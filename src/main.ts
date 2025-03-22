@@ -3,14 +3,13 @@ import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { SwaggerTheme, SwaggerThemeNameEnum } from 'swagger-themes';
-import { Envs } from './envs';
 
 dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  if (Envs.isProduction()) {
+  if (process.env.ENV === 'production') {
     app.enableCors();
   } else {
     const config = new DocumentBuilder()
