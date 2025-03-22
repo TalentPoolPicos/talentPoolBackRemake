@@ -1,0 +1,9 @@
+services:
+  bd:
+    image: mysql:lastest
+    ports:
+      - "3306:3306"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/var/lib/mysql
