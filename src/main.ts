@@ -25,7 +25,7 @@ async function bootstrap() {
       explorer: true,
       customCss: theme.getBuffer(SwaggerThemeNameEnum.DRACULA),
     };
-    SwaggerModule.setup('doc', app, document, options);
+    SwaggerModule.setup('api', app, document, options);
   }
 
   await app.listen(process.env.PORT ?? 3000);
