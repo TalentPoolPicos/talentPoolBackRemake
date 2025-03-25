@@ -1,13 +1,18 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
   NotFoundException,
   Param,
+  Patch,
   Query,
 } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiConflictResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -18,6 +23,7 @@ import { UsersService } from './users.service';
 import { UsersPageDto } from './dtos/users_page.dto';
 import { UserDto } from 'src/dtos/user.dto';
 import { Public } from 'src/auth/decotaros/public.decorator';
+import { PartialUserDto } from './dtos/partial_user.dto';
 
 @ApiTags('User', 'V1')
 @Controller('users')
@@ -90,6 +96,49 @@ export class UsersController {
       profilePicture: user.profilePicture,
       created_at: user.createdAt,
       updated_at: user.updatedAt,
+    };
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update a user partially',
+    description:
+      'Update some user data partially. At least one field must be sent.',
+  })
+  @ApiOkResponse({
+    description: 'The user was successfully updated',
+    type: UserDto,
+  })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  @ApiConflictResponse({
+    description: 'The username or email is already in use',
+  })
+  @ApiBadRequestResponse({
+    description: 'The model state is invalid',
+  })
+  @HttpCode(HttpStatus.OK)
+  @Patch(':uuid')
+  async partialUpdate(
+    @Param('uuid') uuid: string,
+    @Body() partialUserDto: PartialUserDto,
+  ) {
+    const { username, email, password } = partialUserDto;
+
+    const result = await this.usersService.partialUpdate(
+      uuid,
+      username,
+      email,
+      password,
+    );
+
+    return {
+      uuid: result.uuid,
+      username: result.username,
+      email: result.email,
+      role: result.role,
+      profilePicture: result.profilePicture,
+      created_at: result.createdAt,
+      updated_at: result.updatedAt,
     };
   }
 }

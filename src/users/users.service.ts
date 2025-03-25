@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/common/enums/roles.enum';
 import { User } from 'src/entities/user.entity';
@@ -6,6 +11,50 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
+  // Se os dados não forem passados, eles não serão atualizados.
+  // Se o username ou email forem passados, eles somente serão atualizados
+  // se forem diferentes dos atuais e não existirem em outro usuário.
+  async partialUpdate(
+    uuid: string,
+    username?: string,
+    email?: string,
+    password?: string,
+  ): Promise<User> {
+    const user = await this.usersRepository.findOne({
+      where: { uuid },
+      cache: true,
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (!username && !email && !password)
+      throw new BadRequestException('At least one field must be sent');
+
+    if (username) {
+      if (await this.checkIfUserExistsByUsername(username))
+        throw new ConflictException('Username already exists');
+
+      if (username !== user.username) {
+        user.username = username;
+      } else {
+        throw new ConflictException('This username is already in use');
+      }
+    }
+    if (email) {
+      if (email !== user.email) {
+        if (await this.checkIfUserExistsByEmail(email))
+          throw new ConflictException('Email already exists for another user');
+
+        user.email = email;
+      } else {
+        throw new ConflictException('This email is already in use');
+      }
+    }
+    if (password) user.password = password;
+
+    await this.usersRepository.save(user);
+
+    return user;
+  }
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
