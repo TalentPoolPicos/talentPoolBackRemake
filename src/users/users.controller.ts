@@ -17,12 +17,14 @@ import {
 import { UsersService } from './users.service';
 import { UsersPageDto } from './dtos/users_page.dto';
 import { UserDto } from 'src/dtos/user.dto';
+import { Public } from 'src/auth/decotaros/public.decorator';
 
 @ApiTags('User', 'V1')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Public()
   @ApiOperation({ summary: 'Get users by pages' })
   @ApiOkResponse({
     description: 'The list of users and the total number of users',
@@ -64,6 +66,7 @@ export class UsersController {
     };
   }
 
+  @Public()
   @ApiOperation({ summary: 'Get a user by uuid' })
   @ApiOkResponse({
     description: 'The user',
