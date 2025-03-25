@@ -25,6 +25,13 @@ export class UsersService {
     });
   }
 
+  async findByUuid(uuid: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { uuid },
+      cache: true,
+    });
+  }
+
   async findAll(): Promise<User[]> {
     return this.usersRepository.find();
   }
