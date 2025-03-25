@@ -23,7 +23,10 @@ export class AuthController {
 
   @Public()
   @ApiTags('Student')
-  @ApiOperation({ summary: 'Sign in as a student' })
+  @ApiOperation({
+    summary: 'Sign in as a student',
+    description: 'Sign a new user as student.',
+  })
   @ApiOkResponse({
     description: 'The student has successfully signed in',
     type: AccessTokenDto,
@@ -40,7 +43,10 @@ export class AuthController {
 
   @Public()
   @ApiTags('Student')
-  @ApiOperation({ summary: 'Sign up as a student' })
+  @ApiOperation({
+    summary: 'Sign up as a student',
+    description: 'Create and sign up a new user as student.',
+  })
   @ApiOkResponse({
     description: 'The student has successfully signed up',
     type: AccessTokenDto,
