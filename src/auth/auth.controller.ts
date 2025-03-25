@@ -40,9 +40,9 @@ export class AuthController {
 
   @Public()
   @ApiTags('Student')
-  @ApiOperation({ summary: 'Sign un as a student' })
+  @ApiOperation({ summary: 'Sign up as a student' })
   @ApiOkResponse({
-    description: 'The student has successfully signed un',
+    description: 'The student has successfully signed up',
     type: AccessTokenDto,
   })
   @ApiNotFoundResponse({ description: 'The student could not be found' })
