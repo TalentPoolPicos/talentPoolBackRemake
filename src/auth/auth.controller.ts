@@ -14,12 +14,14 @@ import { AccessTokenDto } from './dtos/acess.dto';
 import { SignUpDto } from './dtos/signup.dto';
 import { RefreshTokenDto } from './dtos/refresh.dto';
 import { Role } from 'src/common/enums/roles.enum';
+import { Public } from './decotaros/public.decorator';
 
 @ApiTags('Auth', 'V1')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Public()
   @ApiTags('Student')
   @ApiOperation({ summary: 'Sign in as a student' })
   @ApiOkResponse({
@@ -36,6 +38,7 @@ export class AuthController {
     return this.authService.signIn(signInDto.username, signInDto.password);
   }
 
+  @Public()
   @ApiTags('Student')
   @ApiOperation({ summary: 'Sign un as a student' })
   @ApiOkResponse({
@@ -70,6 +73,7 @@ export class AuthController {
     );
   }
 
+  @Public()
   @ApiOperation({ summary: 'Refresh the access token' })
   @ApiOkResponse({
     description: 'The access token has been successfully refreshed',
