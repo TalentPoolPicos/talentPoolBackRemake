@@ -11,17 +11,8 @@ import { UsersService } from 'src/users/users.service';
 import { User } from 'src/entities/user.entity';
 import { compare, hash } from 'bcrypt';
 import { Role } from 'src/common/enums/roles.enum';
-
-interface JwtPayload {
-  username: string;
-  id: number;
-  uuid: string;
-  role: string;
-}
-
-interface RefreshPayload extends JwtPayload {
-  isRefreshToken: boolean;
-}
+import { JwtPayload } from './interfaces/payload';
+import { RefreshPayload } from './interfaces/refresh';
 
 @Injectable()
 export class AuthService {
