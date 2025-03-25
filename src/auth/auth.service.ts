@@ -8,8 +8,9 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 
-import { Role, User } from 'src/entities/user.entity';
+import { User } from 'src/entities/user.entity';
 import { compare, hash } from 'bcrypt';
+import { Role } from 'src/common/enums/roles.enum';
 
 interface JwtPayload {
   username: string;

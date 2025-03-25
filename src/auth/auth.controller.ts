@@ -11,9 +11,9 @@ import {
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { AccessTokenDto } from './dtos/acess.dto';
-import { Role } from 'src/entities/user.entity';
 import { SignUpDto } from './dtos/signup.dto';
 import { RefreshTokenDto } from './dtos/refresh.dto';
+import { Role } from 'src/common/enums/roles.enum';
 
 @ApiTags('Auth', 'V1')
 @Controller('auth')
