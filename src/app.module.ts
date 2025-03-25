@@ -21,6 +21,7 @@ import { RouterModule } from '@nestjs/core';
       synchronize: process.env.DATABASE_SYNCHRONIZE === 'true', // Set to false in production
     }),
     UsersModule,
+    RouterModule.register([{ path: '/api/v1', module: UsersModule }]),
     AuthModule,
     RouterModule.register([{ path: '/api/v1', module: AuthModule }]),
   ],
