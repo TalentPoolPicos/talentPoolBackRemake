@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Role, User } from 'src/entities/user.entity';
+import { Role } from 'src/common/enums/roles.enum';
+import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -32,6 +33,9 @@ export class UsersService {
     page: number,
     limit: number,
   ): Promise<{ users: User[]; total: number }> {
+    if (limit < 1) limit = 1;
+    if (limit > 20) limit = 20;
+
     const [users, total] = await this.usersRepository.findAndCount({
       take: limit,
       skip: (page - 1) * limit,
