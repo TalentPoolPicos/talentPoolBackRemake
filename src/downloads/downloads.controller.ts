@@ -18,6 +18,7 @@ import { Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Public } from 'src/auth/decotaros/public.decorator';
+import { profilePicturePath } from 'src/common/constants';
 
 @ApiTags('Downloads', 'V1')
 @Controller('downloads')
@@ -33,12 +34,7 @@ export class DownloadsController {
   @HttpCode(HttpStatus.OK)
   @Get('public/images/:filename')
   getProfilePicture(@Param('filename') filename: string, @Res() res: Response) {
-    const filePath = path.join(
-      __dirname,
-      '..',
-      './uploads/public/images',
-      filename,
-    );
+    const filePath = `${profilePicturePath}/${filename}`;
 
     if (!fs.existsSync(filePath)) {
       throw new NotFoundException('Image not found');
