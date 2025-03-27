@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -224,6 +225,28 @@ export class UsersController {
       profilePicture: user.profilePicture,
       created_at: user.createdAt,
       updated_at: user.updatedAt,
+    };
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a user' })
+  @ApiOkResponse({
+    description: 'The user was successfully deleted',
+  })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  @HttpCode(HttpStatus.OK)
+  @Delete()
+  async delete(@Req() req: CustomRequest) {
+    const id = req.user.id;
+
+    const user = await this.usersService.findById(id);
+
+    if (!user) throw new NotFoundException('User not found');
+
+    await this.usersService.delete(user.id);
+
+    return {
+      message: 'The user was successfully deleted',
     };
   }
 }
