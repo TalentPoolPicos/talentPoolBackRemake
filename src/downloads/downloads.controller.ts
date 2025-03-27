@@ -33,7 +33,12 @@ export class DownloadsController {
   @HttpCode(HttpStatus.OK)
   @Get('public/images/:filename')
   getProfilePicture(@Param('filename') filename: string, @Res() res: Response) {
-    const filePath = path.join(__dirname, '..', 'uploads', filename);
+    const filePath = path.join(
+      __dirname,
+      '..',
+      './uploads/public/images',
+      filename,
+    );
 
     if (!fs.existsSync(filePath)) {
       throw new NotFoundException('Image not found');
