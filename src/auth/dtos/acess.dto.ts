@@ -22,14 +22,14 @@ export class AccessTokenDto {
     description: 'The access token expiration time in seconds',
   })
   @IsPositive()
-  access_token_expires_in: Date;
+  access_token_expires_in: number;
 
   @ApiProperty({
     type: Number,
     description: 'The refresh token expiration time in seconds',
   })
   @IsPositive()
-  refresh_token_expires_in: Date;
+  refresh_token_expires_in: number;
 
   @ApiProperty({
     type: UserDto,
