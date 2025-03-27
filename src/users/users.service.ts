@@ -139,6 +139,17 @@ export class UsersService {
     return user;
   }
 
+  async updateProfilePictureName(
+    id: number,
+    profilePicture: string,
+  ): Promise<User | null> {
+    const result = await this.usersRepository.update(id, { profilePicture });
+
+    if (!result.affected) return null;
+
+    return this.usersRepository.findOneBy({ id });
+  }
+
   async delete(id: number): Promise<void> {
     await this.usersRepository.delete(id);
   }
