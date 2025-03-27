@@ -37,6 +37,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { CustomRequest } from 'src/auth/interfaces/custon_request';
 import * as fs from 'fs';
+import * as crypto from 'crypto';
 
 @ApiTags('User', 'V1')
 @Controller('users')
@@ -174,7 +175,13 @@ export class UsersController {
       storage: diskStorage({
         destination: './uploads/public/images',
         filename: (req, file: Express.Multer.File, callback) => {
-          const filename = Date.now().toString() + extname(file.originalname);
+          // Generating a unique filename
+          const filename =
+            crypto
+              .createHash('sha256')
+              .update((file.originalname, 10) + extname(file.originalname))
+              .digest('hex') + file.mimetype.replace('image/', '.');
+
           callback(null, filename);
         },
       }),
@@ -209,12 +216,12 @@ export class UsersController {
     @UploadedFile() file: Express.Multer.File,
     @Req() req: CustomRequest,
   ) {
-    console.log(req.user);
     const user = await this.usersService.findById(req.user.id);
 
     if (!user) throw new NotFoundException('User not found');
 
     if (user.profilePicture) fs.unlinkSync(`./uploads/${user.profilePicture}`);
+    await this.usersService.update(user.id, { profilePicture: file.filename });
     user.profilePicture = file.filename;
 
     return {

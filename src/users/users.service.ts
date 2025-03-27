@@ -86,6 +86,7 @@ export class UsersService {
     user: {
       username?: string;
       password?: string;
+      profilePicture?: string;
       email?: string;
       role?: Role;
     },
