@@ -24,10 +24,13 @@ import { profilePicturePath } from 'src/common/constants';
 @Controller('downloads')
 export class DownloadsController {
   @Public()
-  @ApiOperation({ summary: 'Return the profile picture' })
+  @ApiOperation({ summary: 'Return a public image' })
   @ApiOkResponse({
-    description: 'The profile picture',
-    type: 'image/jpeg',
+    description: 'The image',
+    content: {
+      'image/jpeg': { schema: { type: 'string', format: 'binary' } },
+      'image/png': { schema: { type: 'string', format: 'binary' } },
+    },
   })
   @ApiConsumes('image/jpeg', 'image/png')
   @ApiNotFoundResponse({ description: 'Image not found' })
