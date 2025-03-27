@@ -52,8 +52,8 @@ export class AuthService {
           expiresIn: '7d',
         },
       ),
-      access_token_expires_in: 3600,
-      refresh_token_expires_in: 604800,
+      access_token_expires_in: Date.now() + 3600,
+      refresh_token_expires_in: Date.now() + 604800,
       user: {
         uuid: user.uuid,
         username: user.username,
@@ -108,8 +108,8 @@ export class AuthService {
           role: payload.role,
         }),
         refresh_token: refreshToken,
-        access_token_expires_in: 3600,
-        refresh_token_expires_in: 604800,
+        access_token_expires_in: Date.now() + 3600,
+        refresh_token_expires_in: Date.now() + 604800,
         user: {
           uuid: user.uuid,
           username: user.username,
