@@ -168,10 +168,10 @@ export class UsersController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('file', {
-      dest: './uploads',
+      dest: './uploads/public/images',
       limits: { fileSize: 1024 * 1024 * 3 },
       storage: diskStorage({
-        destination: './uploads',
+        destination: './uploads/public/images',
         filename: (req, file: Express.Multer.File, callback) => {
           const filename = Date.now().toString() + extname(file.originalname);
           callback(null, filename);
