@@ -34,15 +34,20 @@ import { PartialUserDto } from './dtos/partial_user.dto';
 
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
 import { CustomRequest } from 'src/auth/interfaces/custon_request';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
+import { ConfigService } from '@nestjs/config';
+
+import { profilePicturePath } from 'src/common/constants';
 
 @ApiTags('User', 'V1')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Public()
   @ApiOperation({ summary: 'Get users by pages' })
@@ -170,16 +175,16 @@ export class UsersController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('file', {
-      dest: './uploads/public/images',
+      dest: profilePicturePath,
       limits: { fileSize: 1024 * 1024 * 3 },
       storage: diskStorage({
-        destination: './uploads/public/images',
+        destination: profilePicturePath,
         filename: (req, file: Express.Multer.File, callback) => {
           // Generating a unique filename
           const filename =
             crypto
               .createHash('sha256')
-              .update((file.originalname, 10) + extname(file.originalname))
+              .update(file.originalname + Date.now())
               .digest('hex') + file.mimetype.replace('image/', '.');
 
           callback(null, filename);
@@ -220,7 +225,8 @@ export class UsersController {
 
     if (!user) throw new NotFoundException('User not found');
 
-    if (user.profilePicture) fs.unlinkSync(`./uploads/${user.profilePicture}`);
+    if (user.profilePicture)
+      fs.unlinkSync(`${profilePicturePath}/${user.profilePicture}`);
     await this.usersService.update(user.id, { profilePicture: file.filename });
     user.profilePicture = file.filename;
 
