@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -8,11 +9,16 @@ import {
   Param,
   Patch,
   Query,
+  Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiBody,
   ApiConflictResponse,
+  ApiConsumes,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -24,6 +30,12 @@ import { UsersPageDto } from './dtos/users_page.dto';
 import { UserDto } from 'src/dtos/user.dto';
 import { Public } from 'src/auth/decotaros/public.decorator';
 import { PartialUserDto } from './dtos/partial_user.dto';
+
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { CustomRequest } from 'src/auth/interfaces/custon_request';
+import * as fs from 'fs';
 
 @ApiTags('User', 'V1')
 @Controller('users')
@@ -117,11 +129,13 @@ export class UsersController {
     description: 'The model state is invalid',
   })
   @HttpCode(HttpStatus.OK)
-  @Patch(':uuid')
+  @Patch()
   async partialUpdate(
-    @Param('uuid') uuid: string,
     @Body() partialUserDto: PartialUserDto,
+    @Req() req: CustomRequest,
   ) {
+    const uuid = req.user.uuid;
+
     const { username, email, password } = partialUserDto;
 
     const result = await this.usersService.partialUpdate(
@@ -139,6 +153,77 @@ export class UsersController {
       profilePicture: result.profilePicture,
       created_at: result.createdAt,
       updated_at: result.updatedAt,
+    };
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Upload a new profile picture' })
+  @ApiOkResponse({
+    description: 'The profile picture was successfully updated',
+    type: UserDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Only image files are allowed',
+  })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      dest: './uploads',
+      limits: { fileSize: 1024 * 1024 * 3 },
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file: Express.Multer.File, callback) => {
+          const filename = Date.now().toString() + extname(file.originalname);
+          callback(null, filename);
+        },
+      }),
+      fileFilter: (req, file, callback) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+
+        if (!allowedTypes.includes(file.mimetype)) {
+          return callback(
+            new BadRequestException('Only image files are allowed'),
+            false,
+          );
+        }
+
+        callback(null, true);
+      },
+    }),
+  )
+  @ApiBody({
+    required: true,
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @Patch('profile-picture')
+  async uploadProfilePicture(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: CustomRequest,
+  ) {
+    console.log(req.user);
+    const user = await this.usersService.findById(req.user.id);
+
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.profilePicture) fs.unlinkSync(`./uploads/${user.profilePicture}`);
+    user.profilePicture = file.filename;
+
+    return {
+      uuid: user.uuid,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      profilePicture: user.profilePicture,
+      created_at: user.createdAt,
+      updated_at: user.updatedAt,
     };
   }
 }
