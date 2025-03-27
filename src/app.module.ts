@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { RouterModule } from '@nestjs/core';
+import { DownloadsModule } from './downloads/downloads.module';
 
 @Module({
   imports: [
@@ -24,6 +25,8 @@ import { RouterModule } from '@nestjs/core';
     RouterModule.register([{ path: '/api/v1', module: UsersModule }]),
     AuthModule,
     RouterModule.register([{ path: '/api/v1', module: AuthModule }]),
+    DownloadsModule,
+    RouterModule.register([{ path: '/api/v1', module: DownloadsModule }]),
   ],
   controllers: [AppController],
 
