@@ -1,6 +1,5 @@
 /uploads
 /data
-*-lock.json
 
 # compiled output
 /dist
