@@ -5,13 +5,12 @@ export class BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ type: 'uuid', unique: true })
+  @Column({
+    type: 'uuid',
+    unique: true,
+    default: () => 'gen_random_uuid()',
+  })
   uuid!: string;
-
-  @BeforeInsert()
-  generateUuid() {
-    this.uuid = uuidv4();
-  }
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   readonly createdAt!: Date;
