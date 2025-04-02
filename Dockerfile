@@ -9,4 +9,4 @@ RUN npm i
 
 RUN npm run build
 
-CMD ["npm", "run", "start:prod"]
+CMD ["npm", "run", "start:dev"]
