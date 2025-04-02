@@ -80,6 +80,10 @@ You can find the installation instructions for Docker [here](https://docs.docker
 
 ### Docker Compose
 
+Before running the project, configure the environment variables. Consider the **dev.env** file and rename it to **.env**.
+
+After that, you can run the application using Docker Compose.
+
 ```bash
 docker compose -f docker-compose-front-dev.yaml up -d
 ```

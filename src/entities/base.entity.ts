@@ -1,11 +1,17 @@
-import { Column, PrimaryGeneratedColumn } from 'typeorm';
+import { BeforeInsert, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 
 export class BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ type: 'uuid', unique: true, default: () => 'uuid_generate_v4()' })
+  @Column({ type: 'uuid', unique: true })
   uuid!: string;
+
+  @BeforeInsert()
+  generateUuid() {
+    this.uuid = uuidv4();
+  }
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   readonly createdAt!: Date;
