@@ -14,4 +14,10 @@ export class Enterprise extends BaseEntity {
 
   @Column({ nullable: true })
   email: string;
+
+  @Column({ length: 100, nullable: true })
+  socialReason: string;
+
+  @Column({ length: 255, nullable: true })
+  description: string;
 }
