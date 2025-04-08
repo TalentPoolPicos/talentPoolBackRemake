@@ -1,8 +1,9 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Student } from './student.entity';
 import { Enterprise } from './enterprise.entity';
 import { Role } from 'src/common/enums/roles.enum';
+import { SocialMedia } from './socialmedia.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -32,4 +33,7 @@ export class User extends BaseEntity {
   @OneToOne(() => Enterprise, { nullable: true })
   @JoinColumn()
   enterprise?: Enterprise;
+
+  @OneToMany(() => SocialMedia, (socialMedia) => socialMedia.user)
+  socialMedia: SocialMedia[];
 }
