@@ -34,6 +34,7 @@ export class UsersService {
   async findByUuid(uuid: string): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { uuid },
+      relations: ['student', 'enterprise', 'socialMedia'],
       cache: true,
     });
   }
