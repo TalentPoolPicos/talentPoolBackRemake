@@ -27,6 +27,7 @@ export class UsersService {
   async findById(id: number): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { id },
+      relations: ['student', 'enterprise', 'socialMedia'],
       cache: true,
     });
   }
@@ -40,7 +41,10 @@ export class UsersService {
   }
 
   async findAll(): Promise<User[]> {
-    return this.usersRepository.find();
+    return this.usersRepository.find({
+      relations: ['student', 'enterprise', 'socialMedia'],
+      cache: true,
+    });
   }
 
   async findAndCountAll(
