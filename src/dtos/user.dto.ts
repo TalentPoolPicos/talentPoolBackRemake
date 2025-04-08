@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString, IsUrl } from 'class-validator';
 import { Role } from 'src/common/enums/roles.enum';
+import { SocialMediaDto } from 'src/socialmedia/dtos/socialmedia.dto';
 
 export class UserDto {
   @ApiProperty({
@@ -50,4 +51,11 @@ export class UserDto {
     description: 'The date the user was last updated',
   })
   updated_at: Date;
+
+  @ApiProperty({
+    type: [String],
+    description: 'The social media of the user',
+  })
+  @IsString({ each: true, message: 'Social media must be a string' })
+  socialMedia: SocialMediaDto[];
 }
