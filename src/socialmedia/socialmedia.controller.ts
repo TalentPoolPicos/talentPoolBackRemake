@@ -8,6 +8,7 @@ import {
   Req,
 } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -30,6 +31,7 @@ export class SocialmediaController {
     description: 'The list of social media by user',
     type: [SocialMediaDto],
   })
+  @ApiBadRequestResponse({ description: 'The data provided is invalid' })
   @Get(':userUuid')
   async findAllSocialMediaByUserUuid(@Param('userUuid') uuid: string) {
     const result = await this.socialMediaService.findAllByUserUuid(uuid);
