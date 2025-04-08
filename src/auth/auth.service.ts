@@ -62,6 +62,15 @@ export class AuthService {
         profile_picture: user.profilePicture,
         created_at: user.createdAt,
         update_at: user.updatedAt,
+        socialMedia: user.socialMedia.map((socialMedia) => {
+          return {
+            uuid: socialMedia.uuid,
+            type: socialMedia.type,
+            url: socialMedia.url,
+            created_at: socialMedia.createdAt,
+            updated_at: socialMedia.updatedAt,
+          };
+        }),
       },
     };
   }
@@ -118,6 +127,15 @@ export class AuthService {
           profile_picture: user.profilePicture,
           created_at: user.createdAt,
           update_at: user.updatedAt,
+          socialMedia: user.socialMedia.map((socialMedia) => {
+            return {
+              uuid: socialMedia.uuid,
+              type: socialMedia.type,
+              url: socialMedia.url,
+              created_at: socialMedia.createdAt,
+              updated_at: socialMedia.updatedAt,
+            };
+          }),
         },
       };
     } else {
