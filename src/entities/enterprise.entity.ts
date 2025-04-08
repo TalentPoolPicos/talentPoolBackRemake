@@ -6,6 +6,9 @@ export class Enterprise extends BaseEntity {
   @Column({ length: 100 })
   name: string;
 
+  @Column({ length: 100 })
+  fantasyName: string;
+
   @Column({ length: 14 })
   cnpj: string;
 
