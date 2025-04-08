@@ -1,6 +1,26 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsUrl } from 'class-validator';
+import { IsString, IsUrl, Validate } from 'class-validator';
 import { SocialMediaType } from 'src/common/enums/social.enum';
+
+import {
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+} from 'class-validator';
+
+@ValidatorConstraint({ async: false })
+export class IsSocialMediaTypeValid implements ValidatorConstraintInterface {
+  constructor() {}
+
+  validate(value: string) {
+    return Object.values(SocialMediaType).some(
+      (type) => type.toLowerCase() === value.toLowerCase(),
+    );
+  }
+
+  defaultMessage() {
+    return 'Type must be a valid social media type';
+  }
+}
 
 export class CreateSocialMediaDto {
   @ApiProperty({
@@ -9,6 +29,8 @@ export class CreateSocialMediaDto {
     description: 'The type of social media',
     enum: SocialMediaType,
   })
+  @IsString({ message: 'Type must be a string' })
+  @Validate(IsSocialMediaTypeValid)
   type: SocialMediaType;
 
   @ApiProperty({
