@@ -85,6 +85,15 @@ export class UsersController {
           profilePicture: user.profilePicture,
           created_at: user.createdAt,
           updated_at: user.updatedAt,
+          socialMedia: user.socialMedia.map((socialMedia) => {
+            return {
+              uuid: socialMedia.uuid,
+              type: socialMedia.type,
+              url: socialMedia.url,
+              created_at: socialMedia.createdAt,
+              updated_at: socialMedia.updatedAt,
+            };
+          }),
         };
       }),
       total: result.total,
@@ -115,6 +124,15 @@ export class UsersController {
       profilePicture: user.profilePicture,
       created_at: user.createdAt,
       updated_at: user.updatedAt,
+      socialMedia: user.socialMedia.map((socialMedia) => {
+        return {
+          uuid: socialMedia.uuid,
+          type: socialMedia.type,
+          url: socialMedia.url,
+          created_at: socialMedia.createdAt,
+          updated_at: socialMedia.updatedAt,
+        };
+      }),
     };
   }
 
@@ -160,6 +178,15 @@ export class UsersController {
       profilePicture: result.profilePicture,
       created_at: result.createdAt,
       updated_at: result.updatedAt,
+      socialMedia: result.socialMedia.map((socialMedia) => {
+        return {
+          uuid: socialMedia.uuid,
+          type: socialMedia.type,
+          url: socialMedia.url,
+          created_at: socialMedia.createdAt,
+          updated_at: socialMedia.updatedAt,
+        };
+      }),
     };
   }
 
@@ -238,6 +265,15 @@ export class UsersController {
       profilePicture: user.profilePicture,
       created_at: user.createdAt,
       updated_at: user.updatedAt,
+      socialMedia: user.socialMedia.map((socialMedia) => {
+        return {
+          uuid: socialMedia.uuid,
+          type: socialMedia.type,
+          url: socialMedia.url,
+          created_at: socialMedia.createdAt,
+          updated_at: socialMedia.updatedAt,
+        };
+      }),
     };
   }
 

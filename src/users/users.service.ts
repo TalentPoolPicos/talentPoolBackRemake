@@ -19,6 +19,7 @@ export class UsersService {
   async findByUsername(username: string): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { username },
+      relations: ['student', 'enterprise', 'socialMedia'],
       cache: true,
     });
   }
@@ -50,6 +51,7 @@ export class UsersService {
 
     const [users, total] = await this.usersRepository.findAndCount({
       take: limit,
+      relations: ['student', 'enterprise', 'socialMedia'],
       skip: (page - 1) * limit,
       cache: true,
     });
