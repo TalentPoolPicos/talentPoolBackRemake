@@ -31,7 +31,6 @@ export class SocialmediaController {
     description: 'The list of social media by user',
     type: [SocialMediaDto],
   })
-  @ApiBadRequestResponse({ description: 'The data provided is invalid' })
   @Get(':userUuid')
   async findAllSocialMediaByUserUuid(@Param('userUuid') uuid: string) {
     const result = await this.socialMediaService.findAllByUserUuid(uuid);
@@ -47,6 +46,7 @@ export class SocialmediaController {
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create or update a social media' })
+  @ApiBadRequestResponse({ description: 'The data provided is invalid' })
   @ApiOkResponse({
     description: 'The social media has been successfully created',
     type: SocialMediaDto,
