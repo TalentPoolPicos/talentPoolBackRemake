@@ -33,13 +33,10 @@ import { Public } from 'src/auth/decotaros/public.decorator';
 import { PartialUserDto } from './dtos/partial_user.dto';
 
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
 import { CustomRequest } from 'src/auth/interfaces/custon_request';
-import * as fs from 'fs';
-import * as crypto from 'crypto';
-import { ConfigService } from '@nestjs/config';
 
-import { profilePicturePath } from 'src/common/constants';
+import { ConfigService } from '@nestjs/config';
+import { FilesService } from 'src/minio/file.service';
 
 @ApiTags('User', 'V1')
 @Controller('users')
@@ -47,6 +44,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
+    private readonly filesService: FilesService,
   ) {}
 
   @Public()
@@ -202,21 +200,20 @@ export class UsersController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('file', {
-      dest: profilePicturePath,
       limits: { fileSize: 1024 * 1024 * 3 },
-      storage: diskStorage({
-        destination: profilePicturePath,
-        filename: (req, file: Express.Multer.File, callback) => {
-          // Generating a unique filename
-          const filename =
-            crypto
-              .createHash('sha256')
-              .update(file.originalname + Date.now())
-              .digest('hex') + file.mimetype.replace('image/', '.');
+      // storage: diskStorage({
+      //   destination: profilePicturePath,
+      //   filename: (req, file: Express.Multer.File, callback) => {
+      //     // Generating a unique filename
+      //     const filename =
+      //       crypto
+      //         .createHash('sha256')
+      //         .update(file.originalname + Date.now())
+      //         .digest('hex') + file.mimetype.replace('image/', '.');
 
-          callback(null, filename);
-        },
-      }),
+      //     callback(null, filename);
+      //   },
+      // }),
       fileFilter: (req, file, callback) => {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
 
@@ -252,10 +249,21 @@ export class UsersController {
 
     if (!user) throw new NotFoundException('User not found');
 
-    if (user.profilePicture)
-      fs.unlinkSync(`${profilePicturePath}/${user.profilePicture}`);
-    await this.usersService.update(user.id, { profilePicture: file.filename });
-    user.profilePicture = file.filename;
+    if (user.profilePictureUuid)
+      await this.filesService.deleteFile(user.profilePictureUuid);
+
+    const result = await this.filesService.uploadFile(file);
+
+    user.profilePictureUuid = result.filename;
+    const fileUrl = await this.filesService.getFileUrl(result.filename);
+
+    if (!fileUrl) throw new NotFoundException('Error getting file URL');
+    user.profilePicture = fileUrl;
+
+    await this.usersService.update(user.id, {
+      profilePicture: user.profilePicture,
+      profilePictureUuid: user.profilePictureUuid,
+    });
 
     return {
       uuid: user.uuid,

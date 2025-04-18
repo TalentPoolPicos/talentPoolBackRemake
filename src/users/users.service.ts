@@ -94,6 +94,9 @@ export class UsersService {
       username?: string;
       password?: string;
       profilePicture?: string;
+      profilePictureUuid?: string;
+      bannerPicture?: string;
+      bannerPictureUuid?: string;
       email?: string;
       role?: Role;
     },
