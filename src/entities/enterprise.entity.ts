@@ -13,9 +13,6 @@ export class Enterprise extends BaseEntity {
   cnpj: string;
 
   @Column({ nullable: true })
-  logo: string;
-
-  @Column({ nullable: true })
   email: string;
 
   @Column({ length: 100, nullable: true })
