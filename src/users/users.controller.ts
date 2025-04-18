@@ -201,19 +201,6 @@ export class UsersController {
   @UseInterceptors(
     FileInterceptor('file', {
       limits: { fileSize: 1024 * 1024 * 3 },
-      // storage: diskStorage({
-      //   destination: profilePicturePath,
-      //   filename: (req, file: Express.Multer.File, callback) => {
-      //     // Generating a unique filename
-      //     const filename =
-      //       crypto
-      //         .createHash('sha256')
-      //         .update(file.originalname + Date.now())
-      //         .digest('hex') + file.mimetype.replace('image/', '.');
-
-      //     callback(null, filename);
-      //   },
-      // }),
       fileFilter: (req, file, callback) => {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
 
