@@ -24,7 +24,16 @@ export class User extends BaseEntity {
   role: string;
 
   @Column({ nullable: true })
+  profilePictureUuid?: string;
+
+  @Column({ nullable: true })
   profilePicture?: string;
+
+  @Column({ nullable: true })
+  bannerPictureUuid?: string;
+
+  @Column({ nullable: true })
+  bannerPicture?: string;
 
   @OneToOne(() => Student, { nullable: true })
   @JoinColumn()
