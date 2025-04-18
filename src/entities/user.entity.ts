@@ -7,6 +7,24 @@ import { SocialMedia } from './socialmedia.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
+  /**
+   * @description Indica se o usuário tem as informações mínimas para ser considerado completo
+   */
+  @Column({ default: false })
+  isComplete: boolean;
+
+  /**
+   * @description Indica se o usuário já verificou o e-mail
+   */
+  @Column({ default: false })
+  isVerified: boolean;
+
+  @Column({ default: false })
+  isActive: boolean;
+
+  @Column({ default: false })
+  isDeleted: boolean;
+
   @Column({ length: 100, unique: true })
   username: string;
 
