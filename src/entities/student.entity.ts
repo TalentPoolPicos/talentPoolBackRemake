@@ -15,6 +15,14 @@ export class Student extends BaseEntity {
   // Url do pdf do currículo
   @Column({ nullable: true })
   curriculum: string;
+  @Column({ nullable: true })
+  curriculumUuid: string;
+
+  // Url do pdf do histórico
+  @Column({ nullable: true })
+  history: string;
+  @Column({ nullable: true })
+  historyUuid: string;
 
   // lattes url
   @Column({ nullable: true })
