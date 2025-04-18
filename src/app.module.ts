@@ -6,7 +6,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { RouterModule } from '@nestjs/core';
-import { DownloadsModule } from './downloads/downloads.module';
+import { EnterpriseModule } from './enterprise/enterprise.module';
+import { StudentsModule } from './students/students.module';
+import { SocialmediaModule } from './socialmedia/socialmedia.module';
+import { MinioModule } from './minio/minio.module';
 
 @Module({
   imports: [
@@ -21,12 +24,17 @@ import { DownloadsModule } from './downloads/downloads.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: process.env.DATABASE_SYNCHRONIZE === 'true', // Set to false in production
     }),
+    MinioModule,
     UsersModule,
     RouterModule.register([{ path: '/api/v1', module: UsersModule }]),
     AuthModule,
     RouterModule.register([{ path: '/api/v1', module: AuthModule }]),
-    DownloadsModule,
-    RouterModule.register([{ path: '/api/v1', module: DownloadsModule }]),
+    EnterpriseModule,
+    RouterModule.register([{ path: '/api/v1', module: EnterpriseModule }]),
+    StudentsModule,
+    RouterModule.register([{ path: '/api/v1', module: StudentsModule }]),
+    SocialmediaModule,
+    RouterModule.register([{ path: '/api/v1', module: SocialmediaModule }]),
   ],
   controllers: [AppController],
 
