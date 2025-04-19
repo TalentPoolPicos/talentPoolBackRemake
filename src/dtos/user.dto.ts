@@ -41,6 +41,14 @@ export class UserDto {
   profilePicture?: string;
 
   @ApiProperty({
+    type: String,
+    required: false,
+    description: 'The banner picture of the user',
+  })
+  @IsUrl({}, { message: 'Banner picture must be a valid URL' })
+  bannerPicture?: string;
+
+  @ApiProperty({
     type: Date,
     description: 'The date the user was created',
   })

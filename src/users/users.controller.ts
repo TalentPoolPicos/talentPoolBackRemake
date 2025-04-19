@@ -80,6 +80,7 @@ export class UsersController {
           username: user.username,
           email: user.email,
           role: user.role,
+          bannerPicture: user.bannerPicture,
           profilePicture: user.profilePicture,
           created_at: user.createdAt,
           updated_at: user.updatedAt,
@@ -119,6 +120,7 @@ export class UsersController {
       username: user.username,
       email: user.email,
       role: user.role,
+      bannerPicture: user.bannerPicture,
       profilePicture: user.profilePicture,
       created_at: user.createdAt,
       updated_at: user.updatedAt,
@@ -161,7 +163,7 @@ export class UsersController {
 
     const { username, email, password } = partialUserDto;
 
-    const result = await this.usersService.partialUpdate(
+    const user = await this.usersService.partialUpdate(
       uuid,
       username,
       email,
@@ -169,14 +171,15 @@ export class UsersController {
     );
 
     return {
-      uuid: result.uuid,
-      username: result.username,
-      email: result.email,
-      role: result.role,
-      profilePicture: result.profilePicture,
-      created_at: result.createdAt,
-      updated_at: result.updatedAt,
-      socialMedia: result.socialMedia.map((socialMedia) => {
+      uuid: user.uuid,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      bannerPicture: user.bannerPicture,
+      profilePicture: user.profilePicture,
+      created_at: user.createdAt,
+      updated_at: user.updatedAt,
+      socialMedia: user.socialMedia.map((socialMedia) => {
         return {
           uuid: socialMedia.uuid,
           type: socialMedia.type,
@@ -257,6 +260,92 @@ export class UsersController {
       username: user.username,
       email: user.email,
       role: user.role,
+      bannerPicture: user.bannerPicture,
+      profilePicture: user.profilePicture,
+      created_at: user.createdAt,
+      updated_at: user.updatedAt,
+      socialMedia: user.socialMedia.map((socialMedia) => {
+        return {
+          uuid: socialMedia.uuid,
+          type: socialMedia.type,
+          url: socialMedia.url,
+          created_at: socialMedia.createdAt,
+          updated_at: socialMedia.updatedAt,
+        };
+      }),
+    };
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Upload a new banner picture' })
+  @ApiOkResponse({
+    description: 'The banner picture was successfully updated',
+    type: UserDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Only image files are allowed',
+  })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 1024 * 1024 * 3 },
+      fileFilter: (req, file, callback) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+
+        if (!allowedTypes.includes(file.mimetype)) {
+          return callback(
+            new BadRequestException('Only image files are allowed'),
+            false,
+          );
+        }
+
+        callback(null, true);
+      },
+    }),
+  )
+  @ApiBody({
+    required: true,
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @Patch('banner-picture')
+  async uploadBannerPicture(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: CustomRequest,
+  ) {
+    const user = await this.usersService.findById(req.user.id);
+
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.bannerPictureUuid)
+      await this.filesService.deleteFile(user.bannerPictureUuid);
+
+    const result = await this.filesService.uploadFile(file);
+
+    user.bannerPictureUuid = result.filename;
+    const fileUrl = await this.filesService.getFileUrl(result.filename);
+
+    if (!fileUrl) throw new NotFoundException('Error getting file URL');
+    user.bannerPicture = fileUrl;
+
+    await this.usersService.update(user.id, {
+      bannerPicture: user.bannerPicture,
+      bannerPictureUuid: user.bannerPictureUuid,
+    });
+
+    return {
+      uuid: user.uuid,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      bannerPicture: user.bannerPicture,
       profilePicture: user.profilePicture,
       created_at: user.createdAt,
       updated_at: user.updatedAt,
