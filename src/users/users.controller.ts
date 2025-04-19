@@ -93,6 +93,14 @@ export class UsersController {
               updated_at: socialMedia.updatedAt,
             };
           }),
+          tags: user.tag.map((tag) => {
+            return {
+              uuid: tag.uuid,
+              label: tag.label,
+              created_at: tag.createdAt,
+              updated_at: tag.updatedAt,
+            };
+          }),
         };
       }),
       total: result.total,
@@ -131,6 +139,14 @@ export class UsersController {
           url: socialMedia.url,
           created_at: socialMedia.createdAt,
           updated_at: socialMedia.updatedAt,
+        };
+      }),
+      tags: user.tag.map((tag) => {
+        return {
+          uuid: tag.uuid,
+          label: tag.label,
+          created_at: tag.createdAt,
+          updated_at: tag.updatedAt,
         };
       }),
     };
@@ -186,6 +202,14 @@ export class UsersController {
           url: socialMedia.url,
           created_at: socialMedia.createdAt,
           updated_at: socialMedia.updatedAt,
+        };
+      }),
+      tags: user.tag.map((tag) => {
+        return {
+          uuid: tag.uuid,
+          label: tag.label,
+          created_at: tag.createdAt,
+          updated_at: tag.updatedAt,
         };
       }),
     };
@@ -273,6 +297,14 @@ export class UsersController {
           updated_at: socialMedia.updatedAt,
         };
       }),
+      tags: user.tag.map((tag) => {
+        return {
+          uuid: tag.uuid,
+          label: tag.label,
+          created_at: tag.createdAt,
+          updated_at: tag.updatedAt,
+        };
+      }),
     };
   }
 
@@ -356,6 +388,14 @@ export class UsersController {
           url: socialMedia.url,
           created_at: socialMedia.createdAt,
           updated_at: socialMedia.updatedAt,
+        };
+      }),
+      tags: user.tag.map((tag) => {
+        return {
+          uuid: tag.uuid,
+          label: tag.label,
+          created_at: tag.createdAt,
+          updated_at: tag.updatedAt,
         };
       }),
     };

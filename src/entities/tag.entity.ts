@@ -7,7 +7,7 @@ export class Tag extends BaseEntity {
   @Column({ length: 20 })
   label: string;
 
-  @ManyToOne(() => User, (user) => user.tags)
+  @ManyToOne(() => User, (user) => user.tag)
   @JoinColumn()
   user: User;
 }

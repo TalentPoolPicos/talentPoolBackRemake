@@ -72,5 +72,5 @@ export class User extends BaseEntity {
   tagsCount: number;
 
   @OneToMany(() => Tag, (tag) => tag.user)
-  tags: Tag[];
+  tag: Tag[];
 }

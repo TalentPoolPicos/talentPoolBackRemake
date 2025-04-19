@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString, IsUrl } from 'class-validator';
 import { Role } from 'src/common/enums/roles.enum';
+import { Tag } from 'src/entities/tag.entity';
 import { SocialMediaDto } from 'src/socialmedia/dtos/socialmedia.dto';
 
 export class UserDto {
@@ -68,8 +69,8 @@ export class UserDto {
   socialMedia: SocialMediaDto[];
 
   @ApiProperty({
-    type: [Array<string>],
+    type: [String],
     description: 'The tags of the user',
   })
-  tags: string[];
+  tags: Tag[];
 }

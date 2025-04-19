@@ -73,7 +73,7 @@ export class AuthService {
             updated_at: socialMedia.updatedAt,
           };
         }),
-        tags: user.tags.map((tag) => {
+        tags: user.tag.map((tag) => {
           return {
             uuid: tag.uuid,
             label: tag.label,
@@ -146,7 +146,7 @@ export class AuthService {
               updated_at: socialMedia.updatedAt,
             };
           }),
-          tags: user.tags.map((tag) => {
+          tags: user.tag.map((tag) => {
             return {
               uuid: tag.uuid,
               label: tag.label,

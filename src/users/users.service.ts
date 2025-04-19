@@ -19,7 +19,7 @@ export class UsersService {
   async findByUsername(username: string): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { username },
-      relations: ['student', 'enterprise', 'socialMedia'],
+      relations: ['student', 'enterprise', 'socialMedia', 'tag'],
       cache: true,
     });
   }
@@ -27,7 +27,7 @@ export class UsersService {
   async findById(id: number): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { id },
-      relations: ['student', 'enterprise', 'socialMedia'],
+      relations: ['student', 'enterprise', 'socialMedia', 'tag'],
       cache: true,
     });
   }
@@ -35,14 +35,14 @@ export class UsersService {
   async findByUuid(uuid: string): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { uuid },
-      relations: ['student', 'enterprise', 'socialMedia'],
+      relations: ['student', 'enterprise', 'socialMedia', 'tag'],
       cache: true,
     });
   }
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find({
-      relations: ['student', 'enterprise', 'socialMedia'],
+      relations: ['student', 'enterprise', 'socialMedia', 'tag'],
       cache: true,
     });
   }
@@ -56,7 +56,7 @@ export class UsersService {
 
     const [users, total] = await this.usersRepository.findAndCount({
       take: limit,
-      relations: ['student', 'enterprise', 'socialMedia'],
+      relations: ['student', 'enterprise', 'socialMedia', 'tag'],
       skip: (page - 1) * limit,
       cache: true,
     });
