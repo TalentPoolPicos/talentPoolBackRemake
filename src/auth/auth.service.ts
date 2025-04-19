@@ -13,11 +13,13 @@ import { compare, hash } from 'bcrypt';
 import { Role } from 'src/common/enums/roles.enum';
 import { JwtPayload } from './interfaces/payload';
 import { RefreshPayload } from './interfaces/refresh';
+import { StudentsService } from 'src/students/students.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
+    private studentService: StudentsService,
     private jwtService: JwtService,
   ) {}
 
@@ -69,6 +71,14 @@ export class AuthService {
             url: socialMedia.url,
             created_at: socialMedia.createdAt,
             updated_at: socialMedia.updatedAt,
+          };
+        }),
+        tags: user.tags.map((tag) => {
+          return {
+            uuid: tag.uuid,
+            label: tag.label,
+            created_at: tag.createdAt,
+            updated_at: tag.updatedAt,
           };
         }),
       },
@@ -134,6 +144,14 @@ export class AuthService {
               url: socialMedia.url,
               created_at: socialMedia.createdAt,
               updated_at: socialMedia.updatedAt,
+            };
+          }),
+          tags: user.tags.map((tag) => {
+            return {
+              uuid: tag.uuid,
+              label: tag.label,
+              created_at: tag.createdAt,
+              updated_at: tag.updatedAt,
             };
           }),
         },
