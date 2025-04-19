@@ -65,6 +65,12 @@ export class User extends BaseEntity {
   @OneToMany(() => SocialMedia, (socialMedia) => socialMedia.user)
   socialMedia: SocialMedia[];
 
+  /**
+   * @description Indica a quantidade de tags que o usuário tem
+   */
+  @Column({ default: 0 })
+  tagsCount: number;
+
   @OneToMany(() => Tag, (tag) => tag.user)
   tags: Tag[];
 }
