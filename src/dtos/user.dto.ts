@@ -66,4 +66,10 @@ export class UserDto {
   })
   @IsString({ each: true, message: 'Social media must be a string' })
   socialMedia: SocialMediaDto[];
+
+  @ApiProperty({
+    type: [Array<string>],
+    description: 'The tags of the user',
+  })
+  tags: string[];
 }
