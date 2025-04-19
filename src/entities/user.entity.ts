@@ -4,6 +4,7 @@ import { Student } from './student.entity';
 import { Enterprise } from './enterprise.entity';
 import { Role } from 'src/common/enums/roles.enum';
 import { SocialMedia } from './socialmedia.entity';
+import { Tag } from './tag.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -63,4 +64,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => SocialMedia, (socialMedia) => socialMedia.user)
   socialMedia: SocialMedia[];
+
+  @OneToMany(() => Tag, (tag) => tag.user)
+  tags: Tag[];
 }
