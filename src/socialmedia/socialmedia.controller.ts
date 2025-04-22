@@ -57,10 +57,7 @@ export class SocialmediaController {
     @Req() req: CustomRequest,
   ) {
     const id = req.user.id;
-    const result = await this.socialMediaService.addSocialMedia(
-      id,
-      socialMedia,
-    );
+    const result = await this.socialMediaService.add(id, socialMedia);
 
     return {
       uuid: result.uuid,
@@ -81,7 +78,7 @@ export class SocialmediaController {
   })
   @Delete(':uuid')
   async deleteSocialMedia(@Param('uuid') uuid: string) {
-    const result = await this.socialMediaService.deleteSocialMedia(uuid);
+    const result = await this.socialMediaService.delete(uuid);
     return {
       message: 'Social media deleted successfully',
       result,
