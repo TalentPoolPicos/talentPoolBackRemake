@@ -25,7 +25,7 @@ export class SocialmediaService {
     });
   }
 
-  async checkIfSocialMediaExists(
+  async exists(
     userId: number,
     type: SocialMediaType,
   ): Promise<SocialMedia | null> {
@@ -35,17 +35,14 @@ export class SocialmediaService {
     });
   }
 
-  async addSocialMedia(
+  async add(
     userId: number,
     socialMedi: {
       type: SocialMediaType;
       url: string;
     },
   ): Promise<SocialMedia> {
-    const existingSocialMedia = await this.checkIfSocialMediaExists(
-      userId,
-      socialMedi.type,
-    );
+    const existingSocialMedia = await this.exists(userId, socialMedi.type);
 
     if (existingSocialMedia) {
       existingSocialMedia.url = socialMedi.url;
@@ -61,7 +58,7 @@ export class SocialmediaService {
     return this.socialMediaRepository.save(socialMedia);
   }
 
-  async deleteSocialMedia(uuid: string): Promise<SocialMedia> {
+  async delete(uuid: string): Promise<SocialMedia> {
     const socialMedia = await this.socialMediaRepository.findOne({
       where: { uuid },
       cache: true,
