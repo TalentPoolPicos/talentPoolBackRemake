@@ -57,7 +57,7 @@ export class AuthController {
   })
   @ApiConflictResponse({
     description:
-      '"The student already exists" or "The email is already in use"',
+      '"The student already exists" or "The email is already in use" or "role is not valid"',
     schema: {
       example: {
         statusCode: HttpStatus.CONFLICT,
