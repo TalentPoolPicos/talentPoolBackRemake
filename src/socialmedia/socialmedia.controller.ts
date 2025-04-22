@@ -32,7 +32,7 @@ export class SocialmediaController {
     type: [SocialMediaDto],
   })
   @Get(':userUuid')
-  async findAllSocialMediaByUserUuid(@Param('userUuid') uuid: string) {
+  async findAllByUserUuid(@Param('userUuid') uuid: string) {
     const result = await this.socialMediaService.findAllByUserUuid(uuid);
 
     return result.map((socialMedia) => ({
@@ -52,7 +52,7 @@ export class SocialmediaController {
     type: SocialMediaDto,
   })
   @Post()
-  async createSocialMedia(
+  async create(
     @Body() socialMedia: CreateSocialMediaDto,
     @Req() req: CustomRequest,
   ) {
@@ -77,7 +77,7 @@ export class SocialmediaController {
     description: 'The social media could not be found',
   })
   @Delete(':uuid')
-  async deleteSocialMedia(@Param('uuid') uuid: string) {
+  async delete(@Param('uuid') uuid: string) {
     const result = await this.socialMediaService.delete(uuid);
     return {
       message: 'Social media deleted successfully',
