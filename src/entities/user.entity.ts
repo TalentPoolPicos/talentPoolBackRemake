@@ -9,12 +9,6 @@ import { Tag } from './tag.entity';
 @Entity('users')
 export class User extends BaseEntity {
   /**
-   * @description Indica se o usuário tem as informações mínimas para ser considerado completo
-   */
-  @Column({ default: false })
-  isComplete: boolean;
-
-  /**
    * @description Indica se o usuário já verificou o e-mail
    */
   @Column({ default: false })
@@ -54,11 +48,19 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   bannerPicture?: string;
 
-  @OneToOne(() => Student, { nullable: true })
+  @OneToOne(() => Student, {
+    nullable: true,
+    cascade: true,
+    eager: true,
+  })
   @JoinColumn()
   student?: Student;
 
-  @OneToOne(() => Enterprise, { nullable: true })
+  @OneToOne(() => Enterprise, {
+    nullable: true,
+    cascade: true,
+    eager: true,
+  })
   @JoinColumn()
   enterprise?: Enterprise;
 

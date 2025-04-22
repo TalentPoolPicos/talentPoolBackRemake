@@ -3,11 +3,14 @@ import { BaseEntity } from './base.entity';
 
 @Entity('students')
 export class Student extends BaseEntity {
-  @Column({ length: 100 })
-  firstName: string;
+  /**
+   * @description Indica se o usuário tem as informações mínimas para ser considerado completo
+   */
+  @Column({ default: false })
+  isComplete: boolean;
 
-  @Column({ length: 100 })
-  lastName: string;
+  @Column({ length: 100, nullable: true })
+  name: string;
 
   @Column({ type: 'timestamp', nullable: true })
   birthDate: Date;
