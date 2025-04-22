@@ -13,7 +13,7 @@ export class FilesService {
     return await this.minioService.listBuckets();
   }
 
-  async getFileUrl(filename: string): Promise<string | null> {
+  async getUrl(filename: string): Promise<string | null> {
     try {
       return this.minioService.presignedUrl('GET', this._bucketName, filename);
     } catch {
@@ -21,7 +21,7 @@ export class FilesService {
     }
   }
 
-  async uploadFile(file: Express.Multer.File) {
+  async upload(file: Express.Multer.File) {
     const extension = file.originalname.split('.').pop();
     const filename = `${randomUUID().toString()}.${extension}`;
     const result = await this.minioService.putObject(
@@ -37,7 +37,7 @@ export class FilesService {
     return { result, filename };
   }
 
-  async deleteFile(filename: string) {
+  async delete(filename: string) {
     return await this.minioService.removeObject(this._bucketName, filename);
   }
 }
