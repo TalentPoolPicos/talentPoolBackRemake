@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/common/enums/roles.enum';
+import { Student } from 'src/entities/student.entity';
 import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 
@@ -14,6 +15,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    @InjectRepository(Student)
+    private readonly studentsRepository: Repository<Student>,
   ) {}
 
   async findByUsername(username: string): Promise<User | null> {
@@ -77,34 +80,25 @@ export class UsersService {
     username: string;
     password: string;
     email: string;
-    role?: Role;
+    role: Role;
   }): Promise<User> {
     if (await this.checkIfUserExistsByUsername(user.username))
       throw new ConflictException('username already exists');
 
     if (await this.checkIfUserExistsByEmail(user.email))
       throw new ConflictException('email already exists');
+    const userEntity = this.usersRepository.create({
+      ...user,
+      student:
+        user.role === Role.STUDENT
+          ? this.studentsRepository.create({})
+          : undefined,
+    });
 
-    if (user.role && !Object.values(Role).includes(user.role)) {
-      throw new ConflictException('role is not valid');
-    }
-
-    return this.usersRepository.save(user);
+    return this.usersRepository.save(userEntity);
   }
 
-  async update(
-    id: number,
-    user: {
-      username?: string;
-      password?: string;
-      profilePicture?: string;
-      profilePictureUuid?: string;
-      bannerPicture?: string;
-      bannerPictureUuid?: string;
-      email?: string;
-      role?: Role;
-    },
-  ): Promise<User | null> {
+  async update(id: number, user: User): Promise<User | null> {
     await this.usersRepository.update(id, user);
     return this.usersRepository.findOneBy({ id });
   }

@@ -274,10 +274,7 @@ export class UsersController {
     if (!fileUrl) throw new NotFoundException('Error getting file URL');
     user.profilePicture = fileUrl;
 
-    await this.usersService.update(user.id, {
-      profilePicture: user.profilePicture,
-      profilePictureUuid: user.profilePictureUuid,
-    });
+    await this.usersService.update(user.id, user);
 
     return {
       uuid: user.uuid,
@@ -367,10 +364,7 @@ export class UsersController {
     if (!fileUrl) throw new NotFoundException('Error getting file URL');
     user.bannerPicture = fileUrl;
 
-    await this.usersService.update(user.id, {
-      bannerPicture: user.bannerPicture,
-      bannerPictureUuid: user.bannerPictureUuid,
-    });
+    await this.usersService.update(user.id, user);
 
     return {
       uuid: user.uuid,
