@@ -264,12 +264,12 @@ export class UsersController {
     if (!user) throw new NotFoundException('User not found');
 
     if (user.profilePictureUuid)
-      await this.filesService.deleteFile(user.profilePictureUuid);
+      await this.filesService.delete(user.profilePictureUuid);
 
-    const result = await this.filesService.uploadFile(file);
+    const result = await this.filesService.upload(file);
 
     user.profilePictureUuid = result.filename;
-    const fileUrl = await this.filesService.getFileUrl(result.filename);
+    const fileUrl = await this.filesService.getUrl(result.filename);
 
     if (!fileUrl) throw new NotFoundException('Error getting file URL');
     user.profilePicture = fileUrl;
@@ -357,12 +357,12 @@ export class UsersController {
     if (!user) throw new NotFoundException('User not found');
 
     if (user.bannerPictureUuid)
-      await this.filesService.deleteFile(user.bannerPictureUuid);
+      await this.filesService.delete(user.bannerPictureUuid);
 
-    const result = await this.filesService.uploadFile(file);
+    const result = await this.filesService.upload(file);
 
     user.bannerPictureUuid = result.filename;
-    const fileUrl = await this.filesService.getFileUrl(result.filename);
+    const fileUrl = await this.filesService.getUrl(result.filename);
 
     if (!fileUrl) throw new NotFoundException('Error getting file URL');
     user.bannerPicture = fileUrl;
