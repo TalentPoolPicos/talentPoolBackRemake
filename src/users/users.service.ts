@@ -80,10 +80,14 @@ export class UsersService {
     role?: Role;
   }): Promise<User> {
     if (await this.checkIfUserExistsByUsername(user.username))
-      throw new Error('username already exists');
+      throw new ConflictException('username already exists');
 
     if (await this.checkIfUserExistsByEmail(user.email))
-      throw new Error('email already exists');
+      throw new ConflictException('email already exists');
+
+    if (user.role && !Object.values(Role).includes(user.role)) {
+      throw new ConflictException('role is not valid');
+    }
 
     return this.usersRepository.save(user);
   }
