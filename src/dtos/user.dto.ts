@@ -50,18 +50,6 @@ export class UserDto {
   bannerPicture?: string;
 
   @ApiProperty({
-    type: Date,
-    description: 'The date the user was created',
-  })
-  created_at: Date;
-
-  @ApiProperty({
-    type: Date,
-    description: 'The date the user was last updated',
-  })
-  updated_at: Date;
-
-  @ApiProperty({
     type: [String],
     description: 'The social media of the user',
   })
