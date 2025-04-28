@@ -14,6 +14,7 @@ import { Role } from 'src/common/enums/roles.enum';
 import { JwtPayload } from './interfaces/payload';
 import { RefreshPayload } from './interfaces/refresh';
 import { StudentsService } from 'src/students/students.service';
+import { UserAdapter } from 'src/adapters/user.adapter';
 
 @Injectable()
 export class AuthService {
@@ -56,32 +57,7 @@ export class AuthService {
       ),
       access_token_expires_in: 3600,
       refresh_token_expires_in: 604800,
-      user: {
-        uuid: user.uuid,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        profile_picture: user.profilePicture,
-        created_at: user.createdAt,
-        update_at: user.updatedAt,
-        socialMedia: user.socialMedia.map((socialMedia) => {
-          return {
-            uuid: socialMedia.uuid,
-            type: socialMedia.type,
-            url: socialMedia.url,
-            created_at: socialMedia.createdAt,
-            updated_at: socialMedia.updatedAt,
-          };
-        }),
-        tags: user.tag.map((tag) => {
-          return {
-            uuid: tag.uuid,
-            label: tag.label,
-            created_at: tag.createdAt,
-            updated_at: tag.updatedAt,
-          };
-        }),
-      },
+      user: UserAdapter.entityToDto(user),
     };
   }
 
@@ -130,32 +106,7 @@ export class AuthService {
         refresh_token: refreshToken,
         access_token_expires_in: 3600,
         refresh_token_expires_in: 604800,
-        user: {
-          uuid: user.uuid,
-          username: user.username,
-          email: user.email,
-          role: user.role,
-          profile_picture: user.profilePicture,
-          created_at: user.createdAt,
-          update_at: user.updatedAt,
-          socialMedia: user.socialMedia.map((socialMedia) => {
-            return {
-              uuid: socialMedia.uuid,
-              type: socialMedia.type,
-              url: socialMedia.url,
-              created_at: socialMedia.createdAt,
-              updated_at: socialMedia.updatedAt,
-            };
-          }),
-          tags: user.tag.map((tag) => {
-            return {
-              uuid: tag.uuid,
-              label: tag.label,
-              created_at: tag.createdAt,
-              updated_at: tag.updatedAt,
-            };
-          }),
-        },
+        user: UserAdapter.entityToDto(user),
       };
     } else {
       throw new UnauthorizedException();

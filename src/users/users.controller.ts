@@ -37,6 +37,7 @@ import { CustomRequest } from 'src/auth/interfaces/custon_request';
 
 import { ConfigService } from '@nestjs/config';
 import { FilesService } from 'src/minio/file.service';
+import { UserAdapter } from 'src/adapters/user.adapter';
 
 @ApiTags('User', 'V1')
 @Controller('users')
@@ -74,35 +75,7 @@ export class UsersController {
   ) {
     const result = await this.usersService.findAndCountAll(page, limit);
     return {
-      users: result.users.map((user) => {
-        return {
-          uuid: user.uuid,
-          username: user.username,
-          email: user.email,
-          role: user.role,
-          bannerPicture: user.bannerPicture,
-          profilePicture: user.profilePicture,
-          created_at: user.createdAt,
-          updated_at: user.updatedAt,
-          socialMedia: user.socialMedia.map((socialMedia) => {
-            return {
-              uuid: socialMedia.uuid,
-              type: socialMedia.type,
-              url: socialMedia.url,
-              created_at: socialMedia.createdAt,
-              updated_at: socialMedia.updatedAt,
-            };
-          }),
-          tags: user.tag.map((tag) => {
-            return {
-              uuid: tag.uuid,
-              label: tag.label,
-              created_at: tag.createdAt,
-              updated_at: tag.updatedAt,
-            };
-          }),
-        };
-      }),
+      users: result.users.map((user) => UserAdapter.entityToDto(user)),
       total: result.total,
     };
   }
@@ -123,33 +96,7 @@ export class UsersController {
       throw new NotFoundException('User not found');
     }
 
-    return {
-      uuid: user.uuid,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      bannerPicture: user.bannerPicture,
-      profilePicture: user.profilePicture,
-      created_at: user.createdAt,
-      updated_at: user.updatedAt,
-      socialMedia: user.socialMedia.map((socialMedia) => {
-        return {
-          uuid: socialMedia.uuid,
-          type: socialMedia.type,
-          url: socialMedia.url,
-          created_at: socialMedia.createdAt,
-          updated_at: socialMedia.updatedAt,
-        };
-      }),
-      tags: user.tag.map((tag) => {
-        return {
-          uuid: tag.uuid,
-          label: tag.label,
-          created_at: tag.createdAt,
-          updated_at: tag.updatedAt,
-        };
-      }),
-    };
+    return UserAdapter.entityToDto(user);
   }
 
   @ApiBearerAuth()
@@ -186,33 +133,7 @@ export class UsersController {
       password,
     );
 
-    return {
-      uuid: user.uuid,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      bannerPicture: user.bannerPicture,
-      profilePicture: user.profilePicture,
-      created_at: user.createdAt,
-      updated_at: user.updatedAt,
-      socialMedia: user.socialMedia.map((socialMedia) => {
-        return {
-          uuid: socialMedia.uuid,
-          type: socialMedia.type,
-          url: socialMedia.url,
-          created_at: socialMedia.createdAt,
-          updated_at: socialMedia.updatedAt,
-        };
-      }),
-      tags: user.tag.map((tag) => {
-        return {
-          uuid: tag.uuid,
-          label: tag.label,
-          created_at: tag.createdAt,
-          updated_at: tag.updatedAt,
-        };
-      }),
-    };
+    return UserAdapter.entityToDto(user);
   }
 
   @ApiBearerAuth()
@@ -276,33 +197,7 @@ export class UsersController {
 
     await this.usersService.update(user.id, user);
 
-    return {
-      uuid: user.uuid,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      bannerPicture: user.bannerPicture,
-      profilePicture: user.profilePicture,
-      created_at: user.createdAt,
-      updated_at: user.updatedAt,
-      socialMedia: user.socialMedia.map((socialMedia) => {
-        return {
-          uuid: socialMedia.uuid,
-          type: socialMedia.type,
-          url: socialMedia.url,
-          created_at: socialMedia.createdAt,
-          updated_at: socialMedia.updatedAt,
-        };
-      }),
-      tags: user.tag.map((tag) => {
-        return {
-          uuid: tag.uuid,
-          label: tag.label,
-          created_at: tag.createdAt,
-          updated_at: tag.updatedAt,
-        };
-      }),
-    };
+    return UserAdapter.entityToDto(user);
   }
 
   @ApiBearerAuth()
@@ -366,33 +261,7 @@ export class UsersController {
 
     await this.usersService.update(user.id, user);
 
-    return {
-      uuid: user.uuid,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      bannerPicture: user.bannerPicture,
-      profilePicture: user.profilePicture,
-      created_at: user.createdAt,
-      updated_at: user.updatedAt,
-      socialMedia: user.socialMedia.map((socialMedia) => {
-        return {
-          uuid: socialMedia.uuid,
-          type: socialMedia.type,
-          url: socialMedia.url,
-          created_at: socialMedia.createdAt,
-          updated_at: socialMedia.updatedAt,
-        };
-      }),
-      tags: user.tag.map((tag) => {
-        return {
-          uuid: tag.uuid,
-          label: tag.label,
-          created_at: tag.createdAt,
-          updated_at: tag.updatedAt,
-        };
-      }),
-    };
+    return UserAdapter.entityToDto(user);
   }
 
   @ApiBearerAuth()

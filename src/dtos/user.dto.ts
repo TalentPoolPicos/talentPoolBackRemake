@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString, IsUrl } from 'class-validator';
 import { Role } from 'src/common/enums/roles.enum';
-import { Tag } from 'src/entities/tag.entity';
 import { SocialMediaDto } from 'src/socialmedia/dtos/socialmedia.dto';
+import { StudentDto } from 'src/students/dtos/student.dto';
+import { TagDto } from 'src/tags/dtos/tag.dto';
 
 export class UserDto {
   @ApiProperty({
@@ -11,6 +12,18 @@ export class UserDto {
   })
   @IsString({ message: 'UUID must be a string' })
   uuid: string;
+
+  @ApiProperty({
+    type: Date,
+    description: 'The date the user was created',
+  })
+  created_at: Date;
+
+  @ApiProperty({
+    type: Date,
+    description: 'The date the user was last updated',
+  })
+  updated_at: Date;
 
   @ApiProperty({
     type: String,
@@ -60,5 +73,12 @@ export class UserDto {
     type: [String],
     description: 'The tags of the user',
   })
-  tags: Tag[];
+  tags: TagDto[];
+
+  @ApiProperty({
+    type: StudentDto,
+    description: 'The student of the user',
+    required: false,
+  })
+  student?: StudentDto;
 }

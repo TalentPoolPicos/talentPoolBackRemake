@@ -99,7 +99,11 @@ export class UsersService {
   }
 
   async update(id: number, user: User): Promise<User | null> {
-    await this.usersRepository.update(id, user);
+    const userExists = await this.usersRepository.findOne({ where: { id } });
+    if (!userExists) throw new NotFoundException('User not found');
+    Object.assign(userExists, user);
+    userExists.updatedAt = new Date();
+    await this.usersRepository.update(id, userExists);
     return this.usersRepository.findOneBy({ id });
   }
 
