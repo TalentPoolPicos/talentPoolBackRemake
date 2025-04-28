@@ -28,7 +28,7 @@ export class UsersService {
   ) {}
 
   private async loadStudent(user: User): Promise<User> {
-    if (user && user.role === Role.STUDENT.valueOf()) {
+    if (user.role === Role.STUDENT.valueOf()) {
       const student = await this.studentsRepository.findOne({
         where: { user: { id: user.id } },
       });
@@ -164,15 +164,6 @@ export class UsersService {
     });
   }
 
-  async update(id: number, user: User): Promise<User | null> {
-    const userExists = await this.usersRepository.findOne({ where: { id } });
-    if (!userExists) throw new NotFoundException('User not found');
-    Object.assign(userExists, user);
-    userExists.updatedAt = new Date();
-    await this.usersRepository.update(id, userExists);
-    return this.usersRepository.findOneBy({ id });
-  }
-
   // Se os dados não forem passados, eles não serão atualizados.
   // Se o username ou email forem passados, eles somente serão atualizados
   // se forem diferentes dos atuais e não existirem em outro usuário.
@@ -182,10 +173,12 @@ export class UsersService {
     email?: string,
     password?: string,
   ): Promise<User> {
-    const user = await this.usersRepository.findOne({
+    let user = await this.usersRepository.findOne({
       where: { uuid },
+      relations: ['socialMedia', 'tag'],
       cache: true,
     });
+
     if (!user) throw new NotFoundException('User not found');
 
     if (!username && !email && !password)
@@ -215,14 +208,35 @@ export class UsersService {
 
     await this.usersRepository.save(user);
 
+    user = await this.loadStudent(user);
+
     return user;
   }
 
-  async updateProfilePictureName(
+  async updateProfilePicture(
     id: number,
     profilePicture: string,
+    profilePictureUuid: string,
   ): Promise<User | null> {
-    const result = await this.usersRepository.update(id, { profilePicture });
+    const result = await this.usersRepository.update(id, {
+      profilePicture,
+      profilePictureUuid,
+    });
+
+    if (!result.affected) return null;
+
+    return this.usersRepository.findOneBy({ id });
+  }
+
+  async updateBannerPicture(
+    id: number,
+    bannerPicture: string,
+    bannerPictureUuid: string,
+  ): Promise<User | null> {
+    const result = await this.usersRepository.update(id, {
+      bannerPicture,
+      bannerPictureUuid,
+    });
 
     if (!result.affected) return null;
 
