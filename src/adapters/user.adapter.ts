@@ -37,8 +37,8 @@ export class UserAdapter {
       profilePicture: user.profilePicture,
       email: user.email,
       role: this.stringToRole(user.role),
-      created_at: user.createdAt,
-      updated_at: user.updatedAt,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
       socialMedia: user.socialMedia.map((social) =>
         SocialMediaAdapter.entityToDto(social),
       ),

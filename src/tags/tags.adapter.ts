@@ -10,8 +10,8 @@ export class TagsAdapter {
   static entityToDto(tag: Tag): TagDto {
     return {
       uuid: tag.uuid,
-      created_at: tag.createdAt,
-      updated_at: tag.updatedAt,
+      createdAt: tag.createdAt,
+      updatedAt: tag.updatedAt,
       label: tag.label,
     };
   }

@@ -52,13 +52,13 @@ export class StudentDto {
     type: Date,
     description: 'The date the user was created',
   })
-  created_at: Date;
+  createdAt: Date;
 
   @ApiProperty({
     type: Date,
     description: 'The date the user was last updated',
   })
-  updated_at: Date;
+  updatedAt: Date;
 
   @ApiProperty({
     type: Date,

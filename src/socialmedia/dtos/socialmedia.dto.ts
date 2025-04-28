@@ -32,12 +32,12 @@ export class SocialMediaDto {
     description: 'The date the social media was created',
   })
   @IsDate({ message: 'Created at must be a date' })
-  created_at: Date;
+  createdAt: Date;
 
   @ApiProperty({
     type: Date,
     description: 'The date the social media was last updated',
   })
   @IsDate({ message: 'Updated at must be a date' })
-  updated_at: Date;
+  updatedAt: Date;
 }

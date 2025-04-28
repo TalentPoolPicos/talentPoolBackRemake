@@ -42,8 +42,8 @@ export class SocialMediaAdapter {
   static entityToDto(socialMedia: SocialMedia): SocialMediaDto {
     return {
       uuid: socialMedia.uuid,
-      created_at: socialMedia.createdAt,
-      updated_at: socialMedia.updatedAt,
+      createdAt: socialMedia.createdAt,
+      updatedAt: socialMedia.updatedAt,
       type: this.stringToSocialMediaType(socialMedia.type),
       url: socialMedia.url,
     };
