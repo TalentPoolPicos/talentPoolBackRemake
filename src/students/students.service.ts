@@ -24,6 +24,20 @@ export class StudentsService {
     });
   }
 
+  async findByUserId(userId: number): Promise<Student | null> {
+    return this.studentsRepository.findOne({
+      where: { user: { id: userId } },
+      cache: true,
+    });
+  }
+
+  async findByUserUuid(userUuid: string): Promise<Student | null> {
+    return this.studentsRepository.findOne({
+      where: { user: { uuid: userUuid } },
+      cache: true,
+    });
+  }
+
   async findAll(): Promise<Student[]> {
     return this.studentsRepository.find();
   }
@@ -88,10 +102,65 @@ export class StudentsService {
       description?: string;
     },
   ): Promise<Student> {
+    if (Object.keys(student).length === 0) {
+      throw new NotFoundException('No data provided for update');
+    }
+
     const existingStudent = await this.findById(id);
     if (!existingStudent) throw new NotFoundException('Student not found');
     Object.assign(existingStudent, student);
     existingStudent.updatedAt = new Date();
+
+    if (this.checkIfStudentHasMinimumData(existingStudent)) {
+      existingStudent.isComplete = true;
+    }
+
     return this.studentsRepository.save(existingStudent);
+  }
+
+  async updateByUserId(
+    userId: number,
+    student: {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      birthDate?: Date;
+      curriculum?: string;
+      history?: string;
+      lattes?: string;
+      registrationNumber?: string;
+      description?: string;
+    },
+  ): Promise<Student> {
+    if (Object.keys(student).length === 0) {
+      throw new NotFoundException('No data provided for update');
+    }
+    const existingStudent = await this.findByUserId(userId);
+    if (!existingStudent) throw new NotFoundException('Student not found');
+    Object.assign(existingStudent, student);
+    existingStudent.updatedAt = new Date();
+    if (this.checkIfStudentHasMinimumData(existingStudent)) {
+      existingStudent.isComplete = true;
+    }
+
+    return this.studentsRepository.save(existingStudent);
+  }
+
+  /**
+   *
+   * @param student
+   * @returns boolean
+   * @description Verifies if the student has the minimum required data
+   */
+  private checkIfStudentHasMinimumData(student: Student): boolean {
+    const requiredFields = [
+      'name',
+      'birthDate',
+      'email',
+      'registrationNumber',
+      'description',
+    ];
+
+    return requiredFields.every((field) => student[field] !== null);
   }
 }
