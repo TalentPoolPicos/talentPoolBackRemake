@@ -70,7 +70,6 @@ export class AuthService {
         password: cryptPassword,
         role,
       });
-
       return this.signIn(user.username, password);
     } catch (error) {
       if (error instanceof Error) {

@@ -50,15 +50,11 @@ export class User extends BaseEntity {
 
   @OneToOne(() => Student, {
     nullable: true,
-    cascade: true,
-    eager: true,
   })
   student?: Student;
 
   @OneToOne(() => Enterprise, {
     nullable: true,
-    cascade: true,
-    eager: true,
   })
   enterprise?: Enterprise;
 
@@ -66,7 +62,6 @@ export class User extends BaseEntity {
     nullable: true,
     cascade: true,
     eager: true,
-    onDelete: 'CASCADE',
   })
   socialMedia: SocialMedia[];
 
@@ -80,7 +75,6 @@ export class User extends BaseEntity {
     nullable: true,
     cascade: true,
     eager: true,
-    onDelete: 'CASCADE',
   })
   tag: Tag[];
 }

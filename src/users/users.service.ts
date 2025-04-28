@@ -4,11 +4,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/common/enums/roles.enum';
+import { SocialMedia } from 'src/entities/socialmedia.entity';
 import { Student } from 'src/entities/student.entity';
+import { Tag } from 'src/entities/tag.entity';
 import { User } from 'src/entities/user.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
@@ -17,12 +19,18 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Student)
     private readonly studentsRepository: Repository<Student>,
+    @InjectRepository(SocialMedia)
+    private readonly socialMediaRepository: Repository<SocialMedia>,
+    @InjectRepository(Tag)
+    private readonly tagsRepository: Repository<Tag>,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   async findByUsername(username: string): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { username },
-      relations: ['student', 'enterprise', 'socialMedia', 'tag'],
+      relations: ['socialMedia', 'tag'],
       cache: true,
     });
   }
@@ -30,7 +38,7 @@ export class UsersService {
   async findById(id: number): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { id },
-      relations: ['student', 'enterprise', 'socialMedia', 'tag'],
+      relations: ['socialMedia', 'tag'],
       cache: true,
     });
   }
@@ -38,14 +46,14 @@ export class UsersService {
   async findByUuid(uuid: string): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { uuid },
-      relations: ['student', 'enterprise', 'socialMedia', 'tag'],
+      relations: ['socialMedia', 'tag'],
       cache: true,
     });
   }
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find({
-      relations: ['student', 'enterprise', 'socialMedia', 'tag'],
+      relations: ['socialMedia', 'tag'],
       cache: true,
     });
   }
@@ -59,7 +67,7 @@ export class UsersService {
 
     const [users, total] = await this.usersRepository.findAndCount({
       take: limit,
-      relations: ['student', 'enterprise', 'socialMedia', 'tag'],
+      relations: ['socialMedia', 'tag'],
       skip: (page - 1) * limit,
       cache: true,
     });
@@ -67,35 +75,50 @@ export class UsersService {
   }
 
   async checkIfUserExistsByUsername(username: string): Promise<boolean> {
-    const user = await this.usersRepository.findOne({ where: { username } });
-    return !!user;
+    try {
+      const user = await this.usersRepository.findOne({ where: { username } });
+      return !!user;
+    } catch {
+      return false;
+    }
   }
 
   async checkIfUserExistsByEmail(email: string): Promise<boolean> {
-    const user = await this.usersRepository.findOne({ where: { email } });
-    return !!user;
+    try {
+      const user = await this.usersRepository.findOne({ where: { email } });
+      return !!user;
+    } catch {
+      return false;
+    }
   }
 
-  async create(user: {
+  async create(dto: {
     username: string;
     password: string;
     email: string;
     role: Role;
   }): Promise<User> {
-    if (await this.checkIfUserExistsByUsername(user.username))
+    if (await this.checkIfUserExistsByUsername(dto.username))
       throw new ConflictException('username already exists');
 
-    if (await this.checkIfUserExistsByEmail(user.email))
+    if (await this.checkIfUserExistsByEmail(dto.email))
       throw new ConflictException('email already exists');
-    const userEntity = this.usersRepository.create({
-      ...user,
-      student:
-        user.role === Role.STUDENT
-          ? this.studentsRepository.create({})
-          : undefined,
-    });
 
-    return this.usersRepository.save(userEntity);
+    return await this.dataSource.transaction(async (manager) => {
+      const usersRepo = manager.getRepository(User);
+      const studentsRepo = manager.getRepository(Student);
+
+      const user = usersRepo.create(dto);
+      await usersRepo.save(user);
+
+      if (dto.role === Role.STUDENT) {
+        const student = studentsRepo.create({ user });
+        await studentsRepo.save(student);
+        user.student = student;
+      }
+
+      return user;
+    });
   }
 
   async update(id: number, user: User): Promise<User | null> {
@@ -164,6 +187,9 @@ export class UsersService {
   }
 
   async delete(id: number): Promise<void> {
-    await this.usersRepository.delete(id);
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+
+    await this.usersRepository.delete({ id });
   }
 }
