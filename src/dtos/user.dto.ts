@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, IsUrl } from 'class-validator';
+import { IsEmail, IsOptional, IsString, IsUrl } from 'class-validator';
 import { Role } from 'src/common/enums/roles.enum';
 import { SocialMediaDto } from 'src/socialmedia/dtos/socialmedia.dto';
+import { StudentDto } from 'src/students/dtos/student.dto';
 import { TagDto } from 'src/tags/dtos/tag.dto';
 
 export class UserDto {
@@ -73,4 +74,12 @@ export class UserDto {
     description: 'The tags of the user',
   })
   tags: TagDto[];
+
+  @ApiProperty({
+    type: StudentDto,
+    description: 'The student of the user',
+    required: false,
+  })
+  @IsOptional()
+  student?: StudentDto;
 }
