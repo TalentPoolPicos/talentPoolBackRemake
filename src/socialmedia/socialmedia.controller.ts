@@ -20,6 +20,7 @@ import { SocialmediaService } from './socialmedia.service';
 import { CreateSocialMediaDto } from './dtos/create_socialmedia.dto';
 import { CustomRequest } from 'src/auth/interfaces/custon_request';
 import { SocialMediaDto } from './dtos/socialmedia.dto';
+import { SocialMediaAdapter } from './socialmedia.adapter';
 
 @ApiTags('SocialMedia', 'V1')
 @Controller('socialmedia')
@@ -35,13 +36,9 @@ export class SocialmediaController {
   async findAllByUserUuid(@Param('userUuid') uuid: string) {
     const result = await this.socialMediaService.findAllByUserUuid(uuid);
 
-    return result.map((socialMedia) => ({
-      uuid: socialMedia.uuid,
-      type: socialMedia.type,
-      url: socialMedia.url,
-      created_at: socialMedia.createdAt,
-      updated_at: socialMedia.updatedAt,
-    }));
+    return result.map((socialMedia) =>
+      SocialMediaAdapter.entityToDto(socialMedia),
+    );
   }
 
   @ApiBearerAuth()
@@ -59,19 +56,14 @@ export class SocialmediaController {
     const id = req.user.id;
     const result = await this.socialMediaService.add(id, socialMedia);
 
-    return {
-      uuid: result.uuid,
-      type: result.type,
-      url: result.url,
-      created_at: result.createdAt,
-      updated_at: result.updatedAt,
-    };
+    return SocialMediaAdapter.entityToDto(result);
   }
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a social media' })
   @ApiOkResponse({
     description: 'The social media has been successfully deleted',
+    type: SocialMediaDto,
   })
   @ApiNotFoundResponse({
     description: 'The social media could not be found',
@@ -79,9 +71,6 @@ export class SocialmediaController {
   @Delete(':uuid')
   async delete(@Param('uuid') uuid: string) {
     const result = await this.socialMediaService.delete(uuid);
-    return {
-      message: 'Social media deleted successfully',
-      result,
-    };
+    return SocialMediaAdapter.entityToDto(result);
   }
 }
