@@ -1,0 +1,94 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { IsDate, IsEmail, IsString } from 'class-validator';
+
+export class StudentDto {
+  @ApiProperty({
+    type: String,
+    description: 'The uuid of the user',
+  })
+  @IsString({ message: 'UUID must be a string' })
+  uuid: string;
+
+  @ApiProperty({
+    type: Boolean,
+    description: 'The status of the student',
+    required: true,
+  })
+  isCompleted: boolean;
+
+  @ApiProperty({
+    type: String,
+    description: 'The name of the student',
+    required: false,
+  })
+  @IsString({ message: 'Name must be a string' })
+  name?: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'The email of the student',
+    required: false,
+  })
+  @IsEmail({}, { message: 'Email must be a valid email address' })
+  email?: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'The registration number of the student',
+    required: false,
+  })
+  @IsString({ message: 'Registration number must be a string' })
+  registrationNumber?: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'The description of the student',
+    required: false,
+  })
+  @IsString({ message: 'Description must be a string' })
+  description?: string;
+
+  @ApiProperty({
+    type: Date,
+    description: 'The date the user was created',
+  })
+  created_at: Date;
+
+  @ApiProperty({
+    type: Date,
+    description: 'The date the user was last updated',
+  })
+  updated_at: Date;
+
+  @ApiProperty({
+    type: Date,
+    description: 'The date of birth of the student',
+    required: false,
+  })
+  @IsDate({ message: 'Birthdate must be a date' })
+  birthdate?: Date;
+
+  @ApiProperty({
+    type: String,
+    description: 'The url of the curriculum',
+    required: false,
+  })
+  @IsString({ message: 'Curriculum must be a string' })
+  curriculum?: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'The url of the history',
+    required: false,
+  })
+  @IsString({ message: 'History must be a string' })
+  history?: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'The url of the lattes',
+    required: false,
+  })
+  @IsString({ message: 'Lattes must be a string' })
+  lattes?: string;
+}
