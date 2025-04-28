@@ -27,35 +27,71 @@ export class UsersService {
     private readonly dataSource: DataSource,
   ) {}
 
+  private async loadStudent(user: User): Promise<User> {
+    if (user && user.role === Role.STUDENT.valueOf()) {
+      const student = await this.studentsRepository.findOne({
+        where: { user: { id: user.id } },
+      });
+      if (student) {
+        user.student = student;
+      }
+    }
+    return user;
+  }
+
   async findByUsername(username: string): Promise<User | null> {
-    return this.usersRepository.findOne({
+    let user = await this.usersRepository.findOne({
       where: { username },
       relations: ['socialMedia', 'tag'],
       cache: true,
     });
+
+    if (!user) return null;
+
+    user = await this.loadStudent(user);
+
+    return user;
   }
 
   async findById(id: number): Promise<User | null> {
-    return this.usersRepository.findOne({
+    let user = await this.usersRepository.findOne({
       where: { id },
       relations: ['socialMedia', 'tag'],
       cache: true,
     });
+
+    if (!user) return null;
+
+    user = await this.loadStudent(user);
+
+    return user;
   }
 
   async findByUuid(uuid: string): Promise<User | null> {
-    return this.usersRepository.findOne({
+    let user = await this.usersRepository.findOne({
       where: { uuid },
       relations: ['socialMedia', 'tag'],
       cache: true,
     });
+
+    if (!user) return null;
+
+    user = await this.loadStudent(user);
+
+    return user;
   }
 
   async findAll(): Promise<User[]> {
-    return this.usersRepository.find({
+    let users = await this.usersRepository.find({
       relations: ['socialMedia', 'tag'],
       cache: true,
     });
+
+    if (!users) return [];
+
+    users = await Promise.all(users.map((u) => this.loadStudent(u)));
+
+    return users;
   }
 
   async findAndCountAll(
@@ -71,7 +107,14 @@ export class UsersService {
       skip: (page - 1) * limit,
       cache: true,
     });
-    return { users, total };
+
+    if (!users) return { users: [], total: 0 };
+
+    const usersWithStudent = await Promise.all(
+      users.map((user) => this.loadStudent(user)),
+    );
+
+    return { users: usersWithStudent, total };
   }
 
   async checkIfUserExistsByUsername(username: string): Promise<boolean> {
