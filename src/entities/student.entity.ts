@@ -1,5 +1,6 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { User } from './user.entity';
 
 @Entity('students')
 export class Student extends BaseEntity {
@@ -46,4 +47,10 @@ export class Student extends BaseEntity {
     nullable: true,
   })
   description: string;
+
+  @OneToOne(() => User, (user) => user.student, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn()
+  user: User;
 }

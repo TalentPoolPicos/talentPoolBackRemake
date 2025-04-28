@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
+import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Student } from './student.entity';
 import { Enterprise } from './enterprise.entity';
@@ -53,7 +53,6 @@ export class User extends BaseEntity {
     cascade: true,
     eager: true,
   })
-  @JoinColumn()
   student?: Student;
 
   @OneToOne(() => Enterprise, {
@@ -61,10 +60,14 @@ export class User extends BaseEntity {
     cascade: true,
     eager: true,
   })
-  @JoinColumn()
   enterprise?: Enterprise;
 
-  @OneToMany(() => SocialMedia, (socialMedia) => socialMedia.user)
+  @OneToMany(() => SocialMedia, (socialMedia) => socialMedia.user, {
+    nullable: true,
+    cascade: true,
+    eager: true,
+    onDelete: 'CASCADE',
+  })
   socialMedia: SocialMedia[];
 
   /**
@@ -73,6 +76,11 @@ export class User extends BaseEntity {
   @Column({ default: 0 })
   tagsCount: number;
 
-  @OneToMany(() => Tag, (tag) => tag.user)
+  @OneToMany(() => Tag, (tag) => tag.user, {
+    nullable: true,
+    cascade: true,
+    eager: true,
+    onDelete: 'CASCADE',
+  })
   tag: Tag[];
 }

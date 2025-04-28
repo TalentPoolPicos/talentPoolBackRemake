@@ -14,7 +14,9 @@ export class SocialMedia extends BaseEntity {
   @Column({ length: 255 })
   url: string;
 
-  @ManyToOne(() => User, (user) => user.socialMedia)
+  @ManyToOne(() => User, (user) => user.socialMedia, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   user: User;
 }

@@ -7,7 +7,9 @@ export class Tag extends BaseEntity {
   @Column({ length: 20 })
   label: string;
 
-  @ManyToOne(() => User, (user) => user.tag)
+  @ManyToOne(() => User, (user) => user.tag, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   user: User;
 }
