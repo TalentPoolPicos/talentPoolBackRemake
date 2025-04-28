@@ -195,7 +195,11 @@ export class UsersController {
     if (!fileUrl) throw new NotFoundException('Error getting file URL');
     user.profilePicture = fileUrl;
 
-    await this.usersService.update(user.id, user);
+    await this.usersService.updateProfilePicture(
+      user.id,
+      user.profilePicture,
+      user.profilePictureUuid,
+    );
 
     return UserAdapter.entityToDto(user);
   }
@@ -259,7 +263,11 @@ export class UsersController {
     if (!fileUrl) throw new NotFoundException('Error getting file URL');
     user.bannerPicture = fileUrl;
 
-    await this.usersService.update(user.id, user);
+    await this.usersService.updateBannerPicture(
+      user.id,
+      user.bannerPicture,
+      user.bannerPictureUuid,
+    );
 
     return UserAdapter.entityToDto(user);
   }
