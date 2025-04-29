@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -9,10 +10,14 @@ import {
   Patch,
   Query,
   Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -27,6 +32,7 @@ import { StudentAdapter } from './student.adapter';
 import { StudentDto } from './dtos/student.dto';
 import { CustomRequest } from 'src/auth/interfaces/custon_request';
 import { PartialStudentDto } from './dtos/partial_student.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Student')
 @Controller('students')
@@ -114,6 +120,152 @@ export class StudentsController {
     const student = await this.studentsService.updateByUserId(
       userId,
       partialStudentDto,
+    );
+
+    return StudentAdapter.entityToDto(student);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Upload a new curriculum' })
+  @ApiOkResponse({
+    description: 'The curriculum was successfully updated',
+    type: StudentDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Only pdf files are allowed',
+  })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 1024 * 1024 * 5 },
+      fileFilter: (req, file, callback) => {
+        const allowedTypes = [
+          'application/pdf',
+          'application/x-pdf',
+          'application/x-bzpdf',
+          'application/x-gzpdf',
+          'application/pdf; charset=binary',
+        ];
+
+        if (!allowedTypes.includes(file.mimetype)) {
+          return callback(
+            new BadRequestException('Only pdf files are allowed'),
+            false,
+          );
+        }
+
+        callback(null, true);
+      },
+    }),
+  )
+  @ApiBody({
+    required: true,
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @Patch('curriculum')
+  async uploadCurriculum(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: CustomRequest,
+  ) {
+    const userId = req.user.id;
+    const student = await this.studentsService.findByUserId(userId);
+
+    if (!student) throw new NotFoundException('Student not found');
+    if (student.curriculumUuid)
+      await this.filesService.delete(student.curriculumUuid);
+
+    const result = await this.filesService.upload(file);
+    student.curriculumUuid = result.filename;
+
+    const fileUrl = await this.filesService.getUrl(result.filename);
+    if (!fileUrl) throw new NotFoundException('Error getting file URL');
+    student.curriculum = fileUrl;
+
+    await this.studentsService.updateCurriculum(
+      student.id,
+      student.curriculum,
+      student.curriculumUuid,
+    );
+
+    return StudentAdapter.entityToDto(student);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Upload a new history' })
+  @ApiOkResponse({
+    description: 'The history was successfully updated',
+    type: StudentDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Only pdf files are allowed',
+  })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 1024 * 1024 * 5 },
+      fileFilter: (req, file, callback) => {
+        const allowedTypes = [
+          'application/pdf',
+          'application/x-pdf',
+          'application/x-bzpdf',
+          'application/x-gzpdf',
+          'application/pdf; charset=binary',
+        ];
+
+        if (!allowedTypes.includes(file.mimetype)) {
+          return callback(
+            new BadRequestException('Only pdf files are allowed'),
+            false,
+          );
+        }
+
+        callback(null, true);
+      },
+    }),
+  )
+  @ApiBody({
+    required: true,
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @Patch('history')
+  async uploadHistory(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: CustomRequest,
+  ) {
+    const userId = req.user.id;
+    const student = await this.studentsService.findByUserId(userId);
+
+    if (!student) throw new NotFoundException('Student not found');
+    if (student.historyUuid)
+      await this.filesService.delete(student.historyUuid);
+
+    const result = await this.filesService.upload(file);
+    student.historyUuid = result.filename;
+
+    const fileUrl = await this.filesService.getUrl(result.filename);
+    if (!fileUrl) throw new NotFoundException('Error getting file URL');
+    student.history = fileUrl;
+
+    await this.studentsService.updateHitory(
+      student.id,
+      student.history,
+      student.historyUuid,
     );
 
     return StudentAdapter.entityToDto(student);

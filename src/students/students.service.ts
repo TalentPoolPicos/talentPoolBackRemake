@@ -146,6 +146,26 @@ export class StudentsService {
     return this.studentsRepository.save(existingStudent);
   }
 
+  async updateCurriculum(
+    id: number,
+    curriculum: string,
+    curriculumUuid: string,
+  ) {
+    const student = await this.findById(id);
+    if (!student) throw new NotFoundException('Student not found');
+    student.curriculum = curriculum;
+    student.curriculumUuid = curriculumUuid;
+    return this.studentsRepository.save(student);
+  }
+
+  async updateHitory(id: number, history: string, historyUuid: string) {
+    const student = await this.findById(id);
+    if (!student) throw new NotFoundException('Student not found');
+    student.history = history;
+    student.historyUuid = historyUuid;
+    return this.studentsRepository.save(student);
+  }
+
   /**
    *
    * @param student
