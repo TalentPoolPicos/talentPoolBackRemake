@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/common/enums/roles.enum';
+import { Enterprise } from 'src/entities/enterprise.entity';
 import { SocialMedia } from 'src/entities/socialmedia.entity';
 import { Student } from 'src/entities/student.entity';
 import { Tag } from 'src/entities/tag.entity';
@@ -19,6 +20,8 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Student)
     private readonly studentsRepository: Repository<Student>,
+    @InjectRepository(Enterprise)
+    private readonly enterpriseRepository: Repository<Enterprise>,
     @InjectRepository(SocialMedia)
     private readonly socialMediaRepository: Repository<SocialMedia>,
     @InjectRepository(Tag)
@@ -150,6 +153,7 @@ export class UsersService {
     return await this.dataSource.transaction(async (manager) => {
       const usersRepo = manager.getRepository(User);
       const studentsRepo = manager.getRepository(Student);
+      const enterpriseRepo = manager.getRepository(Enterprise);
 
       const user = usersRepo.create(dto);
       await usersRepo.save(user);
@@ -158,6 +162,10 @@ export class UsersService {
         const student = studentsRepo.create({ user });
         await studentsRepo.save(student);
         user.student = student;
+      } else if (dto.role === Role.ENTERPRISE) {
+        const enterprise = enterpriseRepo.create({ user });
+        await enterpriseRepo.save(enterprise);
+        user.enterprise = enterprise;
       }
 
       return user;
