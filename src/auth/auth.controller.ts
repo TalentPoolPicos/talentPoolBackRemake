@@ -37,7 +37,7 @@ export class AuthController {
   })
   @HttpCode(HttpStatus.OK)
   @Post('student/sign-in')
-  signIn(@Body() signInDto: SignInDto) {
+  signInWithStudent(@Body() signInDto: SignInDto) {
     return this.authService.signIn(signInDto.username, signInDto.password);
   }
 
@@ -70,12 +70,73 @@ export class AuthController {
   })
   @HttpCode(HttpStatus.OK)
   @Post('student/sign-up')
-  signUp(@Body() signInDto: SignUpDto) {
+  signUpWithStudent(@Body() signInDto: SignUpDto) {
     return this.authService.signUp(
       signInDto.username,
       signInDto.email,
       signInDto.password,
       Role.STUDENT,
+    );
+  }
+
+  @Public()
+  @ApiTags('Enterprise')
+  @ApiOperation({
+    summary: 'Sign in as a enterprise',
+    description: 'Sign a new user as enterprise.',
+  })
+  @ApiOkResponse({
+    description: 'The enterprise has successfully signed in',
+    type: AccessTokenDto,
+  })
+  @ApiNotFoundResponse({ description: 'The enterprise could not be found' })
+  @ApiUnauthorizedResponse({
+    description: 'The enterprise could not be authenticated',
+  })
+  @HttpCode(HttpStatus.OK)
+  @Post('enterprise/sign-in')
+  signInWithEnterprise(@Body() signInDto: SignInDto) {
+    return this.authService.signIn(signInDto.username, signInDto.password);
+  }
+
+  @Public()
+  @ApiTags('Enterprise')
+  @ApiOperation({
+    summary: 'Sign up as a enterprise',
+    description: 'Create and sign up a new user as enterprise.',
+  })
+  @ApiOkResponse({
+    description: 'The enterprise has successfully signed up',
+    type: AccessTokenDto,
+  })
+  @ApiNotFoundResponse({ description: 'The enterprise could not be found' })
+  @ApiUnauthorizedResponse({
+    description: 'The enterprise could not be authenticated',
+  })
+  @ApiConflictResponse({
+    description:
+      '"The enterprise already exists" or "The email is already in use" or "role is not valid"',
+    schema: {
+      example: {
+        statusCode: HttpStatus.CONFLICT,
+        message: [
+          'The enterprise already exists',
+          'The email is already in use',
+        ],
+      },
+    },
+  })
+  @ApiUnprocessableEntityResponse({
+    description: 'The model state is invalid',
+  })
+  @HttpCode(HttpStatus.OK)
+  @Post('enterprise/sign-up')
+  signUpWithEnterprise(@Body() signInDto: SignUpDto) {
+    return this.authService.signUp(
+      signInDto.username,
+      signInDto.email,
+      signInDto.password,
+      Role.ENTERPRISE,
     );
   }
 
