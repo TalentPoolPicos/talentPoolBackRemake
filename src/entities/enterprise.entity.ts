@@ -10,13 +10,13 @@ export class Enterprise extends BaseEntity {
   @Column({ default: false })
   isComplete: boolean;
 
-  @Column({ length: 100 })
+  @Column({ length: 100, nullable: true })
   name: string;
 
-  @Column({ length: 100 })
+  @Column({ length: 100, nullable: true })
   fantasyName: string;
 
-  @Column({ length: 14 })
+  @Column({ length: 14, nullable: true })
   cnpj: string;
 
   @Column({ nullable: true })
