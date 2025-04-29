@@ -1,5 +1,6 @@
 import { Role } from 'src/common/enums/roles.enum';
 import { UserDto } from 'src/dtos/user.dto';
+import { EnterpriseAdapter } from 'src/enterprise/enterprise.adapter';
 import { User } from 'src/entities/user.entity';
 import { SocialMediaAdapter } from 'src/socialmedia/socialmedia.adapter';
 import { StudentAdapter } from 'src/students/student.adapter';
@@ -45,6 +46,9 @@ export class UserAdapter {
       tags: user.tag.map((tag) => TagsAdapter.entityToDto(tag)),
       ...(user.student
         ? { student: StudentAdapter.entityToDto(user.student) }
+        : {}),
+      ...(user.enterprise
+        ? { enterprise: EnterpriseAdapter.entityToDto(user.enterprise) }
         : {}),
     };
   }
