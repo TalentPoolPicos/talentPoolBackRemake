@@ -4,6 +4,12 @@ import { User } from './user.entity';
 
 @Entity('enterprises')
 export class Enterprise extends BaseEntity {
+  /**
+   * @description Indica se o usuário tem as informações mínimas para ser considerado completo
+   */
+  @Column({ default: false })
+  isComplete: boolean;
+
   @Column({ length: 100 })
   name: string;
 
