@@ -28,7 +28,7 @@ import { StudentDto } from './dtos/student.dto';
 import { CustomRequest } from 'src/auth/interfaces/custon_request';
 import { PartialStudentDto } from './dtos/partial_student.dto';
 
-@ApiTags('Student', 'V1')
+@ApiTags('Student')
 @Controller('students')
 export class StudentsController {
   constructor(
@@ -115,8 +115,6 @@ export class StudentsController {
       userId,
       partialStudentDto,
     );
-
-    console.log('student', student);
 
     return StudentAdapter.entityToDto(student);
   }

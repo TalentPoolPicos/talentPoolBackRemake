@@ -16,7 +16,7 @@ import { RefreshTokenDto } from './dtos/refresh.dto';
 import { Role } from 'src/common/enums/roles.enum';
 import { Public } from './decotaros/public.decorator';
 
-@ApiTags('Auth', 'V1')
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}

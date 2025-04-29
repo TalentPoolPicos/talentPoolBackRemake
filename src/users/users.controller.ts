@@ -39,7 +39,7 @@ import { ConfigService } from '@nestjs/config';
 import { FilesService } from 'src/minio/file.service';
 import { UserAdapter } from 'src/adapters/user.adapter';
 
-@ApiTags('User', 'V1')
+@ApiTags('User')
 @Controller('users')
 export class UsersController {
   constructor(

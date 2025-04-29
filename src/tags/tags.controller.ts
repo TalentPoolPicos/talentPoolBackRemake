@@ -21,7 +21,7 @@ import { CustomRequest } from 'src/auth/interfaces/custon_request';
 import { CreateTagDto } from './dtos/create_tag.dto';
 import { TagsAdapter } from './tags.adapter';
 
-@ApiTags('Tag', 'V1')
+@ApiTags('Tag')
 @Controller('tag')
 export class TagsController {
   constructor(private readonly tagService: TagsService) {}

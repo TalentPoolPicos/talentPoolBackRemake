@@ -22,7 +22,7 @@ import { CustomRequest } from 'src/auth/interfaces/custon_request';
 import { SocialMediaDto } from './dtos/socialmedia.dto';
 import { SocialMediaAdapter } from './socialmedia.adapter';
 
-@ApiTags('SocialMedia', 'V1')
+@ApiTags('SocialMedia')
 @Controller('socialmedia')
 export class SocialmediaController {
   constructor(private readonly socialMediaService: SocialmediaService) {}
