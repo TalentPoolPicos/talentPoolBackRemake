@@ -42,6 +42,18 @@ export class UsersService {
     return user;
   }
 
+  private async loadEnterprise(user: User): Promise<User> {
+    if (user.role === Role.ENTERPRISE.valueOf()) {
+      const enterprise = await this.enterpriseRepository.findOne({
+        where: { user: { id: user.id } },
+      });
+      if (enterprise) {
+        user.enterprise = enterprise;
+      }
+    }
+    return user;
+  }
+
   async findByUsername(username: string): Promise<User | null> {
     let user = await this.usersRepository.findOne({
       where: { username },
@@ -52,6 +64,7 @@ export class UsersService {
     if (!user) return null;
 
     user = await this.loadStudent(user);
+    user = await this.loadEnterprise(user);
 
     return user;
   }
@@ -66,6 +79,7 @@ export class UsersService {
     if (!user) return null;
 
     user = await this.loadStudent(user);
+    user = await this.loadEnterprise(user);
 
     return user;
   }
@@ -80,6 +94,7 @@ export class UsersService {
     if (!user) return null;
 
     user = await this.loadStudent(user);
+    user = await this.loadEnterprise(user);
 
     return user;
   }
@@ -93,6 +108,7 @@ export class UsersService {
     if (!users) return [];
 
     users = await Promise.all(users.map((u) => this.loadStudent(u)));
+    users = await Promise.all(users.map((u) => this.loadEnterprise(u)));
 
     return users;
   }
@@ -116,8 +132,11 @@ export class UsersService {
     const usersWithStudent = await Promise.all(
       users.map((user) => this.loadStudent(user)),
     );
+    const usersWithEnterprise = await Promise.all(
+      usersWithStudent.map((user) => this.loadEnterprise(user)),
+    );
 
-    return { users: usersWithStudent, total };
+    return { users: usersWithEnterprise, total };
   }
 
   async checkIfUserExistsByUsername(username: string): Promise<boolean> {
@@ -217,6 +236,7 @@ export class UsersService {
     await this.usersRepository.save(user);
 
     user = await this.loadStudent(user);
+    user = await this.loadEnterprise(user);
 
     return user;
   }
