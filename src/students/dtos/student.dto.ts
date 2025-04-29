@@ -4,7 +4,7 @@ import { IsDate, IsEmail, IsString } from 'class-validator';
 export class StudentDto {
   @ApiProperty({
     type: String,
-    description: 'The uuid of the user',
+    description: 'The uuid of the student',
   })
   @IsString({ message: 'UUID must be a string' })
   uuid: string;
@@ -50,13 +50,13 @@ export class StudentDto {
 
   @ApiProperty({
     type: Date,
-    description: 'The date the user was created',
+    description: 'The date the student was created',
   })
   createdAt: Date;
 
   @ApiProperty({
     type: Date,
-    description: 'The date the user was last updated',
+    description: 'The date the student was last updated',
   })
   updatedAt: Date;
 
