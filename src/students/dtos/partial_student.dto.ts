@@ -26,24 +26,6 @@ export class PartialStudentDto {
   @ApiProperty({
     type: String,
     required: false,
-    description: 'The student curriculum',
-  })
-  @IsOptional()
-  @IsUrl({}, { message: 'Curriculum must be a valid URL' })
-  curriculum?: string;
-
-  @ApiProperty({
-    type: String,
-    required: false,
-    description: 'The student history',
-  })
-  @IsOptional()
-  @IsUrl({}, { message: 'History must be a valid URL' })
-  history?: string;
-
-  @ApiProperty({
-    type: String,
-    required: false,
     description: 'The student lattes',
   })
   @IsOptional()
