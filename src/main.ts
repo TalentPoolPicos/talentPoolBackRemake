@@ -12,13 +12,20 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
 
   if (process.env.ENV === 'production') {
-    app.enableCors();
+    app.enableCors({
+      origin: [`http://localhost:${process.env.PORT ?? 3000}`],
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept',
+      credentials: true,
+      optionsSuccessStatus: 204,
+    });
   } else {
     const config = new DocumentBuilder()
       .setTitle('API Documentation')
       .setDescription('Interactive API documentation')
       .setVersion('1')
       .addBearerAuth()
+      .addServer('/')
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
@@ -30,7 +37,7 @@ async function bootstrap() {
     SwaggerModule.setup('api', app, document, options);
   }
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT || 3000, '0.0.0.0');
 }
 
 void bootstrap();
