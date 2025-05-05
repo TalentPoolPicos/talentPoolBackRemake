@@ -12,9 +12,6 @@ services:
     restart: always
     env_file:
       - front.dev.env
-    ports:
-      - "${MINIO_PORT}:${MINIO_PORT}"
-      - "${MINIO_CONSOLE_PORT}:${MINIO_CONSOLE_PORT}"
     volumes:
       - minio-data:/bitnami/minio/data
 

@@ -12,9 +12,6 @@ services:
   minio:
     image: bitnami/minio:latest
     restart: always
-    ports:
-      - ${MINIO_PORT}:${MINIO_PORT}
-      - ${MINIO_CONSOLE_PORT}:${MINIO_CONSOLE_PORT}
     env_file:
       - dev.env
     volumes:
