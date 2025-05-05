@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { MINIO_TOKEN } from './minio.decorator';
 import * as Minio from 'minio';
 import { FilesService } from './file.service';
+import { MinioController } from './minio.controller';
 
 @Global()
 @Module({
@@ -14,7 +15,7 @@ import { FilesService } from './file.service';
       useFactory: (configService: ConfigService): Minio.Client => {
         const client = new Minio.Client({
           endPoint: configService.getOrThrow('MINIO_ENDPOINT'),
-          port: +configService.getOrThrow('MINIO_PORT'),
+          port: +configService.getOrThrow('MINIO_API_PORT_NUMBER'),
           accessKey: configService.getOrThrow('MINIO_ACCESS_KEY'),
           secretKey: configService.getOrThrow('MINIO_SECRET_KEY'),
           useSSL: false,
@@ -24,5 +25,6 @@ import { FilesService } from './file.service';
     },
     FilesService,
   ],
+  controllers: [MinioController],
 })
 export class MinioModule {}

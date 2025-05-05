@@ -21,6 +21,16 @@ export class FilesService {
     }
   }
 
+  async getFile(uuid: string): Promise<{
+    stream: NodeJS.ReadableStream;
+    meta: Minio.BucketItemStat;
+  }> {
+    const bucket = 'main';
+    const stream = await this.minioService.getObject(bucket, uuid);
+    const meta = await this.minioService.statObject(bucket, uuid);
+    return { stream, meta };
+  }
+
   async upload(file: Express.Multer.File) {
     const extension = file.originalname.split('.').pop();
     const filename = `${randomUUID().toString()}.${extension}`;
