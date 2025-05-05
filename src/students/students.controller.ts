@@ -128,7 +128,10 @@ export class StudentsController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Upload a new curriculum' })
+  @ApiOperation({
+    summary: 'Upload a new curriculum',
+    description: 'A pdf file is required',
+  })
   @ApiOkResponse({
     description: 'The curriculum was successfully updated',
     type: StudentDto,
@@ -204,7 +207,10 @@ export class StudentsController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Upload a new history' })
+  @ApiOperation({
+    summary: 'Upload a new history',
+    description: 'A pdf file is required',
+  })
   @ApiOkResponse({
     description: 'The history was successfully updated',
     type: StudentDto,

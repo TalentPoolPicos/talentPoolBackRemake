@@ -137,7 +137,10 @@ export class UsersController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Upload a new profile picture' })
+  @ApiOperation({
+    summary: 'Upload a new profile picture',
+    description: 'A image file is required',
+  })
   @ApiOkResponse({
     description: 'The profile picture was successfully updated',
     type: UserDto,
@@ -208,7 +211,10 @@ export class UsersController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Upload a new banner picture' })
+  @ApiOperation({
+    summary: 'Upload a new banner picture',
+    description: 'A image file is required',
+  })
   @ApiOkResponse({
     description: 'The banner picture was successfully updated',
     type: UserDto,
