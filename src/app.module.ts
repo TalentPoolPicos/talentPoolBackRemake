@@ -26,6 +26,7 @@ import { TagsModule } from './tags/tags.module';
       synchronize: process.env.DATABASE_SYNCHRONIZE === 'true', // Set to false in production
     }),
     MinioModule,
+    RouterModule.register([{ path: '/api/v1', module: MinioModule }]),
     UsersModule,
     RouterModule.register([{ path: '/api/v1', module: UsersModule }]),
     AuthModule,
