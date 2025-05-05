@@ -1,4 +1,4 @@
-FROM node:lts-alpine
+FROM node:23-bullseye
 
 WORKDIR /usr/src/app
 
@@ -10,4 +10,4 @@ COPY . .
 
 RUN npm run build
 
-CMD ["npm", "run", "start:dev"]
+CMD ["npm", "run", "start:prod"]
