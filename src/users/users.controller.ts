@@ -193,7 +193,10 @@ export class UsersController {
     const fileUrl = await this.filesService.getUrl(result.filename);
 
     if (!fileUrl) throw new NotFoundException('Error getting file URL');
-    user.profilePicture = fileUrl;
+    // user.profilePicture = fileUrl;
+    user.profilePicture = `http://localhost:${this.configService.get(
+      'PORT',
+    )}/api/v1/minio/${result.filename}`;
 
     await this.usersService.updateProfilePicture(
       user.id,
@@ -261,7 +264,10 @@ export class UsersController {
     const fileUrl = await this.filesService.getUrl(result.filename);
 
     if (!fileUrl) throw new NotFoundException('Error getting file URL');
-    user.bannerPicture = fileUrl;
+    // user.bannerPicture = fileUrl;
+    user.bannerPicture = `http://localhost:${this.configService.get(
+      'PORT',
+    )}/api/v1/minio/${result.filename}`;
 
     await this.usersService.updateBannerPicture(
       user.id,

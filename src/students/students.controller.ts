@@ -33,12 +33,14 @@ import { StudentDto } from './dtos/student.dto';
 import { CustomRequest } from 'src/auth/interfaces/custon_request';
 import { PartialStudentDto } from './dtos/partial_student.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Student')
 @Controller('students')
 export class StudentsController {
   constructor(
     private readonly studentsService: StudentsService,
+    private readonly configService: ConfigService,
     private readonly filesService: FilesService,
   ) {}
 
@@ -187,7 +189,10 @@ export class StudentsController {
 
     const fileUrl = await this.filesService.getUrl(result.filename);
     if (!fileUrl) throw new NotFoundException('Error getting file URL');
-    student.curriculum = fileUrl;
+    // student.curriculum = fileUrl;
+    student.curriculum = `http://localhost:${this.configService.get(
+      'PORT',
+    )}/api/v1/minio/${result.filename}`;
 
     await this.studentsService.updateCurriculum(
       student.id,
@@ -260,7 +265,10 @@ export class StudentsController {
 
     const fileUrl = await this.filesService.getUrl(result.filename);
     if (!fileUrl) throw new NotFoundException('Error getting file URL');
-    student.history = fileUrl;
+    // student.history = fileUrl;
+    student.history = `http://localhost:${this.configService.get(
+      'PORT',
+    )}/api/v1/minio/${result.filename}`;
 
     await this.studentsService.updateHitory(
       student.id,
