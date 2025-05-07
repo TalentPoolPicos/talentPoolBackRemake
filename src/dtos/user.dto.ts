@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsOptional, IsString, IsUrl } from 'class-validator';
 import { Role } from 'src/common/enums/roles.enum';
+import { EnterpriseDto } from 'src/enterprise/dtos/enterprise.dto';
 import { SocialMediaDto } from 'src/socialmedia/dtos/socialmedia.dto';
 import { StudentDto } from 'src/students/dtos/student.dto';
 import { TagDto } from 'src/tags/dtos/tag.dto';
@@ -82,4 +83,12 @@ export class UserDto {
   })
   @IsOptional()
   student?: StudentDto;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    description: 'The enterprise of the user',
+  })
+  @IsOptional()
+  enterprise?: EnterpriseDto;
 }
