@@ -38,7 +38,8 @@ import { CustomRequest } from 'src/auth/interfaces/custon_request';
 import { ConfigService } from '@nestjs/config';
 import { FilesService } from 'src/minio/file.service';
 import { UserAdapter } from 'src/adapters/user.adapter';
-import { SearchInterceptor } from 'src/search/search.interceptor';
+import { SearchUpdateInterceptor } from 'src/search/search_update.interceptor';
+import { SearchDeleteInterceptor } from 'src/search/search_delete.interceptor';
 
 @ApiTags('User')
 @Controller('users')
@@ -118,7 +119,7 @@ export class UsersController {
     description: 'The model state is invalid',
   })
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(SearchInterceptor)
+  @UseInterceptors(SearchUpdateInterceptor)
   @Patch()
   async partialUpdate(
     @Body() partialUserDto: PartialUserDto,
@@ -293,6 +294,7 @@ export class UsersController {
   })
   @ApiNotFoundResponse({ description: 'User not found' })
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(SearchDeleteInterceptor)
   @Delete()
   async delete(@Req() req: CustomRequest) {
     const id = req.user.id;
