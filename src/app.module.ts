@@ -11,6 +11,7 @@ import { StudentsModule } from './students/students.module';
 import { SocialmediaModule } from './socialmedia/socialmedia.module';
 import { MinioModule } from './minio/minio.module';
 import { TagsModule } from './tags/tags.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -39,6 +40,8 @@ import { TagsModule } from './tags/tags.module';
     RouterModule.register([{ path: '/api/v1', module: SocialmediaModule }]),
     TagsModule,
     RouterModule.register([{ path: '/api/v1', module: TagsModule }]),
+    SearchModule,
+    RouterModule.register([{ path: '/api/v1', module: SearchModule }]),
   ],
   controllers: [AppController],
 

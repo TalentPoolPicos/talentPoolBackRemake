@@ -1,0 +1,129 @@
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { ElasticsearchService } from '@nestjs/elasticsearch';
+import { SearchQueryDto } from './dtos/search_query.dto';
+import { UserIndexDto } from './dtos/user_index.dto';
+import { UsersService } from 'src/users/users.service';
+import { UserAdapter } from 'src/adapters/user.adapter';
+import { Role } from 'src/common/enums/roles.enum';
+import { User } from 'src/entities/user.entity';
+import { UserDto } from 'src/dtos/user.dto';
+
+@Injectable()
+export class SearchService {
+  constructor(
+    @Inject() private readonly elasticsearchService: ElasticsearchService,
+    private readonly usersService: UsersService,
+  ) {
+    this.loadIndex().catch(() => {
+      console.error('Error loading index:');
+    });
+  }
+
+  private async loadIndex() {
+    try {
+      await this.elasticsearchService.indices.delete({
+        index: 'users',
+      });
+    } catch {
+      console.error('Error deleting index:');
+    }
+
+    const users = await this.usersService.findAll();
+
+    const usersIndex = users.map((user) => this.userToIndex(user));
+
+    const promises = usersIndex.map((user) => {
+      return this.indexDocument(user.uuid, {
+        name: user.name,
+        username: user.username,
+        tags: user.tags,
+        email: user.email,
+        description: user.description,
+      });
+    });
+
+    await Promise.all(promises);
+  }
+
+  private userToIndex(user: User): {
+    uuid: string;
+    name: string;
+    username: string;
+    tags: string;
+    email: string;
+    description: string;
+  } {
+    const userDto = UserAdapter.entityToDto(user);
+    const name =
+      userDto.role == Role.STUDENT
+        ? userDto.student?.name
+        : userDto.enterprise?.name;
+    const description =
+      userDto.role == Role.STUDENT
+        ? userDto.student?.description
+        : userDto.enterprise?.description;
+    const tags = userDto.tags.map((tag) => tag.label).join(',');
+    const email =
+      userDto.role == Role.STUDENT
+        ? userDto.student?.email
+        : userDto.enterprise?.email;
+    return {
+      uuid: userDto.uuid,
+      name: name || '',
+      username: userDto.username,
+      tags: tags,
+      email: email || '',
+      description: description || '',
+    };
+  }
+
+  async users(
+    query: SearchQueryDto,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<UserDto[]> {
+    if (page < 1) {
+      throw new BadRequestException('Page must be greater than or equal to 1');
+    }
+
+    if (limit > 20) {
+      throw new BadRequestException('Limit must be less than or equal to 20');
+    }
+
+    const result = await this.elasticsearchService.search({
+      index: 'users',
+      from: (page - 1) * limit,
+      size: limit,
+      query: {
+        multi_match: {
+          query: query.searchTerm,
+          fields: ['username', 'tags', 'email', 'description'],
+          fuzziness: 'AUTO',
+          prefix_length: 1,
+          operator: 'or',
+        },
+      },
+    });
+
+    const hits = result.hits.hits
+      .map((hit) => hit._id)
+      .filter((hit) => hit !== undefined);
+
+    const usersPromise = hits.map((uuid) => this.usersService.findByUuid(uuid));
+
+    const users = await Promise.all(usersPromise);
+
+    const usersDto = users
+      .filter((user) => user != null)
+      .map((user) => UserAdapter.entityToDto(user));
+    return usersDto;
+  }
+
+  async indexDocument(id: string, document: UserIndexDto) {
+    return this.elasticsearchService.index({
+      index: 'users',
+      id: id,
+      body: document,
+    });
+  }
+}

@@ -17,8 +17,20 @@ services:
     volumes:
       - minio-data:/bitnami/minio/data
 
+  es:
+    image: bitnami/elasticsearch:latest
+    restart: always
+    env_file:
+      - dev.env
+    ports:
+      - "9200:${ES_PORT}"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+
 volumes:
   postgres-data:
     driver: local
   minio-data:
+    driver: local
+  es-data:
     driver: local
