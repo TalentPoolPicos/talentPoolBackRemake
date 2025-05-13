@@ -25,7 +25,7 @@ import { EnterprisePageDto } from './dtos/enterprise_page.dto';
 import { EnterpriseAdapter } from './enterprise.adapter';
 import { PartialEnterpriseDto } from './dtos/partial_enterprise.dto';
 import { CustomRequest } from 'src/auth/interfaces/custon_request';
-import { SearchInterceptor } from 'src/search/search.interceptor';
+import { SearchUpdateInterceptor } from 'src/search/search_update.interceptor';
 
 @ApiTags('Enterprise')
 @Controller('enterprises')
@@ -106,7 +106,7 @@ export class EnterpriseController {
     description: 'The enterprise was not found',
   })
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(SearchInterceptor)
+  @UseInterceptors(SearchUpdateInterceptor)
   @Patch()
   async partialUpdate(
     @Body() partialStudentDto: PartialEnterpriseDto,

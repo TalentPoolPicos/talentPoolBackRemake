@@ -34,7 +34,7 @@ import { CustomRequest } from 'src/auth/interfaces/custon_request';
 import { PartialStudentDto } from './dtos/partial_student.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
-import { SearchInterceptor } from 'src/search/search.interceptor';
+import { SearchUpdateInterceptor } from 'src/search/search_update.interceptor';
 
 @ApiTags('Student')
 @Controller('students')
@@ -113,7 +113,7 @@ export class StudentsController {
     description: 'The model state is invalid',
   })
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(SearchInterceptor)
+  @UseInterceptors(SearchUpdateInterceptor)
   @Patch()
   async patialUpdate(
     @Body() partialStudentDto: PartialStudentDto,
