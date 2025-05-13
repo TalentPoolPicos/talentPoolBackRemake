@@ -119,6 +119,60 @@ export class SearchService {
     return usersDto;
   }
 
+  async deleteDocument(id: string) {
+    return this.elasticsearchService.delete({
+      index: 'users',
+      id: id,
+    });
+  }
+
+  async updateDocumentByUser(user: User) {
+    const userDto = UserAdapter.entityToDto(user);
+    const name =
+      userDto.role == Role.STUDENT
+        ? userDto.student?.name
+        : userDto.enterprise?.name;
+    const description =
+      userDto.role == Role.STUDENT
+        ? userDto.student?.description
+        : userDto.enterprise?.description;
+    const tags = userDto.tags.map((tag) => tag.label).join(',');
+    const email =
+      userDto.role == Role.STUDENT
+        ? userDto.student?.email
+        : userDto.enterprise?.email;
+
+    return this.indexDocument(user.uuid, {
+      name: name || '',
+      username: user.username,
+      tags: tags,
+      email: email || '',
+      description: description || '',
+    });
+  }
+
+  async updateDocumentByUserUuid(uuid: string) {
+    const user = await this.usersService.findByUuid(uuid);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    return this.updateDocumentByUser(user);
+  }
+
+  createDocumentByUser(user: User) {
+    const userDto = UserAdapter.entityToDto(user);
+    const newIndex = this.userToIndex(user);
+
+    return this.indexDocument(userDto.uuid, {
+      name: newIndex.name,
+      username: newIndex.username,
+      tags: newIndex.tags,
+      email: newIndex.email,
+      description: newIndex.description,
+    });
+  }
+
   async indexDocument(id: string, document: UserIndexDto) {
     return this.elasticsearchService.index({
       index: 'users',
