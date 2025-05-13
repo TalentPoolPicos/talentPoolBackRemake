@@ -10,7 +10,7 @@ import { JwtPayload } from 'src/auth/interfaces/payload';
 import { Request } from 'express';
 
 @Injectable()
-export class SearchInterceptor implements NestInterceptor {
+export class SearchDeleteInterceptor implements NestInterceptor {
   constructor(private readonly searchService: SearchService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
@@ -21,7 +21,7 @@ export class SearchInterceptor implements NestInterceptor {
       tap(() => {
         if (payload.uuid) {
           this.searchService
-            .updateDocumentByUserUuid(payload.uuid)
+            .deleteDocumentbyUserUuid(payload.uuid)
             .catch((error) => {
               console.error('Error updating document:', error);
             });

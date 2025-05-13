@@ -119,10 +119,10 @@ export class SearchService {
     return usersDto;
   }
 
-  async deleteDocument(id: string) {
+  async deleteDocumentbyUserUuid(uuid: string) {
     return this.elasticsearchService.delete({
       index: 'users',
-      id: id,
+      id: uuid,
     });
   }
 
