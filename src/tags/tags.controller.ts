@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Req,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -20,6 +21,7 @@ import { TagDto } from './dtos/tag.dto';
 import { CustomRequest } from 'src/auth/interfaces/custon_request';
 import { CreateTagDto } from './dtos/create_tag.dto';
 import { TagsAdapter } from './tags.adapter';
+import { SearchInterceptor } from 'src/search/search.interceptor';
 
 @ApiTags('Tag')
 @Controller('tag')
@@ -46,6 +48,7 @@ export class TagsController {
     description: 'The tag has been successfully created',
     type: TagDto,
   })
+  @UseInterceptors(SearchInterceptor)
   @Post()
   async create(@Body() tag: CreateTagDto, @Req() req: CustomRequest) {
     const id = req.user.id;
@@ -61,6 +64,7 @@ export class TagsController {
     description: 'The tag has been successfully deleted',
     type: TagDto,
   })
+  @UseInterceptors(SearchInterceptor)
   @Delete(':uuid')
   async delete(@Param('uuid') uuid: string) {
     const result = await this.tagService.deleteByUuid(uuid);

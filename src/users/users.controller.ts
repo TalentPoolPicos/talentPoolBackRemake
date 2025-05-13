@@ -38,6 +38,7 @@ import { CustomRequest } from 'src/auth/interfaces/custon_request';
 import { ConfigService } from '@nestjs/config';
 import { FilesService } from 'src/minio/file.service';
 import { UserAdapter } from 'src/adapters/user.adapter';
+import { SearchInterceptor } from 'src/search/search.interceptor';
 
 @ApiTags('User')
 @Controller('users')
@@ -117,6 +118,7 @@ export class UsersController {
     description: 'The model state is invalid',
   })
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(SearchInterceptor)
   @Patch()
   async partialUpdate(
     @Body() partialUserDto: PartialUserDto,
