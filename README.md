@@ -85,3 +85,11 @@ You can run the application using Docker Compose.
 ```bash
 docker compose -f docker-compose-front-dev.yaml up -d
 ```
+
+### Types generation
+Convert the OpenAPI schema to TypeScript types using the `openapi-typescript` package. This is useful for generating types for your API endpoints, which can help with type safety and autocompletion in your code editor.
+
+To generate types for the application, you can use the following command:
+```bash
+pnpm dlx openapi-typescript http://localhost:3000/api-json -o src/types/api.d.ts
+```
