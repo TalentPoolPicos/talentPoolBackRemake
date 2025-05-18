@@ -491,6 +491,34 @@ export interface components {
       /** @description The url of the lattes */
       lattes?: string;
     };
+    EnterpriseDto: {
+      /** @description The uuid of the enterprise */
+      uuid: string;
+      /**
+       * Format: date-time
+       * @description The date the enterprise was created
+       */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description The date the enterprise was last updated
+       */
+      updatedAt: string;
+      /** @description The status of the enterprise */
+      isCompleted: boolean;
+      /** @description The name of the enterprise */
+      name?: string;
+      /** @description The email of the enterprise */
+      email?: string;
+      /** @description The description of the enterprise */
+      description?: string;
+      /** @description The CNPJ of the enterprise */
+      cnpj?: string;
+      /** @description The social reason of the enterprise */
+      socialReason?: string;
+      /** @description The fantasy name of the enterprise */
+      fantasyName?: string;
+    };
     UserDto: {
       /** @description The uuid of the user */
       uuid: string;
@@ -526,7 +554,7 @@ export interface components {
       /** @description The student of the user */
       student?: components['schemas']['StudentDto'];
       /** @description The enterprise of the user */
-      enterprise?: string;
+      enterprise?: components['schemas']['EnterpriseDto'];
     };
     UsersPageDto: {
       /** @description The list of users */
@@ -595,34 +623,6 @@ export interface components {
     RefreshTokenDto: {
       /** @description The refresh token of the user */
       refreshToken: string;
-    };
-    EnterpriseDto: {
-      /** @description The uuid of the enterprise */
-      uuid: string;
-      /**
-       * Format: date-time
-       * @description The date the enterprise was created
-       */
-      createdAt: string;
-      /**
-       * Format: date-time
-       * @description The date the enterprise was last updated
-       */
-      updatedAt: string;
-      /** @description The status of the enterprise */
-      isCompleted: boolean;
-      /** @description The name of the enterprise */
-      name?: string;
-      /** @description The email of the enterprise */
-      email?: string;
-      /** @description The description of the enterprise */
-      description?: string;
-      /** @description The CNPJ of the enterprise */
-      cnpj?: string;
-      /** @description The social reason of the enterprise */
-      socialReason?: string;
-      /** @description The fantasy name of the enterprise */
-      fantasyName?: string;
     };
     EnterprisePageDto: {
       /** @description The list of enterprises */
@@ -747,21 +747,8 @@ export interface components {
       /**
        * @description The label of the tag
        * @example nodejs
-       * @enum {string}
        */
-      label:
-        | 'x'
-        | 'facebook'
-        | 'instagram'
-        | 'linkedin'
-        | 'youtube'
-        | 'tiktok'
-        | 'github'
-        | 'gitlab'
-        | 'reddit'
-        | 'telegram'
-        | 'whatsapp'
-        | 'discord';
+      label: string;
     };
     CreateTagDto: {
       /**
