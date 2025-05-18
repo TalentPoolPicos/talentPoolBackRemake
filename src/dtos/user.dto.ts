@@ -85,7 +85,7 @@ export class UserDto {
   student?: StudentDto;
 
   @ApiProperty({
-    type: String,
+    type: EnterpriseDto,
     required: false,
     description: 'The enterprise of the user',
   })
