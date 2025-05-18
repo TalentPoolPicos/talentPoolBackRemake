@@ -11,14 +11,19 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
 
+  app.enableCors({
+    origin: [
+      `http://localhost:${process.env.PORT ?? 3000}`,
+      'http://localhost:5173',
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept',
+    credentials: true,
+    optionsSuccessStatus: 204,
+  });
+
   if (process.env.ENV === 'production') {
-    app.enableCors({
-      origin: [`http://localhost:${process.env.PORT ?? 3000}`],
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-      allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept',
-      credentials: true,
-      optionsSuccessStatus: 204,
-    });
+    //
   } else {
     const config = new DocumentBuilder()
       .setTitle('API Documentation')
