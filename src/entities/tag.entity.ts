@@ -4,7 +4,7 @@ import { User } from './user.entity';
 
 @Entity('tag')
 export class Tag extends BaseEntity {
-  @Column({ length: 20 })
+  @Column({ length: 40 })
   label: string;
 
   @ManyToOne(() => User, (user) => user.tag, {
