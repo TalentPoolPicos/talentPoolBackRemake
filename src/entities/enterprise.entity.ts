@@ -1,6 +1,7 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
+import { Match } from './match.entity';
 
 @Entity('enterprises')
 export class Enterprise extends BaseEntity {
@@ -16,7 +17,7 @@ export class Enterprise extends BaseEntity {
   @Column({ length: 100, nullable: true })
   fantasyName: string;
 
-  @Column({ length: 14, nullable: true })
+  @Column({ length: 18, nullable: true })
   cnpj: string;
 
   @Column({ nullable: true })
@@ -33,4 +34,7 @@ export class Enterprise extends BaseEntity {
   })
   @JoinColumn()
   user: User;
+
+  @OneToMany(() => Match, (match) => match.userEnterprise)
+  matches: Match[];
 }
