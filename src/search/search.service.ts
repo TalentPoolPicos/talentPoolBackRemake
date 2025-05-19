@@ -90,17 +90,36 @@ export class SearchService {
       throw new BadRequestException('Limit must be less than or equal to 20');
     }
 
+    const term = query.searchTerm.toLowerCase();
     const result = await this.elasticsearchService.search({
       index: 'users',
       from: (page - 1) * limit,
       size: limit,
       query: {
-        multi_match: {
-          query: query.searchTerm,
-          fields: ['username', 'tags', 'email', 'description'],
-          fuzziness: 'AUTO',
-          prefix_length: 1,
-          operator: 'or',
+        bool: {
+          should: [
+            {
+              multi_match: {
+                query: term,
+                fields: ['username^3', 'tags^2', 'email', 'description'],
+                fuzziness: 'AUTO',
+                prefix_length: 3,
+                minimum_should_match: '60%',
+                type: 'bool_prefix',
+              },
+            },
+            {
+              wildcard: {
+                username: { value: `*${term}*`, case_insensitive: true },
+              },
+            },
+            {
+              wildcard: {
+                email: { value: `*${term}*`, case_insensitive: true },
+              },
+            },
+          ],
+          minimum_should_match: 1,
         },
       },
     });
