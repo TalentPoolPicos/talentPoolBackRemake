@@ -194,10 +194,7 @@ export class StudentsController {
 
     const fileUrl = await this.filesService.getUrl(result.filename);
     if (!fileUrl) throw new NotFoundException('Error getting file URL');
-    // student.curriculum = fileUrl;
-    student.curriculum = `http://localhost:${this.configService.get(
-      'PORT',
-    )}/api/v1/minio/${result.filename}`;
+    student.curriculum = fileUrl;
 
     await this.studentsService.updateCurriculum(
       student.id,
@@ -273,10 +270,7 @@ export class StudentsController {
 
     const fileUrl = await this.filesService.getUrl(result.filename);
     if (!fileUrl) throw new NotFoundException('Error getting file URL');
-    // student.history = fileUrl;
-    student.history = `http://localhost:${this.configService.get(
-      'PORT',
-    )}/api/v1/minio/${result.filename}`;
+    student.history = fileUrl;
 
     await this.studentsService.updateHitory(
       student.id,
