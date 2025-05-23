@@ -754,21 +754,8 @@ export interface components {
       /**
        * @description The label of the tag
        * @example nodejs
-       * @enum {string}
        */
-      label:
-        | 'x'
-        | 'facebook'
-        | 'instagram'
-        | 'linkedin'
-        | 'youtube'
-        | 'tiktok'
-        | 'github'
-        | 'gitlab'
-        | 'reddit'
-        | 'telegram'
-        | 'whatsapp'
-        | 'discord';
+      label: string;
     };
   };
   responses: never;
