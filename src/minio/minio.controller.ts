@@ -21,7 +21,7 @@ export class MinioController {
   })
   @Get(':uuid')
   async getFile(@Param('uuid') uuid: string): Promise<StreamableFile> {
-    const url = await this.fileService.getUrl(uuid);
+    const url = await this.fileService.getMinIOUrl(uuid);
 
     if (!url) {
       throw new NotFoundException(`File with UUID ${uuid} not found`);

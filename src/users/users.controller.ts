@@ -196,10 +196,7 @@ export class UsersController {
     const result = await this.filesService.upload(file);
 
     user.profilePictureUuid = result.filename;
-    const fileUrl = await this.filesService.getUrl(result.filename);
-
-    if (!fileUrl) throw new NotFoundException('Error getting file URL');
-    user.profilePicture = fileUrl;
+    user.profilePicture = this.filesService.getUrl(result.filename);
 
     await this.usersService.updateProfilePicture(
       user.id,
@@ -267,10 +264,7 @@ export class UsersController {
     const result = await this.filesService.upload(file);
 
     user.bannerPictureUuid = result.filename;
-    const fileUrl = await this.filesService.getUrl(result.filename);
-
-    if (!fileUrl) throw new NotFoundException('Error getting file URL');
-    user.bannerPicture = fileUrl;
+    user.bannerPicture = this.filesService.getUrl(result.filename);
 
     await this.usersService.updateBannerPicture(
       user.id,

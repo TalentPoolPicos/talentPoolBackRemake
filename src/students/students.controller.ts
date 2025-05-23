@@ -191,10 +191,7 @@ export class StudentsController {
 
     const result = await this.filesService.upload(file);
     student.curriculumUuid = result.filename;
-
-    const fileUrl = await this.filesService.getUrl(result.filename);
-    if (!fileUrl) throw new NotFoundException('Error getting file URL');
-    student.curriculum = fileUrl;
+    student.curriculum = this.filesService.getUrl(result.filename);
 
     await this.studentsService.updateCurriculum(
       student.id,
@@ -267,10 +264,7 @@ export class StudentsController {
 
     const result = await this.filesService.upload(file);
     student.historyUuid = result.filename;
-
-    const fileUrl = await this.filesService.getUrl(result.filename);
-    if (!fileUrl) throw new NotFoundException('Error getting file URL');
-    student.history = fileUrl;
+    student.history = this.filesService.getUrl(result.filename);
 
     await this.studentsService.updateHitory(
       student.id,
