@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import * as Minio from 'minio';
 import { InjectMinio } from 'src/minio/minio.decorator';
@@ -7,13 +8,20 @@ import { InjectMinio } from 'src/minio/minio.decorator';
 export class FilesService {
   protected _bucketName = 'main';
 
-  constructor(@InjectMinio() private readonly minioService: Minio.Client) {}
+  constructor(
+    @InjectMinio() private readonly minioService: Minio.Client,
+    private readonly configService: ConfigService,
+  ) {}
 
   async bucketsList() {
     return await this.minioService.listBuckets();
   }
 
-  async getUrl(filename: string): Promise<string | null> {
+  getUrl(filename: string): string {
+    return `${this.configService.get('MINIO_SERVER_URL')}/api/v1/minio/${filename}`;
+  }
+
+  async getMinIOUrl(filename: string): Promise<string | null> {
     try {
       return this.minioService.presignedUrl('GET', this._bucketName, filename);
     } catch {
