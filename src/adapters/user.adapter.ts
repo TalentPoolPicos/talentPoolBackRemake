@@ -1,3 +1,4 @@
+import { AddressAdapter } from 'src/address/address.adapter';
 import { Role } from 'src/common/enums/roles.enum';
 import { UserDto } from 'src/dtos/user.dto';
 import { EnterpriseAdapter } from 'src/enterprise/enterprise.adapter';
@@ -34,8 +35,8 @@ export class UserAdapter {
     return {
       uuid: user.uuid,
       username: user.username,
-      bannerPicture: user.bannerPicture,
-      profilePicture: user.profilePicture,
+      bannerPicture: user.bannerPicture ? user.bannerPicture : null,
+      profilePicture: user.profilePicture ? user.profilePicture : null,
       email: user.email,
       role: this.stringToRole(user.role),
       createdAt: user.createdAt,
@@ -43,6 +44,7 @@ export class UserAdapter {
       socialMedia: user.socialMedia.map((social) =>
         SocialMediaAdapter.entityToDto(social),
       ),
+      address: user.address ? AddressAdapter.entityToDto(user.address) : null,
       tags: user.tag.map((tag) => TagsAdapter.entityToDto(tag)),
       ...(user.student
         ? { student: StudentAdapter.entityToDto(user.student) }
