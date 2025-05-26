@@ -21,7 +21,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/minio/{uuid}': {
+  '/minio/{uuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -41,7 +41,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/users': {
+  '/users': {
     parameters: {
       query?: never;
       header?: never;
@@ -63,7 +63,7 @@ export interface paths {
     patch: operations['UsersController_partialUpdate'];
     trace?: never;
   };
-  '/api/v1/users/{uuid}': {
+  '/users/{uuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -80,7 +80,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/users/profile-picture': {
+  '/users/profile-picture': {
     parameters: {
       query?: never;
       header?: never;
@@ -88,59 +88,59 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
     /**
      * Upload a new profile picture
      * @description A image file is required
      */
-    patch: operations['UsersController_uploadProfilePicture'];
-    trace?: never;
-  };
-  '/api/v1/users/banner-picture': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
+    put: operations['UsersController_uploadProfilePicture'];
     post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Upload a new banner picture
-     * @description A image file is required
-     */
-    patch: operations['UsersController_uploadBannerPicture'];
-    trace?: never;
-  };
-  '/api/v1/auth/student/sign-in': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Sign in as a student
-     * @description Sign a new user as student.
-     */
-    post: operations['AuthController_signInWithStudent'];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  '/api/v1/auth/student/sign-up': {
+  '/users/banner-picture': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Upload a new banner picture
+     * @description A image file is required
+     */
+    put: operations['UsersController_uploadBannerPicture'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/sign-in': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Sign in as a student or enterprise
+     * @description Sign a new user as student or enterprise.
+     */
+    post: operations['AuthController_signIn'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/student/sign-up': {
     parameters: {
       query?: never;
       header?: never;
@@ -160,27 +160,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/auth/enterprise/sign-in': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Sign in as a enterprise
-     * @description Sign a new user as enterprise.
-     */
-    post: operations['AuthController_signInWithEnterprise'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/enterprise/sign-up': {
+  '/auth/enterprise/sign-up': {
     parameters: {
       query?: never;
       header?: never;
@@ -200,7 +180,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/auth/refresh': {
+  '/auth/refresh': {
     parameters: {
       query?: never;
       header?: never;
@@ -217,7 +197,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/enterprises': {
+  '/enterprises': {
     parameters: {
       query?: never;
       header?: never;
@@ -238,7 +218,7 @@ export interface paths {
     patch: operations['EnterpriseController_partialUpdate'];
     trace?: never;
   };
-  '/api/v1/enterprises/{uuid}': {
+  '/enterprises/{uuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -255,7 +235,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/students': {
+  '/students': {
     parameters: {
       query?: never;
       header?: never;
@@ -276,7 +256,7 @@ export interface paths {
     patch: operations['StudentsController_patialUpdate'];
     trace?: never;
   };
-  '/api/v1/students/{uuid}': {
+  '/students/{uuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -293,7 +273,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/students/curriculum': {
+  '/students/curriculum': {
     parameters: {
       query?: never;
       header?: never;
@@ -301,19 +281,19 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
     /**
      * Upload a new curriculum
      * @description A pdf file is required
      */
-    patch: operations['StudentsController_uploadCurriculum'];
+    put: operations['StudentsController_uploadCurriculum'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
-  '/api/v1/students/history': {
+  '/students/history': {
     parameters: {
       query?: never;
       header?: never;
@@ -321,19 +301,19 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
     /**
      * Upload a new history
      * @description A pdf file is required
      */
-    patch: operations['StudentsController_uploadHistory'];
+    put: operations['StudentsController_uploadHistory'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
-  '/api/v1/socialmedia/{userUuid}': {
+  '/socialmedia/{userUuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -350,7 +330,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/socialmedia': {
+  '/socialmedia': {
     parameters: {
       query?: never;
       header?: never;
@@ -367,7 +347,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/socialmedia/{uuid}': {
+  '/socialmedia/{uuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -384,7 +364,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/tag/{userUuid}': {
+  '/tag/{userUuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -401,7 +381,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/tag': {
+  '/tag': {
     parameters: {
       query?: never;
       header?: never;
@@ -418,7 +398,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/tag/{uuid}': {
+  '/tag/{uuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -435,7 +415,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/search/{query}': {
+  '/search/{query}': {
     parameters: {
       query?: never;
       header?: never;
@@ -452,10 +432,83 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/address/{userUuid}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get address by user */
+    get: operations['AddressController_findByUserUuid'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/address': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create or update address by user */
+    post: operations['AddressController_createOrUpdateAddress'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    AddressDto: {
+      /** @description The uuid of the address */
+      uuid: string;
+      /**
+       * Format: date-time
+       * @description The date the address was created
+       */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description The date the address was last updated
+       */
+      updatedAt: string;
+      /**
+       * @description The zip code of the address
+       * @example 12345-678
+       */
+      zipCode: string;
+      /**
+       * @description The street of the address
+       * @example Street Exemplo
+       */
+      street?: string | null;
+      /**
+       * @description The neighborhood of the address
+       * @example Neighborhood Exemplo
+       */
+      neighborhood?: string | null;
+      /**
+       * @description The city of the address
+       * @example City Exemplo
+       */
+      city?: string | null;
+      /**
+       * @description The state of the address
+       * @example State Exemplo
+       */
+      state?: string | null;
+    };
     StudentDto: {
       /** @description The uuid of the student */
       uuid: string;
@@ -547,6 +600,8 @@ export interface components {
       profilePicture?: string;
       /** @description The banner picture of the user */
       bannerPicture?: string;
+      /** @description The address of the user */
+      address?: components['schemas']['AddressDto'] | null;
       /** @description The social media of the user */
       socialMedia: string[];
       /** @description The tags of the user */
@@ -756,6 +811,33 @@ export interface components {
        * @example nodejs
        */
       label: string;
+    };
+    CreateOrUpdateAddressDto: {
+      /**
+       * @description The zip code of the address
+       * @example 12345-678
+       */
+      zipCode?: string;
+      /**
+       * @description The street of the address
+       * @example Street Exemplo
+       */
+      street?: string | null;
+      /**
+       * @description The neighborhood of the address
+       * @example Neighborhood Exemplo
+       */
+      neighborhood?: string | null;
+      /**
+       * @description The city of the address
+       * @example City Exemplo
+       */
+      city?: string | null;
+      /**
+       * @description The state of the address
+       * @example State Exemplo
+       */
+      state?: string | null;
     };
   };
   responses: never;
@@ -995,7 +1077,7 @@ export interface operations {
       };
     };
   };
-  AuthController_signInWithStudent: {
+  AuthController_signIn: {
     parameters: {
       query?: never;
       header?: never;
@@ -1008,7 +1090,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description The student has successfully signed in */
+      /** @description The user has successfully signed in */
       200: {
         headers: {
           [name: string]: unknown;
@@ -1017,14 +1099,14 @@ export interface operations {
           'application/json': components['schemas']['AccessTokenDto'];
         };
       };
-      /** @description The student could not be authenticated */
+      /** @description The user could not be authenticated */
       401: {
         headers: {
           [name: string]: unknown;
         };
         content?: never;
       };
-      /** @description The student could not be found */
+      /** @description The user could not be found */
       404: {
         headers: {
           [name: string]: unknown;
@@ -1080,44 +1162,6 @@ export interface operations {
       };
       /** @description The model state is invalid */
       422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  AuthController_signInWithEnterprise: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['SignInDto'];
-      };
-    };
-    responses: {
-      /** @description The enterprise has successfully signed in */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['AccessTokenDto'];
-        };
-      };
-      /** @description The enterprise could not be authenticated */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description The enterprise could not be found */
-      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -1649,6 +1693,52 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['UserDto'][];
+        };
+      };
+    };
+  };
+  AddressController_findByUserUuid: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The address of the user */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AddressDto'];
+        };
+      };
+    };
+  };
+  AddressController_createOrUpdateAddress: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateOrUpdateAddressDto'];
+      };
+    };
+    responses: {
+      /** @description The address of the user has been created or updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AddressDto'];
         };
       };
     };
