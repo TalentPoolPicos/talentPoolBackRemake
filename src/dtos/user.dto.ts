@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsOptional, IsString, IsUrl } from 'class-validator';
+import { AddressDto } from 'src/address/dtos/address.dto';
 import { Role } from 'src/common/enums/roles.enum';
 import { EnterpriseDto } from 'src/enterprise/dtos/enterprise.dto';
 import { SocialMediaDto } from 'src/socialmedia/dtos/socialmedia.dto';
@@ -53,7 +54,7 @@ export class UserDto {
     description: 'The profile picture of the user',
   })
   @IsUrl({}, { message: 'Profile picture must be a valid URL' })
-  profilePicture?: string;
+  profilePicture: string | null;
 
   @ApiProperty({
     type: String,
@@ -61,7 +62,15 @@ export class UserDto {
     description: 'The banner picture of the user',
   })
   @IsUrl({}, { message: 'Banner picture must be a valid URL' })
-  bannerPicture?: string;
+  bannerPicture: string | null;
+
+  @ApiProperty({
+    type: AddressDto,
+    required: false,
+    description: 'The address of the user',
+    nullable: true,
+  })
+  address: AddressDto | null;
 
   @ApiProperty({
     type: [String],
