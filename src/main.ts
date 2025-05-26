@@ -10,6 +10,8 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
+  app.setGlobalPrefix('api');
+  app.enableShutdownHooks();
 
   app.enableCors({
     origin: '*',
@@ -36,7 +38,7 @@ async function bootstrap() {
       explorer: true,
       customCss: theme.getBuffer(SwaggerThemeNameEnum.DRACULA),
     };
-    SwaggerModule.setup('api', app, document, options);
+    SwaggerModule.setup('doc', app, document, options);
   }
 
   await app.listen(process.env.PORT || 3000, '0.0.0.0');
