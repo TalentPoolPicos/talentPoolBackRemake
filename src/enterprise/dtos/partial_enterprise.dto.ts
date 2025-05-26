@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString } from 'class-validator';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 
 export class PartialEnterpriseDto {
   @ApiProperty({
@@ -7,6 +7,7 @@ export class PartialEnterpriseDto {
     description: 'The name of the enterprise',
     required: false,
   })
+  @IsOptional()
   @IsString({ message: 'Name must be a string' })
   name?: string;
 
@@ -15,6 +16,7 @@ export class PartialEnterpriseDto {
     description: 'The email of the enterprise',
     required: false,
   })
+  @IsOptional()
   @IsEmail({}, { message: 'Email must be a valid email address' })
   email?: string;
 
@@ -23,6 +25,7 @@ export class PartialEnterpriseDto {
     description: 'The description of the enterprise',
     required: false,
   })
+  @IsOptional()
   @IsString({ message: 'Description must be a string' })
   description?: string;
 
@@ -31,6 +34,7 @@ export class PartialEnterpriseDto {
     description: 'The CNPJ of the enterprise',
     required: false,
   })
+  @IsOptional()
   cnpj?: string;
 
   @ApiProperty({
@@ -38,6 +42,7 @@ export class PartialEnterpriseDto {
     description: 'The social reason of the enterprise',
     required: false,
   })
+  @IsOptional()
   @IsString({ message: 'Social reason must be a string' })
   socialReason?: string;
 
@@ -46,6 +51,7 @@ export class PartialEnterpriseDto {
     description: 'The fantasy name of the enterprise',
     required: false,
   })
+  @IsOptional()
   @IsString({ message: 'Fantasy name must be a string' })
   fantasyName?: string;
 }
