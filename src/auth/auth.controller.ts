@@ -22,22 +22,21 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Public()
-  @ApiTags('Student')
   @ApiOperation({
-    summary: 'Sign in as a student',
-    description: 'Sign a new user as student.',
+    summary: 'Sign in as a student or enterprise',
+    description: 'Sign a new user as student or enterprise.',
   })
   @ApiOkResponse({
-    description: 'The student has successfully signed in',
+    description: 'The user has successfully signed in',
     type: AccessTokenDto,
   })
-  @ApiNotFoundResponse({ description: 'The student could not be found' })
+  @ApiNotFoundResponse({ description: 'The user could not be found' })
   @ApiUnauthorizedResponse({
-    description: 'The student could not be authenticated',
+    description: 'The user could not be authenticated',
   })
   @HttpCode(HttpStatus.OK)
-  @Post('student/sign-in')
-  signInWithStudent(@Body() signInDto: SignInDto) {
+  @Post('sign-in')
+  signIn(@Body() signInDto: SignInDto) {
     return this.authService.signIn(signInDto.username, signInDto.password);
   }
 
@@ -77,26 +76,6 @@ export class AuthController {
       signInDto.password,
       Role.STUDENT,
     );
-  }
-
-  @Public()
-  @ApiTags('Enterprise')
-  @ApiOperation({
-    summary: 'Sign in as a enterprise',
-    description: 'Sign a new user as enterprise.',
-  })
-  @ApiOkResponse({
-    description: 'The enterprise has successfully signed in',
-    type: AccessTokenDto,
-  })
-  @ApiNotFoundResponse({ description: 'The enterprise could not be found' })
-  @ApiUnauthorizedResponse({
-    description: 'The enterprise could not be authenticated',
-  })
-  @HttpCode(HttpStatus.OK)
-  @Post('enterprise/sign-in')
-  signInWithEnterprise(@Body() signInDto: SignInDto) {
-    return this.authService.signIn(signInDto.username, signInDto.password);
   }
 
   @Public()
