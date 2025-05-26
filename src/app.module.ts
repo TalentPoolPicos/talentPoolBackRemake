@@ -11,6 +11,7 @@ import { SocialmediaModule } from './socialmedia/socialmedia.module';
 import { MinioModule } from './minio/minio.module';
 import { TagsModule } from './tags/tags.module';
 import { SearchModule } from './search/search.module';
+import { AddressModule } from './address/address.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { SearchModule } from './search/search.module';
     SocialmediaModule,
     TagsModule,
     SearchModule,
+    AddressModule,
   ],
   controllers: [AppController],
 
