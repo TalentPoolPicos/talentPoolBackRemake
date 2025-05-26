@@ -8,6 +8,7 @@ import {
   NotFoundException,
   Param,
   Patch,
+  Put,
   Query,
   Req,
   UploadedFile,
@@ -177,7 +178,7 @@ export class StudentsController {
       },
     },
   })
-  @Patch('curriculum')
+  @Put('curriculum')
   async uploadCurriculum(
     @UploadedFile() file: Express.Multer.File,
     @Req() req: CustomRequest,
@@ -250,7 +251,7 @@ export class StudentsController {
       },
     },
   })
-  @Patch('history')
+  @Put('history')
   async uploadHistory(
     @UploadedFile() file: Express.Multer.File,
     @Req() req: CustomRequest,

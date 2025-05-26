@@ -9,6 +9,7 @@ import {
   NotFoundException,
   Param,
   Patch,
+  Put,
   Query,
   Req,
   UploadedFile,
@@ -181,7 +182,7 @@ export class UsersController {
       },
     },
   })
-  @Patch('profile-picture')
+  @Put('profile-picture')
   async uploadProfilePicture(
     @UploadedFile() file: Express.Multer.File,
     @Req() req: CustomRequest,
@@ -249,7 +250,7 @@ export class UsersController {
       },
     },
   })
-  @Patch('banner-picture')
+  @Put('banner-picture')
   async uploadBannerPicture(
     @UploadedFile() file: Express.Multer.File,
     @Req() req: CustomRequest,
