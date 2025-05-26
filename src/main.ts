@@ -27,9 +27,10 @@ async function bootstrap() {
     const config = new DocumentBuilder()
       .setTitle('API Documentation')
       .setDescription('Interactive API documentation')
-      .setVersion('1')
+      .setVersion('2')
       .addBearerAuth()
       .addServer('/')
+      .addServer('v2')
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
