@@ -57,7 +57,7 @@ export class UsersService {
   async findByUsername(username: string): Promise<User | null> {
     let user = await this.usersRepository.findOne({
       where: { username },
-      relations: ['socialMedia', 'tag'],
+      relations: ['socialMedia', 'tag', 'address'],
       cache: true,
     });
 
@@ -72,7 +72,7 @@ export class UsersService {
   async findById(id: number): Promise<User | null> {
     let user = await this.usersRepository.findOne({
       where: { id },
-      relations: ['socialMedia', 'tag'],
+      relations: ['socialMedia', 'tag', 'address'],
       cache: true,
     });
 
@@ -87,7 +87,7 @@ export class UsersService {
   async findByUuid(uuid: string): Promise<User | null> {
     let user = await this.usersRepository.findOne({
       where: { uuid },
-      relations: ['socialMedia', 'tag'],
+      relations: ['socialMedia', 'tag', 'address'],
       cache: true,
     });
 
@@ -101,7 +101,7 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     let users = await this.usersRepository.find({
-      relations: ['socialMedia', 'tag'],
+      relations: ['socialMedia', 'tag', 'address'],
       cache: true,
     });
 
@@ -122,7 +122,7 @@ export class UsersService {
 
     const [users, total] = await this.usersRepository.findAndCount({
       take: limit,
-      relations: ['socialMedia', 'tag'],
+      relations: ['socialMedia', 'tag', 'address'],
       skip: (page - 1) * limit,
       cache: true,
     });
@@ -202,7 +202,7 @@ export class UsersService {
   ): Promise<User> {
     let user = await this.usersRepository.findOne({
       where: { uuid },
-      relations: ['socialMedia', 'tag'],
+      relations: ['socialMedia', 'tag', 'address'],
       cache: true,
     });
 
