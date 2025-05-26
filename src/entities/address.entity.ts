@@ -1,5 +1,6 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { User } from './user.entity';
 
 @Entity('addresses')
 export class Address extends BaseEntity {
@@ -32,4 +33,10 @@ export class Address extends BaseEntity {
    */
   @Column({ length: 100, nullable: true })
   state: string;
+
+  @OneToOne(() => User, (user) => user.address, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn()
+  user: User;
 }

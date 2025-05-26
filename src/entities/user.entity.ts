@@ -5,6 +5,7 @@ import { Enterprise } from './enterprise.entity';
 import { Role } from 'src/common/enums/roles.enum';
 import { SocialMedia } from './socialmedia.entity';
 import { Tag } from './tag.entity';
+import { Address } from './address.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -77,4 +78,11 @@ export class User extends BaseEntity {
     eager: true,
   })
   tag: Tag[];
+
+  @OneToOne(() => Address, (address) => address.user, {
+    nullable: true,
+    cascade: true,
+    eager: true,
+  })
+  address?: Address | null;
 }
