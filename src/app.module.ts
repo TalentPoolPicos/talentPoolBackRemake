@@ -5,7 +5,6 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { RouterModule } from '@nestjs/core';
 import { EnterpriseModule } from './enterprise/enterprise.module';
 import { StudentsModule } from './students/students.module';
 import { SocialmediaModule } from './socialmedia/socialmedia.module';
@@ -27,21 +26,13 @@ import { SearchModule } from './search/search.module';
       synchronize: process.env.DATABASE_SYNCHRONIZE === 'true', // Set to false in production
     }),
     MinioModule,
-    RouterModule.register([{ path: '/api/v2', module: MinioModule }]),
     UsersModule,
-    RouterModule.register([{ path: '/api/v2', module: UsersModule }]),
     AuthModule,
-    RouterModule.register([{ path: '/api/v2', module: AuthModule }]),
     EnterpriseModule,
-    RouterModule.register([{ path: '/api/v2', module: EnterpriseModule }]),
     StudentsModule,
-    RouterModule.register([{ path: '/api/v2', module: StudentsModule }]),
     SocialmediaModule,
-    RouterModule.register([{ path: '/api/v2', module: SocialmediaModule }]),
     TagsModule,
-    RouterModule.register([{ path: '/api/v2', module: TagsModule }]),
     SearchModule,
-    RouterModule.register([{ path: '/api/v2', module: SearchModule }]),
   ],
   controllers: [AppController],
 
