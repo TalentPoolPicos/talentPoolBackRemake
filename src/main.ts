@@ -10,7 +10,7 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api/v2');
   app.enableShutdownHooks();
 
   app.enableCors({
@@ -30,7 +30,6 @@ async function bootstrap() {
       .setVersion('2')
       .addBearerAuth()
       .addServer('/')
-      .addServer('v2')
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
