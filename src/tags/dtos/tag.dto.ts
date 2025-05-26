@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsString } from 'class-validator';
+import { IsDate, IsString, IsUUID } from 'class-validator';
 
 export class TagDto {
   @ApiProperty({
     type: String,
     description: 'The uuid of the social media',
   })
-  @IsString({ message: 'UUID must be a string' })
+  @IsUUID()
   uuid: string;
 
   @ApiProperty({
