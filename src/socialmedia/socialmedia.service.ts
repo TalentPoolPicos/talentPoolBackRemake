@@ -35,7 +35,7 @@ export class SocialmediaService {
     });
   }
 
-  async add(
+  async create(
     userId: number,
     socialMedi: {
       type: SocialMediaType;

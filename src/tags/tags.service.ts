@@ -31,7 +31,7 @@ export class TagsService {
     });
   }
 
-  async add(userId: number, label: string): Promise<Tag> {
+  async create(userId: number, label: string): Promise<Tag> {
     const existingTag = await this.exists(userId, label);
 
     if (existingTag) {

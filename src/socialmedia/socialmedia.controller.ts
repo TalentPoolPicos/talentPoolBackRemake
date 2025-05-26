@@ -54,7 +54,7 @@ export class SocialmediaController {
     @Req() req: CustomRequest,
   ) {
     const id = req.user.id;
-    const result = await this.socialMediaService.add(id, socialMedia);
+    const result = await this.socialMediaService.create(id, socialMedia);
 
     return SocialMediaAdapter.entityToDto(result);
   }

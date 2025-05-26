@@ -52,7 +52,7 @@ export class TagsController {
   @Post()
   async create(@Body() tag: CreateTagDto, @Req() req: CustomRequest) {
     const id = req.user.id;
-    const result = await this.tagService.add(id, tag.label);
+    const result = await this.tagService.create(id, tag.label);
 
     return TagsAdapter.entityToDto(result);
   }
