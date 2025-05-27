@@ -140,9 +140,10 @@ export class SearchService {
           (user.enterprise?.isComplete || user.student?.isComplete),
       )
       .map((user) => UserAdapter.entityToDto(user!));
+    const total = usersDto.length;
     return {
       items: usersDto.slice((page - 1) * limit, page * limit),
-      total: usersDto.length,
+      total: total,
     };
   }
 
