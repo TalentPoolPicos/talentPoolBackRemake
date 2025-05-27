@@ -41,6 +41,7 @@ async function bootstrap() {
     const options: SwaggerCustomOptions = {
       swaggerOptions: {
         persistAuthorization: true,
+        docExpansion: 'none',
       },
       customCss: theme.getBuffer(SwaggerThemeNameEnum.DARK),
     };
