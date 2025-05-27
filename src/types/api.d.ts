@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-  '/': {
+  '/api/v2': {
     parameters: {
       query?: never;
       header?: never;
@@ -21,7 +21,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/minio/{uuid}': {
+  '/api/v2/minio/{uuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -41,7 +41,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/users': {
+  '/api/v2/users': {
     parameters: {
       query?: never;
       header?: never;
@@ -63,7 +63,7 @@ export interface paths {
     patch: operations['UsersController_partialUpdate'];
     trace?: never;
   };
-  '/users/{uuid}': {
+  '/api/v2/users/{uuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -80,7 +80,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/users/profile-picture': {
+  '/api/v2/users/profile-picture': {
     parameters: {
       query?: never;
       header?: never;
@@ -100,7 +100,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/users/banner-picture': {
+  '/api/v2/users/banner-picture': {
     parameters: {
       query?: never;
       header?: never;
@@ -120,7 +120,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/auth/sign-in': {
+  '/api/v2/auth/sign-in': {
     parameters: {
       query?: never;
       header?: never;
@@ -140,7 +140,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/auth/student/sign-up': {
+  '/api/v2/auth/student/sign-up': {
     parameters: {
       query?: never;
       header?: never;
@@ -160,7 +160,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/auth/enterprise/sign-up': {
+  '/api/v2/auth/enterprise/sign-up': {
     parameters: {
       query?: never;
       header?: never;
@@ -180,7 +180,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/auth/refresh': {
+  '/api/v2/auth/refresh': {
     parameters: {
       query?: never;
       header?: never;
@@ -197,7 +197,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/enterprises': {
+  '/api/v2/enterprises': {
     parameters: {
       query?: never;
       header?: never;
@@ -218,7 +218,7 @@ export interface paths {
     patch: operations['EnterpriseController_partialUpdate'];
     trace?: never;
   };
-  '/enterprises/{uuid}': {
+  '/api/v2/enterprises/{uuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -235,7 +235,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/students': {
+  '/api/v2/students': {
     parameters: {
       query?: never;
       header?: never;
@@ -256,7 +256,7 @@ export interface paths {
     patch: operations['StudentsController_patialUpdate'];
     trace?: never;
   };
-  '/students/{uuid}': {
+  '/api/v2/students/{uuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -273,7 +273,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/students/curriculum': {
+  '/api/v2/students/curriculum': {
     parameters: {
       query?: never;
       header?: never;
@@ -293,7 +293,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/students/history': {
+  '/api/v2/students/history': {
     parameters: {
       query?: never;
       header?: never;
@@ -313,7 +313,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/socialmedia/{userUuid}': {
+  '/api/v2/socialmedia/{userUuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -330,7 +330,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/socialmedia': {
+  '/api/v2/socialmedia': {
     parameters: {
       query?: never;
       header?: never;
@@ -347,7 +347,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/socialmedia/{uuid}': {
+  '/api/v2/socialmedia/{uuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -364,7 +364,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/tag/{userUuid}': {
+  '/api/v2/tag/{userUuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -381,7 +381,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/tag': {
+  '/api/v2/tag': {
     parameters: {
       query?: never;
       header?: never;
@@ -398,7 +398,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/tag/{uuid}': {
+  '/api/v2/tag/{uuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -415,7 +415,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/search/{query}': {
+  '/api/v2/search/{query}': {
     parameters: {
       query?: never;
       header?: never;
@@ -432,7 +432,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/address/{userUuid}': {
+  '/api/v2/address/{userUuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -449,7 +449,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/address': {
+  '/api/v2/address': {
     parameters: {
       query?: never;
       header?: never;
