@@ -179,6 +179,7 @@ export class StudentsService {
       'email',
       'registrationNumber',
       'description',
+      'course',
     ];
 
     return requiredFields.every((field) => student[field] !== null);

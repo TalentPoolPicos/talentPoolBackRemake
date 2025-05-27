@@ -12,16 +12,19 @@ export class StudentAdapter {
     return {
       uuid: student.uuid,
       isCompleted: student.isComplete,
-      name: student.name,
-      email: student.email,
-      registrationNumber: student.registrationNumber,
-      description: student.description,
+      name: student.name ? student.name : null,
+      email: student.email ? student.email : null,
+      registrationNumber: student.registrationNumber
+        ? student.registrationNumber
+        : null,
+      course: student.course ? student.course : null,
+      description: student.description ? student.description : null,
       createdAt: student.createdAt,
       updatedAt: student.updatedAt,
-      birthdate: student.birthDate,
+      birthdate: student.birthDate ? student.birthDate : null,
       curriculum: student.curriculum,
-      history: student.history,
-      lattes: student.lattes,
+      history: student.history ? student.history : null,
+      lattes: student.lattes ? student.lattes : null,
     };
   }
 }

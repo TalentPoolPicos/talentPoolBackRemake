@@ -36,6 +36,9 @@ export class Student extends BaseEntity {
   @Column({ nullable: true })
   email: string;
 
+  @Column({ nullable: true })
+  course: string;
+
   // Número de matrícula
   @Column({
     length: 11,

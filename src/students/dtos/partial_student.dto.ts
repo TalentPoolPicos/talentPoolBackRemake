@@ -47,6 +47,16 @@ export class PartialStudentDto {
   })
   registrationNumber?: string;
 
+  // curso
+  @ApiProperty({
+    type: String,
+    required: false,
+    description: 'The student course',
+  })
+  @IsOptional()
+  @IsString({ message: 'Course must be a string' })
+  course?: string;
+
   @ApiProperty({
     type: String,
     required: false,

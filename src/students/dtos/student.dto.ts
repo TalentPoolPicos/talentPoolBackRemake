@@ -22,7 +22,7 @@ export class StudentDto {
     required: false,
   })
   @IsString({ message: 'Name must be a string' })
-  name?: string;
+  name: string | null;
 
   @ApiProperty({
     type: String,
@@ -30,7 +30,7 @@ export class StudentDto {
     required: false,
   })
   @IsEmail({}, { message: 'Email must be a valid email address' })
-  email?: string;
+  email: string | null;
 
   @ApiProperty({
     type: String,
@@ -38,7 +38,15 @@ export class StudentDto {
     required: false,
   })
   @IsString({ message: 'Registration number must be a string' })
-  registrationNumber?: string;
+  registrationNumber: string | null;
+
+  @ApiProperty({
+    type: String,
+    description: 'The course of the student',
+    required: false,
+  })
+  @IsString({ message: 'Course must be a string' })
+  course: string | null;
 
   @ApiProperty({
     type: String,
@@ -46,7 +54,7 @@ export class StudentDto {
     required: false,
   })
   @IsString({ message: 'Description must be a string' })
-  description?: string;
+  description: string | null;
 
   @ApiProperty({
     type: Date,
@@ -66,7 +74,7 @@ export class StudentDto {
     required: false,
   })
   @IsDate({ message: 'Birthdate must be a date' })
-  birthdate?: Date;
+  birthdate: Date | null;
 
   @ApiProperty({
     type: String,
@@ -74,7 +82,7 @@ export class StudentDto {
     required: false,
   })
   @IsString({ message: 'Curriculum must be a string' })
-  curriculum?: string;
+  curriculum: string | null;
 
   @ApiProperty({
     type: String,
@@ -82,7 +90,7 @@ export class StudentDto {
     required: false,
   })
   @IsString({ message: 'History must be a string' })
-  history?: string;
+  history: string | null;
 
   @ApiProperty({
     type: String,
@@ -90,5 +98,5 @@ export class StudentDto {
     required: false,
   })
   @IsString({ message: 'Lattes must be a string' })
-  lattes?: string;
+  lattes: string | null;
 }
