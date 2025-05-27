@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Student } from 'src/entities/student.entity';
+import { FilesService } from 'src/minio/file.service';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -8,7 +9,26 @@ export class StudentsService {
   constructor(
     @InjectRepository(Student)
     private readonly studentsRepository: Repository<Student>,
-  ) {}
+    private readonly fileService: FilesService,
+  ) {
+    this.findAll()
+      .then((students) => {
+        students.forEach((student) => {
+          if (student.curriculumUuid) {
+            student.curriculum = this.fileService.getUrl(
+              student.curriculumUuid,
+            );
+          }
+
+          if (student.historyUuid) {
+            student.history = this.fileService.getUrl(student.historyUuid);
+          }
+        });
+      })
+      .catch(() => {
+        console.error('Error fetching students on service initialization');
+      });
+  }
 
   async findById(id: number): Promise<Student | null> {
     return this.studentsRepository.findOne({

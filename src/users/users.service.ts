@@ -7,10 +7,9 @@ import {
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/common/enums/roles.enum';
 import { Enterprise } from 'src/entities/enterprise.entity';
-import { SocialMedia } from 'src/entities/socialmedia.entity';
 import { Student } from 'src/entities/student.entity';
-import { Tag } from 'src/entities/tag.entity';
 import { User } from 'src/entities/user.entity';
+import { FilesService } from 'src/minio/file.service';
 import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
@@ -22,13 +21,29 @@ export class UsersService {
     private readonly studentsRepository: Repository<Student>,
     @InjectRepository(Enterprise)
     private readonly enterpriseRepository: Repository<Enterprise>,
-    @InjectRepository(SocialMedia)
-    private readonly socialMediaRepository: Repository<SocialMedia>,
-    @InjectRepository(Tag)
-    private readonly tagsRepository: Repository<Tag>,
     @InjectDataSource()
     private readonly dataSource: DataSource,
-  ) {}
+    private readonly fileService: FilesService,
+  ) {
+    this.findAll()
+      .then((users) => {
+        users.forEach((user) => {
+          if (user.profilePictureUuid) {
+            user.profilePicture = this.fileService.getUrl(
+              user.profilePictureUuid,
+            );
+          }
+          if (user.bannerPictureUuid) {
+            user.bannerPicture = this.fileService.getUrl(
+              user.bannerPictureUuid,
+            );
+          }
+        });
+      })
+      .catch(() => {
+        console.error('Error fetching users on service initialization');
+      });
+  }
 
   private async loadStudent(user: User): Promise<User> {
     if (user.role === Role.STUDENT.valueOf()) {
