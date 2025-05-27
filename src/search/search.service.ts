@@ -97,6 +97,7 @@ export class SearchService {
     try {
       const result = await this.elasticsearchService.search({
         index: 'users',
+        size: 100,
         query: {
           bool: {
             should: [
