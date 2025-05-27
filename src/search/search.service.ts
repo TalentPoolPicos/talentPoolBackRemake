@@ -140,7 +140,6 @@ export class SearchService {
           (user.enterprise?.isComplete || user.student?.isComplete),
       )
       .map((user) => UserAdapter.entityToDto(user!));
-    console.log(usersDto.length, 'users found');
     return {
       items: usersDto.slice((page - 1) * limit, page * limit),
       total: usersDto.length,
