@@ -29,7 +29,7 @@ async function bootstrap() {
     });
 
     const config = new DocumentBuilder()
-      .setTitle('API Documentation')
+      .setTitle('TalentPool API Documentation')
       .setDescription('Interactive API documentation')
       .setVersion('2')
       .addBearerAuth()
@@ -39,11 +39,10 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, config);
     const theme = new SwaggerTheme();
     const options: SwaggerCustomOptions = {
-      explorer: true,
       swaggerOptions: {
         persistAuthorization: true,
       },
-      customCss: theme.getBuffer(SwaggerThemeNameEnum.DRACULA),
+      customCss: theme.getBuffer(SwaggerThemeNameEnum.DARK),
     };
     SwaggerModule.setup('doc', app, document, options);
   }
