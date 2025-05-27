@@ -520,6 +520,8 @@ export interface components {
       email?: string;
       /** @description The registration number of the student */
       registrationNumber?: string;
+      /** @description The course of the student */
+      course?: string;
       /** @description The description of the student */
       description?: string;
       /**
@@ -721,6 +723,8 @@ export interface components {
       /** @description The student email */
       email?: string;
       registrationNumber?: string;
+      /** @description The student course */
+      course?: string;
       /** @description The student description */
       description?: string;
     };
@@ -811,6 +815,12 @@ export interface components {
        * @example nodejs
        */
       label: string;
+    };
+    SearchResultDto: {
+      /** @description The list of users found by the search query */
+      users: components['schemas']['UserDto'];
+      /** @description The total number of users found by the search query */
+      total: number;
     };
     CreateOrUpdateAddressDto: {
       /**
@@ -1692,7 +1702,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['UserDto'][];
+          'application/json': components['schemas']['SearchResultDto'];
         };
       };
     };
