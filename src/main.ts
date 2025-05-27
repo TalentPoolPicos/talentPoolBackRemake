@@ -17,17 +17,17 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v2');
   app.enableShutdownHooks();
 
-  app.enableCors({
-    origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept',
-    credentials: true,
-    optionsSuccessStatus: 204,
-  });
-
   if (process.env.ENV === 'production') {
     //
   } else {
+    app.enableCors({
+      origin: '*',
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept',
+      credentials: true,
+      optionsSuccessStatus: 204,
+    });
+
     const config = new DocumentBuilder()
       .setTitle('API Documentation')
       .setDescription('Interactive API documentation')
