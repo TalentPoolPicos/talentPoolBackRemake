@@ -94,57 +94,63 @@ export class SearchService {
     }
 
     const term = query.searchTerm.toLowerCase();
-    const result = await this.elasticsearchService.search({
-      index: 'users',
-      query: {
-        bool: {
-          should: [
-            {
-              multi_match: {
-                query: term,
-                fields: ['username^3', 'tags^2', 'email', 'description'],
-                fuzziness: 'AUTO',
-                prefix_length: 3,
-                minimum_should_match: '60%',
-                type: 'bool_prefix',
+    try {
+      const result = await this.elasticsearchService.search({
+        index: 'users',
+        query: {
+          bool: {
+            should: [
+              {
+                multi_match: {
+                  query: term,
+                  fields: ['username^3', 'tags^2', 'email', 'description'],
+                  fuzziness: 'AUTO',
+                  prefix_length: 3,
+                  minimum_should_match: '60%',
+                  type: 'bool_prefix',
+                },
               },
-            },
-            {
-              wildcard: {
-                username: { value: `*${term}*`, case_insensitive: true },
+              {
+                wildcard: {
+                  username: { value: `*${term}*`, case_insensitive: true },
+                },
               },
-            },
-            {
-              wildcard: {
-                email: { value: `*${term}*`, case_insensitive: true },
+              {
+                wildcard: {
+                  email: { value: `*${term}*`, case_insensitive: true },
+                },
               },
-            },
-          ],
-          minimum_should_match: 1,
+            ],
+            minimum_should_match: 1,
+          },
         },
-      },
-    });
+      });
 
-    const hits = result.hits.hits
-      .map((hit) => hit._id)
-      .filter((hit) => hit !== undefined);
+      const hits = result.hits.hits
+        .map((hit) => hit._id)
+        .filter((hit) => hit !== undefined);
 
-    const usersPromise = hits.map((uuid) => this.usersService.findByUuid(uuid));
+      const usersPromise = hits.map((uuid) =>
+        this.usersService.findByUuid(uuid),
+      );
 
-    const users = await Promise.all(usersPromise);
+      const users = await Promise.all(usersPromise);
 
-    const usersDto = users
-      .filter(
-        (user) =>
-          user != null &&
-          (user.enterprise?.isComplete || user.student?.isComplete),
-      )
-      .map((user) => UserAdapter.entityToDto(user!));
-    const total = usersDto.length;
-    return {
-      items: usersDto.slice((page - 1) * limit, page * limit),
-      total: total,
-    };
+      const usersDto = users
+        .filter(
+          (user) =>
+            user != null &&
+            (user.enterprise?.isComplete || user.student?.isComplete),
+        )
+        .map((user) => UserAdapter.entityToDto(user!));
+      const total = usersDto.length;
+      return {
+        items: usersDto.slice((page - 1) * limit, page * limit),
+        total: total,
+      };
+    } catch {
+      throw new BadRequestException('Error searching users');
+    }
   }
 
   async deleteDocumentbyUserUuid(uuid: string) {
