@@ -3,7 +3,7 @@ import { UserDto } from 'src/dtos/user.dto';
 
 export class SearchResultDto {
   @ApiProperty({
-    type: UserDto,
+    type: [UserDto],
     description: 'The list of users found by the search query',
   })
   users: UserDto[];

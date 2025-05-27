@@ -3,7 +3,7 @@ import { StudentDto } from './student.dto';
 
 export class StudentsPageDto {
   @ApiProperty({
-    type: StudentDto,
+    type: [StudentDto],
     description: 'The list of students',
   })
   students: StudentDto[];

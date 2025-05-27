@@ -73,14 +73,14 @@ export class UserDto {
   address: AddressDto | null;
 
   @ApiProperty({
-    type: [String],
+    type: [SocialMediaDto],
     description: 'The social media of the user',
   })
   @IsString({ each: true, message: 'Social media must be a string' })
   socialMedia: SocialMediaDto[];
 
   @ApiProperty({
-    type: [String],
+    type: [TagDto],
     description: 'The tags of the user',
   })
   tags: TagDto[];

@@ -3,7 +3,7 @@ import { EnterpriseDto } from './enterprise.dto';
 
 export class EnterprisePageDto {
   @ApiProperty({
-    type: EnterpriseDto,
+    type: [EnterpriseDto],
     description: 'The list of enterprises',
   })
   enterprises: EnterpriseDto[];
