@@ -1,7 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import {
+  DocumentBuilder,
+  SwaggerCustomOptions,
+  SwaggerModule,
+} from '@nestjs/swagger';
 import { SwaggerTheme, SwaggerThemeNameEnum } from 'swagger-themes';
 import { ValidationPipe } from '@nestjs/common';
 
@@ -34,8 +38,11 @@ async function bootstrap() {
 
     const document = SwaggerModule.createDocument(app, config);
     const theme = new SwaggerTheme();
-    const options = {
+    const options: SwaggerCustomOptions = {
       explorer: true,
+      swaggerOptions: {
+        persistAuthorization: true,
+      },
       customCss: theme.getBuffer(SwaggerThemeNameEnum.DRACULA),
     };
     SwaggerModule.setup('doc', app, document, options);
