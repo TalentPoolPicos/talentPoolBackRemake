@@ -14,7 +14,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Public } from 'src/auth/decotaros/public.decorator';
-import { UserDto } from 'src/dtos/user.dto';
+import { SearchResultDto } from './dtos/search_result.dto';
 
 @ApiTags('Search')
 @Controller('search')
@@ -25,7 +25,7 @@ export class SearchController {
   @ApiOperation({ summary: 'Search users' })
   @ApiOkResponse({
     description: 'The list of users',
-    type: [UserDto],
+    type: SearchResultDto,
   })
   @ApiQuery({
     name: 'page',
@@ -46,14 +46,15 @@ export class SearchController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
     @Param('query') query: string,
-  ) {
+  ): Promise<SearchResultDto> {
     const result = await this.searchService.users(
       { searchTerm: query },
       page,
       limit,
     );
-    return result.filter(
-      (user) => user.enterprise?.isCompleted || user.student?.isCompleted,
-    );
+    return {
+      users: result.items,
+      total: result.total,
+    };
   }
 }

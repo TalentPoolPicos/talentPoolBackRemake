@@ -81,7 +81,10 @@ export class SearchService {
     query: SearchQueryDto,
     page: number = 1,
     limit: number = 10,
-  ): Promise<UserDto[]> {
+  ): Promise<{
+    items: UserDto[];
+    total: number;
+  }> {
     if (page < 1) {
       throw new BadRequestException('Page must be greater than or equal to 1');
     }
@@ -93,8 +96,6 @@ export class SearchService {
     const term = query.searchTerm.toLowerCase();
     const result = await this.elasticsearchService.search({
       index: 'users',
-      from: (page - 1) * limit,
-      size: limit,
       query: {
         bool: {
           should: [
@@ -133,9 +134,17 @@ export class SearchService {
     const users = await Promise.all(usersPromise);
 
     const usersDto = users
-      .filter((user) => user != null)
-      .map((user) => UserAdapter.entityToDto(user));
-    return usersDto;
+      .filter(
+        (user) =>
+          user != null &&
+          (user.enterprise?.isComplete || user.student?.isComplete),
+      )
+      .map((user) => UserAdapter.entityToDto(user!));
+    console.log(usersDto.length, 'users found');
+    return {
+      items: usersDto.slice((page - 1) * limit, page * limit),
+      total: usersDto.length,
+    };
   }
 
   async deleteDocumentbyUserUuid(uuid: string) {
