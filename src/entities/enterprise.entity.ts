@@ -35,6 +35,6 @@ export class Enterprise extends BaseEntity {
   @JoinColumn()
   user: User;
 
-  @OneToMany(() => Match, (match) => match.userEnterprise)
+  @OneToMany(() => Match, (match) => match.enterprise)
   matches: Match[];
 }

@@ -9,7 +9,7 @@ export class Match extends BaseEntity {
     onDelete: 'CASCADE',
   })
   @JoinColumn()
-  userEnterprise: Enterprise;
+  enterprise: Enterprise;
 
   @Column({ default: false })
   enterpriseLike: boolean;
@@ -18,7 +18,7 @@ export class Match extends BaseEntity {
     onDelete: 'CASCADE',
   })
   @JoinColumn()
-  userStudent: Student;
+  student: Student;
 
   @Column({ default: false })
   studentLike: boolean;

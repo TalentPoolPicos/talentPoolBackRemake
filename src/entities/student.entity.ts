@@ -58,6 +58,6 @@ export class Student extends BaseEntity {
   @JoinColumn()
   user: User;
 
-  @OneToMany(() => Match, (match) => match.userStudent)
+  @OneToMany(() => Match, (match) => match.student)
   matches: Match[];
 }
