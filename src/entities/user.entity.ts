@@ -77,7 +77,7 @@ export class User extends BaseEntity {
     cascade: true,
     eager: true,
   })
-  tag: Tag[];
+  tags: Tag[];
 
   @OneToOne(() => Address, (address) => address.user, {
     nullable: true,

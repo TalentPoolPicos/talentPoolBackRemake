@@ -45,7 +45,7 @@ export class UserAdapter {
         SocialMediaAdapter.entityToDto(social),
       ),
       address: user.address ? AddressAdapter.entityToDto(user.address) : null,
-      tags: user.tag.map((tag) => TagsAdapter.entityToDto(tag)),
+      tags: user.tags.map((tag) => TagsAdapter.entityToDto(tag)),
       ...(user.student
         ? { student: StudentAdapter.entityToDto(user.student) }
         : {}),
