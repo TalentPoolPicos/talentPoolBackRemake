@@ -1,7 +1,6 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
-import { Match } from './match.entity';
 
 @Entity('enterprises')
 export class Enterprise extends BaseEntity {
@@ -34,7 +33,4 @@ export class Enterprise extends BaseEntity {
   })
   @JoinColumn()
   user: User;
-
-  @OneToMany(() => Match, (match) => match.enterprise)
-  matches: Match[];
 }

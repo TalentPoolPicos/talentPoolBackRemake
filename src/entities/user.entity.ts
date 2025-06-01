@@ -6,6 +6,7 @@ import { Role } from 'src/common/enums/roles.enum';
 import { SocialMedia } from './socialmedia.entity';
 import { Tag } from './tag.entity';
 import { Address } from './address.entity';
+import { Like } from './like.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -85,4 +86,10 @@ export class User extends BaseEntity {
     eager: true,
   })
   address?: Address | null;
+
+  @OneToMany(() => Like, (like) => like.initiator)
+  initiators: Like[];
+
+  @OneToMany(() => Like, (like) => like.receiver)
+  receivers: Like[];
 }
