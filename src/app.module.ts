@@ -12,6 +12,7 @@ import { MinioModule } from './minio/minio.module';
 import { TagsModule } from './tags/tags.module';
 import { SearchModule } from './search/search.module';
 import { AddressModule } from './address/address.module';
+import { LikeModule } from './likes/like.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { AddressModule } from './address/address.module';
     TagsModule,
     SearchModule,
     AddressModule,
+    LikeModule,
   ],
   controllers: [AppController],
 
