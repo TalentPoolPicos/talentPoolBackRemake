@@ -466,6 +466,92 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v2/like/recommendations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get recommended users */
+    get: operations['LikeController_likes'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/like/{userUuid}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Like a user */
+    post: operations['LikeController_like'];
+    /** Unlike a user */
+    delete: operations['LikeController_unlike'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/like/your-likes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get users you have liked */
+    get: operations['LikeController_yourLikes'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/like/liked-by-you': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get users who have liked you */
+    get: operations['LikeController_likedByYou'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/like/has-liked/{userUuid}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Check if user has liked another user */
+    get: operations['LikeController_hasLiked'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -848,6 +934,37 @@ export interface components {
        * @example State Exemplo
        */
       state?: string | null;
+    };
+    RecommendedUsersPageDto: {
+      /** @description The list of users */
+      users: components['schemas']['UserDto'][];
+      /** @description The total number of users */
+      total: number;
+    };
+    LikeDto: {
+      /** @description The uuid of the user */
+      uuid: string;
+      /**
+       * Format: date-time
+       * @description The date the user was created
+       */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description The date the user was last updated
+       */
+      updatedAt: string;
+      /** @description The initiator */
+      initiator: components['schemas']['UserDto'];
+      /** @description The receiver */
+      receiver: components['schemas']['UserDto'];
+    };
+    IsLikeDto: {
+      /**
+       * @description Indicates if the user likes the profile
+       * @example true
+       */
+      isLike: boolean;
     };
   };
   responses: never;
@@ -1750,6 +1867,205 @@ export interface operations {
         content: {
           'application/json': components['schemas']['AddressDto'];
         };
+      };
+    };
+  };
+  LikeController_likes: {
+    parameters: {
+      query?: {
+        /** @description The page number */
+        page?: number;
+        /** @description The number of items per page. Default is 10. Max is 20 and min is 1 */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Returns a list of recommended users based on the logged-in user's tags. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RecommendedUsersPageDto'];
+        };
+      };
+      /** @description Bad request. Invalid parameters or user not found. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  LikeController_like: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description User liked successfully. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LikeDto'];
+        };
+      };
+      /** @description Bad request. Invalid parameters or user not found. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  LikeController_unlike: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description User unliked successfully. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad request. Invalid parameters or user not found. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  LikeController_yourLikes: {
+    parameters: {
+      query?: {
+        /** @description The page number */
+        page?: number;
+        /** @description The number of items per page. Default is 10. Max is 20 and min is 1 */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Returns a list of users you have liked. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UsersPageDto'];
+        };
+      };
+      /** @description User not found or invalid parameters. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  LikeController_likedByYou: {
+    parameters: {
+      query?: {
+        /** @description The page number */
+        page?: number;
+        /** @description The number of items per page. Default is 10. Max is 20 and min is 1 */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Returns a list of users who have liked you. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UsersPageDto'];
+        };
+      };
+      /** @description User not found or invalid parameters. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  LikeController_hasLiked: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Returns true if the user has liked the other user. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['IsLikeDto'];
+        };
+      };
+      /** @description User not found or invalid parameters. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
