@@ -501,7 +501,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v2/like/your-likes': {
+  '/api/v2/like/initiator/{userUuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -509,7 +509,7 @@ export interface paths {
       cookie?: never;
     };
     /** Get users you have liked */
-    get: operations['LikeController_yourLikes'];
+    get: operations['LikeController_initiatorLikes'];
     put?: never;
     post?: never;
     delete?: never;
@@ -518,7 +518,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v2/like/liked-by-you': {
+  '/api/v2/like/receiver/{userUuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -526,7 +526,7 @@ export interface paths {
       cookie?: never;
     };
     /** Get users who have liked you */
-    get: operations['LikeController_likedByYou'];
+    get: operations['LikeController_receiverLikes'];
     put?: never;
     post?: never;
     delete?: never;
@@ -1976,7 +1976,7 @@ export interface operations {
       };
     };
   };
-  LikeController_yourLikes: {
+  LikeController_initiatorLikes: {
     parameters: {
       query?: {
         /** @description The page number */
@@ -1985,7 +1985,9 @@ export interface operations {
         limit?: number;
       };
       header?: never;
-      path?: never;
+      path: {
+        userUuid: string;
+      };
       cookie?: never;
     };
     requestBody?: never;
@@ -2008,7 +2010,7 @@ export interface operations {
       };
     };
   };
-  LikeController_likedByYou: {
+  LikeController_receiverLikes: {
     parameters: {
       query?: {
         /** @description The page number */
@@ -2017,7 +2019,9 @@ export interface operations {
         limit?: number;
       };
       header?: never;
-      path?: never;
+      path: {
+        userUuid: string;
+      };
       cookie?: never;
     };
     requestBody?: never;
