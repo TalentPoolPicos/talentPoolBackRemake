@@ -26,6 +26,7 @@ import { LikeAdapter } from './like.adapter';
 import { IsLikeDto } from './dtos/is_like.dto';
 import { UserAdapter } from 'src/adapters/user.adapter';
 import { UsersPageDto } from 'src/users/dtos/users_page.dto';
+import { Public } from 'src/auth/decotaros/public.decorator';
 
 @Controller('like')
 export class LikeController {
@@ -117,6 +118,7 @@ export class LikeController {
     return { message: 'User unliked successfully' };
   }
 
+  @Public()
   @ApiOperation({
     summary: 'Get users you have liked',
   })
@@ -166,6 +168,7 @@ export class LikeController {
     };
   }
 
+  @Public()
   @ApiOperation({
     summary: 'Get users who have liked you',
   })
