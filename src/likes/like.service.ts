@@ -141,8 +141,30 @@ export class LikeService {
     });
   }
 
+  async findLikesByUserInitiatorUuid(
+    userInitiatorUuid: string,
+  ): Promise<Like[]> {
+    const user = await this.usersService.findByUuid(userInitiatorUuid);
+    if (!user) throw new NotFoundException('User not found');
+
+    return this.likeRepository.find({
+      where: { initiator: { id: user.id } },
+      relations: ['receiver'],
+    });
+  }
+
   async findLikesByUserReceiverId(userReceiverId: number): Promise<Like[]> {
     const user = await this.usersService.findById(userReceiverId);
+    if (!user) throw new NotFoundException('User not found');
+
+    return this.likeRepository.find({
+      where: { receiver: { id: user.id } },
+      relations: ['initiator'],
+    });
+  }
+
+  async findLikesByUserReceiverUuid(userReceiverUuid: string): Promise<Like[]> {
+    const user = await this.usersService.findByUuid(userReceiverUuid);
     if (!user) throw new NotFoundException('User not found');
 
     return this.likeRepository.find({

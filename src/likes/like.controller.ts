@@ -117,7 +117,6 @@ export class LikeController {
     return { message: 'User unliked successfully' };
   }
 
-  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get users you have liked',
   })
@@ -142,14 +141,13 @@ export class LikeController {
       'The number of items per page. Default is 10. Max is 20 and min is 1',
   })
   @HttpCode(HttpStatus.OK)
-  @Get('your-likes')
-  async yourLikes(
+  @Get('initiator/:userUuid')
+  async initiatorLikes(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
-    @Req() req: CustomRequest,
+    @Param('userUuid') userUuid: string,
   ): Promise<UsersPageDto> {
-    const user = req.user;
-    if (!user) throw new NotFoundException('User not found');
+    if (!userUuid) throw new NotFoundException('User not found');
     if (page < 1) throw new NotFoundException('Page must be greater than 0');
     if (limit < 1) throw new NotFoundException('Limit must be greater than 0');
     if (limit > 20)
@@ -157,7 +155,7 @@ export class LikeController {
     if (page > 100)
       throw new NotFoundException('Page must be less than or equal to 100');
 
-    let likes = await this.likeService.findLikesByUserInitiatorId(user.id);
+    let likes = await this.likeService.findLikesByUserInitiatorUuid(userUuid);
     const total = likes.length;
     likes = likes.slice((page - 1) * limit, page * limit);
     const users = likes.map((like) => UserAdapter.entityToDto(like.receiver));
@@ -168,7 +166,6 @@ export class LikeController {
     };
   }
 
-  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get users who have liked you',
   })
@@ -193,14 +190,13 @@ export class LikeController {
       'The number of items per page. Default is 10. Max is 20 and min is 1',
   })
   @HttpCode(HttpStatus.OK)
-  @Get('liked-by-you')
-  async likedByYou(
+  @Get('receiver/:userUuid')
+  async receiverLikes(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
-    @Req() req: CustomRequest,
+    @Param('userUuid') userUuid: string,
   ): Promise<UsersPageDto> {
-    const user = req.user;
-    if (!user) throw new NotFoundException('User not found');
+    if (!userUuid) throw new NotFoundException('User not found');
     if (page < 1) throw new NotFoundException('Page must be greater than 0');
     if (limit < 1) throw new NotFoundException('Limit must be greater than 0');
     if (limit > 20)
@@ -208,7 +204,7 @@ export class LikeController {
     if (page > 100)
       throw new NotFoundException('Page must be less than or equal to 100');
 
-    let likes = await this.likeService.findLikesByUserReceiverId(user.id);
+    let likes = await this.likeService.findLikesByUserReceiverUuid(userUuid);
     const total = likes.length;
     likes = likes.slice((page - 1) * limit, page * limit);
     const users = likes.map((like) => UserAdapter.entityToDto(like.initiator));
