@@ -41,23 +41,27 @@ export class LikeService {
     const tags = loggedUser.tags.map((tag) => tag.label);
 
     const usersDtoResults: UserDto[] = [];
-
+    let total = 0;
     for (const tag of tags) {
       const query: SearchQueryDto = { searchTerm: tag };
-      const users = await this.searchService.users(query, page, limit);
+      const users = await this.searchService.usersAll(query);
+
       for (const user of users.items) {
         const isExisting = usersDtoResults.some(
           (existingUser) => existingUser.uuid === user.uuid,
         );
         const isDifferentRole = loggedUser.role !== user.role;
 
-        if (!isExisting && isDifferentRole) usersDtoResults.push(user);
+        if (!isExisting && isDifferentRole) {
+          usersDtoResults.push(user);
+          total++;
+        }
       }
     }
 
     return {
       users: usersDtoResults.slice((page - 1) * limit, page * limit),
-      total: usersDtoResults.length,
+      total: total,
     };
   }
 
