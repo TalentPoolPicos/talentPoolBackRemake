@@ -93,6 +93,20 @@ export class SearchService {
       throw new BadRequestException('Limit must be less than or equal to 20');
     }
 
+    const users = await this.usersAll(query);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedItems = users.items.slice(startIndex, endIndex);
+    return {
+      items: paginatedItems,
+      total: users.total,
+    };
+  }
+
+  async usersAll(query: SearchQueryDto): Promise<{
+    items: UserDto[];
+    total: number;
+  }> {
     const term = query.searchTerm.toLowerCase();
     try {
       const result = await this.elasticsearchService.search({
@@ -146,7 +160,7 @@ export class SearchService {
         .map((user) => UserAdapter.entityToDto(user!));
       const total = usersDto.length;
       return {
-        items: usersDto.slice((page - 1) * limit, page * limit),
+        items: usersDto,
         total: total,
       };
     } catch {
