@@ -18,7 +18,7 @@ export class FilesService {
   }
 
   getUrl(filename: string): string {
-    return `${this.configService.get('MINIO_SERVER_URL')}/minio/${filename}`;
+    return `${this.configService.get('MINIO_SERVER_URL')}/${filename}`;
   }
 
   async getMinIOUrl(filename: string): Promise<string | null> {
