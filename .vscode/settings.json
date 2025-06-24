@@ -1,0 +1,15 @@
+{
+  // Desliga o formatador genérico
+  "editor.formatOnSave": false,
+  // Usa as “code actions” do ESLint (que agora incluem o prettier) ao salvar
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  // Define o Prettier como default formatter pra TS/JS
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}

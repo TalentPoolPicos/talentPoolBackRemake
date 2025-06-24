@@ -16,27 +16,26 @@ import { RefreshTokenDto } from './dtos/refresh.dto';
 import { Role } from 'src/common/enums/roles.enum';
 import { Public } from './decotaros/public.decorator';
 
-@ApiTags('Auth', 'V1')
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Public()
-  @ApiTags('Student')
   @ApiOperation({
-    summary: 'Sign in as a student',
-    description: 'Sign a new user as student.',
+    summary: 'Sign in as a student or enterprise',
+    description: 'Sign a new user as student or enterprise.',
   })
   @ApiOkResponse({
-    description: 'The student has successfully signed in',
+    description: 'The user has successfully signed in',
     type: AccessTokenDto,
   })
-  @ApiNotFoundResponse({ description: 'The student could not be found' })
+  @ApiNotFoundResponse({ description: 'The user could not be found' })
   @ApiUnauthorizedResponse({
-    description: 'The student could not be authenticated',
+    description: 'The user could not be authenticated',
   })
   @HttpCode(HttpStatus.OK)
-  @Post('student/sign-in')
+  @Post('sign-in')
   signIn(@Body() signInDto: SignInDto) {
     return this.authService.signIn(signInDto.username, signInDto.password);
   }
@@ -57,7 +56,7 @@ export class AuthController {
   })
   @ApiConflictResponse({
     description:
-      '"The student already exists" or "The email is already in use"',
+      '"The student already exists" or "The email is already in use" or "role is not valid"',
     schema: {
       example: {
         statusCode: HttpStatus.CONFLICT,
@@ -70,12 +69,53 @@ export class AuthController {
   })
   @HttpCode(HttpStatus.OK)
   @Post('student/sign-up')
-  signUp(@Body() signInDto: SignUpDto) {
+  signUpWithStudent(@Body() signInDto: SignUpDto) {
     return this.authService.signUp(
       signInDto.username,
       signInDto.email,
       signInDto.password,
       Role.STUDENT,
+    );
+  }
+
+  @Public()
+  @ApiTags('Enterprise')
+  @ApiOperation({
+    summary: 'Sign up as a enterprise',
+    description: 'Create and sign up a new user as enterprise.',
+  })
+  @ApiOkResponse({
+    description: 'The enterprise has successfully signed up',
+    type: AccessTokenDto,
+  })
+  @ApiNotFoundResponse({ description: 'The enterprise could not be found' })
+  @ApiUnauthorizedResponse({
+    description: 'The enterprise could not be authenticated',
+  })
+  @ApiConflictResponse({
+    description:
+      '"The enterprise already exists" or "The email is already in use" or "role is not valid"',
+    schema: {
+      example: {
+        statusCode: HttpStatus.CONFLICT,
+        message: [
+          'The enterprise already exists',
+          'The email is already in use',
+        ],
+      },
+    },
+  })
+  @ApiUnprocessableEntityResponse({
+    description: 'The model state is invalid',
+  })
+  @HttpCode(HttpStatus.OK)
+  @Post('enterprise/sign-up')
+  signUpWithEnterprise(@Body() signInDto: SignUpDto) {
+    return this.authService.signUp(
+      signInDto.username,
+      signInDto.email,
+      signInDto.password,
+      Role.ENTERPRISE,
     );
   }
 

@@ -13,11 +13,14 @@ import { compare, hash } from 'bcrypt';
 import { Role } from 'src/common/enums/roles.enum';
 import { JwtPayload } from './interfaces/payload';
 import { RefreshPayload } from './interfaces/refresh';
+import { StudentsService } from 'src/students/students.service';
+import { UserAdapter } from 'src/adapters/user.adapter';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
+    private studentService: StudentsService,
     private jwtService: JwtService,
   ) {}
 
@@ -54,15 +57,7 @@ export class AuthService {
       ),
       access_token_expires_in: 3600,
       refresh_token_expires_in: 604800,
-      user: {
-        uuid: user.uuid,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        profile_picture: user.profilePicture,
-        created_at: user.createdAt,
-        update_at: user.updatedAt,
-      },
+      user: UserAdapter.entityToDto(user),
     };
   }
 
@@ -110,15 +105,7 @@ export class AuthService {
         refresh_token: refreshToken,
         access_token_expires_in: 3600,
         refresh_token_expires_in: 604800,
-        user: {
-          uuid: user.uuid,
-          username: user.username,
-          email: user.email,
-          role: user.role,
-          profile_picture: user.profilePicture,
-          created_at: user.createdAt,
-          update_at: user.updatedAt,
-        },
+        user: UserAdapter.entityToDto(user),
       };
     } else {
       throw new UnauthorizedException();

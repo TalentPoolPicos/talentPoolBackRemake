@@ -1,13 +1,17 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { User } from './user.entity';
 
 @Entity('students')
 export class Student extends BaseEntity {
-  @Column({ length: 100 })
-  firstName: string;
+  /**
+   * @description Indica se o usuário tem as informações mínimas para ser considerado completo
+   */
+  @Column({ default: false })
+  isComplete: boolean;
 
-  @Column({ length: 100 })
-  lastName: string;
+  @Column({ length: 100, nullable: true })
+  name: string;
 
   @Column({ type: 'timestamp', nullable: true })
   birthDate: Date;
@@ -15,6 +19,14 @@ export class Student extends BaseEntity {
   // Url do pdf do currículo
   @Column({ nullable: true })
   curriculum: string;
+  @Column({ nullable: true })
+  curriculumUuid: string;
+
+  // Url do pdf do histórico
+  @Column({ nullable: true })
+  history: string;
+  @Column({ nullable: true })
+  historyUuid: string;
 
   // lattes url
   @Column({ nullable: true })
@@ -22,6 +34,9 @@ export class Student extends BaseEntity {
 
   @Column({ nullable: true })
   email: string;
+
+  @Column({ nullable: true })
+  course: string;
 
   // Número de matrícula
   @Column({
@@ -35,4 +50,10 @@ export class Student extends BaseEntity {
     nullable: true,
   })
   description: string;
+
+  @OneToOne(() => User, (user) => user.student, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn()
+  user: User;
 }

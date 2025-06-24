@@ -9,6 +9,7 @@ import {
   NotFoundException,
   Param,
   Patch,
+  Put,
   Query,
   Req,
   UploadedFile,
@@ -33,20 +34,21 @@ import { Public } from 'src/auth/decotaros/public.decorator';
 import { PartialUserDto } from './dtos/partial_user.dto';
 
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
 import { CustomRequest } from 'src/auth/interfaces/custon_request';
-import * as fs from 'fs';
-import * as crypto from 'crypto';
+
 import { ConfigService } from '@nestjs/config';
+import { FilesService } from 'src/minio/file.service';
+import { UserAdapter } from 'src/adapters/user.adapter';
+import { SearchUpdateInterceptor } from 'src/search/search_update.interceptor';
+import { SearchDeleteInterceptor } from 'src/search/search_delete.interceptor';
 
-import { profilePicturePath } from 'src/common/constants';
-
-@ApiTags('User', 'V1')
+@ApiTags('User')
 @Controller('users')
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
+    private readonly filesService: FilesService,
   ) {}
 
   @Public()
@@ -76,17 +78,7 @@ export class UsersController {
   ) {
     const result = await this.usersService.findAndCountAll(page, limit);
     return {
-      users: result.users.map((user) => {
-        return {
-          uuid: user.uuid,
-          username: user.username,
-          email: user.email,
-          role: user.role,
-          profilePicture: user.profilePicture,
-          created_at: user.createdAt,
-          updated_at: user.updatedAt,
-        };
-      }),
+      users: result.users.map((user) => UserAdapter.entityToDto(user)),
       total: result.total,
     };
   }
@@ -107,15 +99,7 @@ export class UsersController {
       throw new NotFoundException('User not found');
     }
 
-    return {
-      uuid: user.uuid,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      profilePicture: user.profilePicture,
-      created_at: user.createdAt,
-      updated_at: user.updatedAt,
-    };
+    return UserAdapter.entityToDto(user);
   }
 
   @ApiBearerAuth()
@@ -136,6 +120,7 @@ export class UsersController {
     description: 'The model state is invalid',
   })
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(SearchUpdateInterceptor)
   @Patch()
   async partialUpdate(
     @Body() partialUserDto: PartialUserDto,
@@ -145,26 +130,21 @@ export class UsersController {
 
     const { username, email, password } = partialUserDto;
 
-    const result = await this.usersService.partialUpdate(
+    const user = await this.usersService.partialUpdate(
       uuid,
       username,
       email,
       password,
     );
 
-    return {
-      uuid: result.uuid,
-      username: result.username,
-      email: result.email,
-      role: result.role,
-      profilePicture: result.profilePicture,
-      created_at: result.createdAt,
-      updated_at: result.updatedAt,
-    };
+    return UserAdapter.entityToDto(user);
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Upload a new profile picture' })
+  @ApiOperation({
+    summary: 'Upload a new profile picture',
+    description: 'A image file is required',
+  })
   @ApiOkResponse({
     description: 'The profile picture was successfully updated',
     type: UserDto,
@@ -175,21 +155,7 @@ export class UsersController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('file', {
-      dest: profilePicturePath,
       limits: { fileSize: 1024 * 1024 * 3 },
-      storage: diskStorage({
-        destination: profilePicturePath,
-        filename: (req, file: Express.Multer.File, callback) => {
-          // Generating a unique filename
-          const filename =
-            crypto
-              .createHash('sha256')
-              .update(file.originalname + Date.now())
-              .digest('hex') + file.mimetype.replace('image/', '.');
-
-          callback(null, filename);
-        },
-      }),
       fileFilter: (req, file, callback) => {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
 
@@ -216,7 +182,7 @@ export class UsersController {
       },
     },
   })
-  @Patch('profile-picture')
+  @Put('profile-picture')
   async uploadProfilePicture(
     @UploadedFile() file: Express.Multer.File,
     @Req() req: CustomRequest,
@@ -225,20 +191,89 @@ export class UsersController {
 
     if (!user) throw new NotFoundException('User not found');
 
-    if (user.profilePicture)
-      fs.unlinkSync(`${profilePicturePath}/${user.profilePicture}`);
-    await this.usersService.update(user.id, { profilePicture: file.filename });
-    user.profilePicture = file.filename;
+    if (user.profilePictureUuid)
+      await this.filesService.delete(user.profilePictureUuid);
 
-    return {
-      uuid: user.uuid,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      profilePicture: user.profilePicture,
-      created_at: user.createdAt,
-      updated_at: user.updatedAt,
-    };
+    const result = await this.filesService.upload(file);
+
+    user.profilePictureUuid = result.filename;
+    user.profilePicture = this.filesService.getUrl(result.filename);
+
+    await this.usersService.updateProfilePicture(
+      user.id,
+      user.profilePicture,
+      user.profilePictureUuid,
+    );
+
+    return UserAdapter.entityToDto(user);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Upload a new banner picture',
+    description: 'A image file is required',
+  })
+  @ApiOkResponse({
+    description: 'The banner picture was successfully updated',
+    type: UserDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Only image files are allowed',
+  })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 1024 * 1024 * 3 },
+      fileFilter: (req, file, callback) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+
+        if (!allowedTypes.includes(file.mimetype)) {
+          return callback(
+            new BadRequestException('Only image files are allowed'),
+            false,
+          );
+        }
+
+        callback(null, true);
+      },
+    }),
+  )
+  @ApiBody({
+    required: true,
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @Put('banner-picture')
+  async uploadBannerPicture(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: CustomRequest,
+  ) {
+    const user = await this.usersService.findById(req.user.id);
+
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.bannerPictureUuid)
+      await this.filesService.delete(user.bannerPictureUuid);
+
+    const result = await this.filesService.upload(file);
+
+    user.bannerPictureUuid = result.filename;
+    user.bannerPicture = this.filesService.getUrl(result.filename);
+
+    await this.usersService.updateBannerPicture(
+      user.id,
+      user.bannerPicture,
+      user.bannerPictureUuid,
+    );
+
+    return UserAdapter.entityToDto(user);
   }
 
   @ApiBearerAuth()
@@ -248,6 +283,7 @@ export class UsersController {
   })
   @ApiNotFoundResponse({ description: 'User not found' })
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(SearchDeleteInterceptor)
   @Delete()
   async delete(@Req() req: CustomRequest) {
     const id = req.user.id;

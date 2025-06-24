@@ -3,7 +3,7 @@ import { UserDto } from 'src/dtos/user.dto';
 
 export class UsersPageDto {
   @ApiProperty({
-    type: UserDto,
+    type: [UserDto],
     description: 'The list of users',
   })
   users: UserDto[];

@@ -1,5 +1,4 @@
-
-FROM node
+FROM node:23-bullseye
 
 WORKDIR /usr/src/app
 
@@ -11,4 +10,6 @@ COPY . .
 
 RUN npm run build
 
-CMD ["npm", "run", "start:dev"]
+EXPOSE 3000
+
+CMD ["npm", "run", "start:prod"]

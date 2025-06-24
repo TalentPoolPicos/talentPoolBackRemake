@@ -1,6 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, IsUrl } from 'class-validator';
+import { IsEmail, IsOptional, IsString, IsUrl } from 'class-validator';
+import { AddressDto } from 'src/address/dtos/address.dto';
 import { Role } from 'src/common/enums/roles.enum';
+import { EnterpriseDto } from 'src/enterprise/dtos/enterprise.dto';
+import { SocialMediaDto } from 'src/socialmedia/dtos/socialmedia.dto';
+import { StudentDto } from 'src/students/dtos/student.dto';
+import { TagDto } from 'src/tags/dtos/tag.dto';
 
 export class UserDto {
   @ApiProperty({
@@ -9,6 +14,18 @@ export class UserDto {
   })
   @IsString({ message: 'UUID must be a string' })
   uuid: string;
+
+  @ApiProperty({
+    type: Date,
+    description: 'The date the user was created',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    type: Date,
+    description: 'The date the user was last updated',
+  })
+  updatedAt: Date;
 
   @ApiProperty({
     type: String,
@@ -37,17 +54,50 @@ export class UserDto {
     description: 'The profile picture of the user',
   })
   @IsUrl({}, { message: 'Profile picture must be a valid URL' })
-  profilePicture?: string;
+  profilePicture: string | null;
 
   @ApiProperty({
-    type: Date,
-    description: 'The date the user was created',
+    type: String,
+    required: false,
+    description: 'The banner picture of the user',
   })
-  created_at: Date;
+  @IsUrl({}, { message: 'Banner picture must be a valid URL' })
+  bannerPicture: string | null;
 
   @ApiProperty({
-    type: Date,
-    description: 'The date the user was last updated',
+    type: AddressDto,
+    required: false,
+    description: 'The address of the user',
+    nullable: true,
   })
-  updated_at: Date;
+  address: AddressDto | null;
+
+  @ApiProperty({
+    type: [SocialMediaDto],
+    description: 'The social media of the user',
+  })
+  @IsString({ each: true, message: 'Social media must be a string' })
+  socialMedia: SocialMediaDto[];
+
+  @ApiProperty({
+    type: [TagDto],
+    description: 'The tags of the user',
+  })
+  tags: TagDto[];
+
+  @ApiProperty({
+    type: StudentDto,
+    description: 'The student of the user',
+    required: false,
+  })
+  @IsOptional()
+  student?: StudentDto;
+
+  @ApiProperty({
+    type: EnterpriseDto,
+    required: false,
+    description: 'The enterprise of the user',
+  })
+  @IsOptional()
+  enterprise?: EnterpriseDto;
 }
