@@ -195,7 +195,6 @@ export class StudentsService {
   private checkIfStudentHasMinimumData(student: Student): boolean {
     const requiredFields = [
       'name',
-      'birthDate',
       'email',
       'registrationNumber',
       'description',
