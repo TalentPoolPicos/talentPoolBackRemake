@@ -14,7 +14,6 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
-  app.setGlobalPrefix('api/v3');
   app.enableShutdownHooks();
 
   if (process.env.ENV === 'production') {
@@ -31,7 +30,7 @@ async function bootstrap() {
     const config = new DocumentBuilder()
       .setTitle('TalentPool API Documentation')
       .setDescription('Interactive API documentation')
-      .setVersion('2')
+      .setVersion('3')
       .addBearerAuth()
       .addServer('/')
       .build();
