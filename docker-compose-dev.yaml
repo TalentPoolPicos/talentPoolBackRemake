@@ -14,9 +14,13 @@ services:
     restart: always
     env_file:
       - dev.env
+    environment:
+      - MINIO_API_PORT_NUMBER=${MINIO_PORT}
+      - MINIO_CONSOLE_PORT_NUMBER=9001
+      - MINIO_DEFAULT_BUCKETS=${MINIO_BUCKET_NAME}
     ports:
-      - "9000:${MINIO_API_PORT_NUMBER}"
-      - "8000:8000"
+      - "${MINIO_PORT}:${MINIO_PORT}"
+      - "9001:9001"
     volumes:
       - minio-data:/bitnami/minio/data
 

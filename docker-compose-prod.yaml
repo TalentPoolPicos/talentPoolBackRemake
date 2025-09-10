@@ -13,15 +13,12 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - PORT=${PORT}
       - ELASTICSEARCH_NODE=${ELASTICSEARCH_NODE}
-      - MINIO_API_PORT_NUMBER=${MINIO_API_PORT_NUMBER}
-      - MINIO_CONSOLE_PORT_NUMBER=${MINIO_CONSOLE_PORT_NUMBER}
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-      - MINIO_DEFAULT_BUCKETS=${MINIO_DEFAULT_BUCKETS}
       - MINIO_ENDPOINT=${MINIO_ENDPOINT}
-      - MINIO_SERVER_URL=${MINIO_SERVER_URL}
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_PORT=${MINIO_PORT}
+      - MINIO_USE_SSL=${MINIO_USE_SSL}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
     depends_on:
       postgres:
         condition: service_healthy
@@ -51,19 +48,18 @@ services:
     image: bitnami/minio:2025.5.24-debian-12-r7
     restart: always
     environment:
-      - MINIO_API_PORT_NUMBER=${MINIO_API_PORT_NUMBER}
-      - MINIO_CONSOLE_PORT_NUMBER=${MINIO_CONSOLE_PORT_NUMBER}
+      - MINIO_API_PORT_NUMBER=${MINIO_PORT}
+      - MINIO_CONSOLE_PORT_NUMBER=9001
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-      - MINIO_DEFAULT_BUCKETS=${MINIO_DEFAULT_BUCKETS}
-      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
-      - MINIO_SERVER_URL=${MINIO_SERVER_URL}
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_DEFAULT_BUCKETS=${MINIO_BUCKET_NAME}
+    ports:
+      - "${MINIO_PORT}:${MINIO_PORT}"
+      - "9001:9001"
     volumes:
       - minio-data:/bitnami/minio/data
     healthcheck:
-      test: ["CMD-SHELL", "mc alias set local http://localhost:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} >/dev/null 2>&1"]
+      test: ["CMD-SHELL", "mc alias set local http://localhost:${MINIO_PORT} $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} >/dev/null 2>&1"]
       interval: 30s
       timeout: 10s
       retries: 3
