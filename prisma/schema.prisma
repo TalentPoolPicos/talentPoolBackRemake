@@ -33,103 +33,143 @@ enum SocialMediaType {
   discord
 }
 
+enum AttachmentType {
+  profile_picture
+  banner_picture
+  curriculum
+  history
+  document
+  image
+  video
+  audio
+  other
+}
+
+model Attachment {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // File metadata
+  filename     String         @db.VarChar(255)
+  originalName String         @map("original_name") @db.VarChar(255)
+  mimeType     String         @map("mime_type") @db.VarChar(100)
+  size         Int // Size in bytes
+  type         AttachmentType
+
+  // File storage info
+  storageKey String  @unique @map("storage_key") @db.VarChar(500) // MinIO/S3 key
+  url        String? @db.VarChar(1000) // Generated URL (can be regenerated)
+
+  // Relations to entities that can have attachments
+  userId       Int? @map("user_id")
+  studentId    Int? @map("student_id")
+  enterpriseId Int? @map("enterprise_id")
+
+  user       User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  student    Student?    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  enterprise Enterprise? @relation(fields: [enterpriseId], references: [id], onDelete: Cascade)
+
+  // Indexes for performance
+  @@index([userId, type])
+  @@index([studentId, type])
+  @@index([enterpriseId, type])
+  @@index([type])
+  @@index([storageKey])
+  @@map("attachments")
+}
+
 model User {
-  id                   Int           @id @default(autoincrement())
-  uuid                 String        @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt            DateTime      @default(now()) @map("created_at")
-  updatedAt            DateTime      @updatedAt @map("updated_at")
-  
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   // Status fields
-  isVerified           Boolean       @default(false) @map("is_verified")
-  isActive             Boolean       @default(false) @map("is_active")
-  isDeleted            Boolean       @default(false) @map("is_deleted")
-  isComplete           Boolean       @default(false) @map("is_complete")
-  
+  isVerified Boolean @default(false) @map("is_verified")
+  isActive   Boolean @default(false) @map("is_active")
+  isDeleted  Boolean @default(false) @map("is_deleted")
+  isComplete Boolean @default(false) @map("is_complete")
+
   // Authentication fields
-  username             String        @unique @db.VarChar(100)
-  email                String        @unique
-  password             String
-  role                 Role          @default(student)
-  
+  username String @unique @db.VarChar(100)
+  email    String @unique
+  password String
+  role     Role   @default(student)
+
   // Profile fields
-  name                 String?       @db.VarChar(100)
-  description          String?       @db.VarChar(255)
-  profilePictureUuid   String?       @map("profile_picture_uuid")
-  profilePicture       String?       @map("profile_picture")
-  bannerPictureUuid    String?       @map("banner_picture_uuid")
-  bannerPicture        String?       @map("banner_picture")
-  
+  name        String? @db.VarChar(100)
+  description String? @db.VarChar(255)
+
   // Relations
-  student              Student?
-  enterprise           Enterprise?
-  socialMedia          SocialMedia[]
-  tags                 Tag[]
-  address              Address?
-  initiatedLikes       Like[]        @relation("LikeInitiator")
-  receivedLikes        Like[]        @relation("LikeReceiver")
-  
+  student        Student?
+  enterprise     Enterprise?
+  socialMedia    SocialMedia[]
+  tags           Tag[]
+  address        Address?
+  attachments    Attachment[]
+  initiatedLikes Like[]        @relation("LikeInitiator")
+  receivedLikes  Like[]        @relation("LikeReceiver")
+
   // Constraints to ensure role consistency
   @@index([role])
   @@map("users")
 }
 
 model Student {
-  id                   Int       @id @default(autoincrement())
-  uuid                 String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt            DateTime  @default(now()) @map("created_at")
-  updatedAt            DateTime  @updatedAt @map("updated_at")
-  
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   // Student-specific fields
-  birthDate            DateTime? @map("birth_date")
-  course               String?   @db.VarChar(100)
-  registrationNumber   String?   @unique @db.VarChar(11) @map("registration_number")
-  
-  // Academic documents
-  curriculum           String?
-  curriculumUuid       String?   @map("curriculum_uuid")
-  history              String?
-  historyUuid          String?   @map("history_uuid")
-  lattes               String?   @db.VarChar(255)
-  
-  // User relation
-  userId               Int       @unique @map("user_id")
-  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  birthDate          DateTime? @map("birth_date")
+  course             String?   @db.VarChar(100)
+  registrationNumber String?   @unique @map("registration_number") @db.VarChar(11)
+  lattes             String?   @db.VarChar(255)
+
+  // Relations
+  userId      Int          @unique @map("user_id")
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attachments Attachment[]
+
   @@index([course])
   @@map("students")
 }
 
 model Enterprise {
-  id                   Int       @id @default(autoincrement())
-  uuid                 String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt            DateTime  @default(now()) @map("created_at")
-  updatedAt            DateTime  @updatedAt @map("updated_at")
-  
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   // Enterprise-specific fields
-  fantasyName          String?   @db.VarChar(100) @map("fantasy_name")
-  cnpj                 String?   @unique @db.VarChar(18)
-  socialReason         String?   @db.VarChar(100) @map("social_reason")
-  
-  // User relation
-  userId               Int       @unique @map("user_id")
-  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  fantasyName  String? @map("fantasy_name") @db.VarChar(100)
+  cnpj         String? @unique @db.VarChar(18)
+  socialReason String? @map("social_reason") @db.VarChar(100)
+
+  // Relations
+  userId      Int          @unique @map("user_id")
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attachments Attachment[]
+
   @@index([cnpj])
   @@map("enterprises")
 }
 
 model SocialMedia {
-  id        Int               @id @default(autoincrement())
-  uuid      String            @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime          @default(now()) @map("created_at")
-  updatedAt DateTime          @updatedAt @map("updated_at")
-  
-  type      SocialMediaType
-  url       String            @db.VarChar(255)
-  
-  userId    Int               @map("user_id")
-  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  type SocialMediaType
+  url  String          @db.VarChar(255)
+
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("social_media")
 }
 
@@ -138,45 +178,45 @@ model Tag {
   uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  
-  label     String   @db.VarChar(40)
-  
-  userId    Int      @map("user_id")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
+  label String @db.VarChar(40)
+
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("tags")
 }
 
 model Address {
-  id           Int      @id @default(autoincrement())
-  uuid         String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  
-  zipCode      String   @db.VarChar(10) @map("zip_code")
-  street       String?  @db.VarChar(100)
-  neighborhood String?  @db.VarChar(100)
-  city         String?  @db.VarChar(100)
-  state        String?  @db.VarChar(100)
-  
-  userId       Int      @unique @map("user_id")
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  zipCode      String  @map("zip_code") @db.VarChar(10)
+  street       String? @db.VarChar(100)
+  neighborhood String? @db.VarChar(100)
+  city         String? @db.VarChar(100)
+  state        String? @db.VarChar(100)
+
+  userId Int  @unique @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("addresses")
 }
 
 model Like {
-  id          Int      @id @default(autoincrement())
-  uuid        String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  
-  initiatorId Int      @map("initiator_id")
-  receiverId  Int      @map("receiver_id")
-  
-  initiator   User     @relation("LikeInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
-  receiver    User     @relation("LikeReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
-  
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  initiatorId Int @map("initiator_id")
+  receiverId  Int @map("receiver_id")
+
+  initiator User @relation("LikeInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  receiver  User @relation("LikeReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
   // Prevent self-likes and duplicate likes
   @@unique([initiatorId, receiverId])
   @@index([initiatorId])
