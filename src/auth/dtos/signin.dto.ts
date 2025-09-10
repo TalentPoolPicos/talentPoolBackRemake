@@ -4,23 +4,29 @@ import { IsString, IsStrongPassword, MinLength } from 'class-validator';
 export class SignInDto {
   @ApiProperty({
     type: String,
-    example: 'john',
-    description: 'The username of the user',
+    example: 'joao_silva',
+    description: 'O nome de usuário',
   })
-  @IsString({ message: 'Username must be a string' })
-  @MinLength(4, { message: 'Username must be at least 4 characters long' })
+  @IsString({ message: 'Nome de usuário deve ser uma string' })
+  @MinLength(3, { message: 'Nome de usuário deve ter pelo menos 3 caracteres' })
   username: string;
 
   @ApiProperty({
     type: String,
-    example: 'StrongP@ssword1!',
-    description: 'The password of the user (must be strong)',
+    example: 'MinhaSenh@123',
+    description: 'A senha do usuário (deve ser forte)',
   })
   @IsStrongPassword(
-    {},
+    {
+      minLength: 8,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1,
+    },
     {
       message:
-        'Password must be strong (include uppercase, lowercase, numbers, and symbols)',
+        'Senha deve ter pelo menos 8 caracteres e conter pelo menos uma letra maiúscula, uma minúscula, um número e um símbolo',
     },
   )
   password: string;

@@ -6,109 +6,254 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from 'src/users/users.service';
-
-import { User } from 'src/entities/user.entity';
+import { PrismaService } from '../prisma/prisma.service';
 import { compare, hash } from 'bcrypt';
-import { Role } from 'src/common/enums/roles.enum';
 import { JwtPayload } from './interfaces/payload';
 import { RefreshPayload } from './interfaces/refresh';
-import { StudentsService } from 'src/students/students.service';
-import { UserAdapter } from 'src/adapters/user.adapter';
+import { UserWithProfiles } from './interfaces/user.interface';
+import { SignUpDto } from './dtos/signup.dto';
+import { UserResponseDto, AccessTokenDto } from './dtos/acess.dto';
+import { isInstitutionalEmail } from './constants/institutional-emails';
+import { Role } from './enums/role.enum';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private studentService: StudentsService,
+    private prisma: PrismaService,
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(username: string, password: string): Promise<User> {
-    const user = await this.usersService.findByUsername(username);
-    if (!user) throw new NotFoundException();
+  /**
+   * Validates user credentials
+   */
+  async validateUser(
+    username: string,
+    password: string,
+  ): Promise<UserWithProfiles> {
+    const user = (await this.prisma.user.findUnique({
+      where: { username },
+      include: {
+        student: true,
+        enterprise: true,
+      },
+    })) as UserWithProfiles | null;
 
-    const userPassword = user.password;
-    const isPasswordValid = await compare(password, userPassword);
-
-    if (isPasswordValid) {
-      return user;
-    } else {
-      throw new UnauthorizedException();
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
     }
+
+    if (user.isDeleted) {
+      throw new UnauthorizedException('Conta do usuário foi excluída');
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('Conta do usuário não está ativa');
+    }
+
+    const isPasswordValid = await compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Credenciais inválidas');
+    }
+
+    return user;
   }
 
-  async signIn(username: string, password: string) {
+  /**
+   * Sign in user and return tokens
+   * Works for all user roles (ADMIN, MODERATOR, STUDENT, ENTERPRISE, TEACHER)
+   */
+  async signIn(username: string, password: string): Promise<AccessTokenDto> {
     const user = await this.validateUser(username, password);
 
     const payload: JwtPayload = {
+      sub: user.id,
       username: user.username,
-      id: user.id,
       uuid: user.uuid,
       role: user.role,
     };
+
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = this.jwtService.sign(
+      { ...payload, isRefreshToken: true },
+      { expiresIn: '7d' },
+    );
+
     return {
-      access_token: this.jwtService.sign(payload),
-      refresh_token: this.jwtService.sign(
-        { ...payload, isRefreshToken: true },
-        {
-          expiresIn: '7d',
-        },
-      ),
+      access_token: accessToken,
+      refresh_token: refreshToken,
       access_token_expires_in: 3600,
       refresh_token_expires_in: 604800,
-      user: UserAdapter.entityToDto(user),
+      user: this.mapUserToDto(user),
     };
   }
 
-  async signUp(username: string, email: string, password: string, role: Role) {
-    try {
-      const cryptPassword = await hash(password, 10);
-      const user = await this.usersService.create({
-        username,
-        email,
-        password: cryptPassword,
-        role,
-      });
-      return this.signIn(user.username, password);
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message.includes('username'))
-          throw new ConflictException('User already exists');
-        else if (error.message.includes('email'))
-          throw new ConflictException('Email already exists');
-        else throw new UnprocessableEntityException();
-      } else throw new UnprocessableEntityException();
-    }
-  }
+  /**
+   * Sign up new user (students only with institutional email)
+   */
+  async signUp(signUpDto: SignUpDto): Promise<AccessTokenDto> {
+    const { username, email, password, name, description } = signUpDto;
 
-  async refresh(refreshToken: string) {
-    let payload: RefreshPayload;
-    try {
-      payload = this.jwtService.verify<RefreshPayload>(refreshToken);
-    } catch {
-      throw new UnauthorizedException();
+    // Validate institutional email (extra validation layer)
+    if (!isInstitutionalEmail(email)) {
+      throw new UnprocessableEntityException(
+        'Email deve ser de uma instituição educacional válida',
+      );
     }
 
-    const user = await this.usersService.findById(payload.id);
+    // Check if user already exists
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ username }, { email }],
+      },
+    });
 
-    if (!user) throw new NotFoundException();
+    if (existingUser) {
+      if (existingUser.username === username) {
+        throw new ConflictException('Nome de usuário já existe');
+      }
+      if (existingUser.email === email) {
+        throw new ConflictException('Email já está em uso');
+      }
+    }
 
-    if (payload.isRefreshToken) {
+    const hashedPassword = await hash(password, 12);
+
+    try {
+      const user = await this.prisma.$transaction(
+        async (tx): Promise<UserWithProfiles> => {
+          // Create user as STUDENT (forced)
+          const newUser = (await tx.user.create({
+            data: {
+              username,
+              email,
+              password: hashedPassword,
+              role: Role.STUDENT, // Always STUDENT for sign-up
+              name,
+              description,
+              isActive: true,
+            },
+            include: {
+              student: true,
+              enterprise: true,
+            },
+          })) as UserWithProfiles;
+
+          // Create student profile (always for sign-up)
+          await tx.student.create({
+            data: {
+              userId: newUser.id,
+            },
+          });
+
+          return newUser;
+        },
+      );
+
+      // Generate tokens
+      const payload: JwtPayload = {
+        sub: user.id,
+        username: user.username,
+        uuid: user.uuid,
+        role: user.role,
+      };
+
+      const accessToken = this.jwtService.sign(payload);
+      const refreshToken = this.jwtService.sign(
+        { ...payload, isRefreshToken: true },
+        { expiresIn: '7d' },
+      );
+
       return {
-        access_token: this.jwtService.sign({
-          username: payload.username,
-          id: payload.id,
-          uuid: payload.uuid,
-          role: payload.role,
-        }),
+        access_token: accessToken,
         refresh_token: refreshToken,
         access_token_expires_in: 3600,
         refresh_token_expires_in: 604800,
-        user: UserAdapter.entityToDto(user),
+        user: this.mapUserToDto(user),
       };
-    } else {
-      throw new UnauthorizedException();
+    } catch {
+      throw new UnprocessableEntityException('Falha ao criar usuário');
     }
+  }
+
+  /**
+   * Refresh access token using refresh token
+   */
+  async refresh(refreshToken: string): Promise<AccessTokenDto> {
+    let payload: RefreshPayload;
+
+    try {
+      payload = this.jwtService.verify<RefreshPayload>(refreshToken);
+    } catch {
+      throw new UnauthorizedException('Token de renovação inválido');
+    }
+
+    if (!payload.isRefreshToken) {
+      throw new UnauthorizedException('Token não é um token de renovação');
+    }
+
+    const user = (await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+      include: {
+        student: true,
+        enterprise: true,
+      },
+    })) as UserWithProfiles | null;
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    if (user.isDeleted || !user.isActive) {
+      throw new UnauthorizedException('Conta do usuário não está ativa');
+    }
+
+    const newPayload: JwtPayload = {
+      sub: user.id,
+      username: user.username,
+      uuid: user.uuid,
+      role: user.role,
+    };
+
+    const newAccessToken = this.jwtService.sign(newPayload);
+
+    return {
+      access_token: newAccessToken,
+      refresh_token: refreshToken,
+      access_token_expires_in: 3600,
+      refresh_token_expires_in: 604800,
+      user: this.mapUserToDto(user),
+    };
+  }
+
+  /**
+   * Find user by ID (for guards and middleware)
+   */
+  async findUserById(id: number): Promise<UserWithProfiles | null> {
+    return (await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        student: true,
+        enterprise: true,
+      },
+    })) as UserWithProfiles | null;
+  }
+
+  /**
+   * Map user entity to DTO
+   */
+  private mapUserToDto(user: UserWithProfiles): UserResponseDto {
+    return {
+      uuid: user.uuid,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      name: user.name || undefined,
+      description: user.description || undefined,
+      isVerified: user.isVerified,
+      isActive: user.isActive,
+      isComplete: user.isComplete,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+    };
   }
 }

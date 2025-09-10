@@ -1,11 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsJWT } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 
 export class RefreshTokenDto {
   @ApiProperty({
     type: String,
-    description: 'The refresh token of the user',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    description: 'O token de renovação para obter um novo token de acesso',
   })
-  @IsJWT()
+  @IsString({ message: 'Token de renovação deve ser uma string' })
+  @IsNotEmpty({ message: 'Token de renovação não pode estar vazio' })
   refreshToken: string;
 }

@@ -9,132 +9,157 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
+  ApiBadRequestResponse,
 } from '@nestjs/swagger';
 import { AccessTokenDto } from './dtos/acess.dto';
 import { SignUpDto } from './dtos/signup.dto';
 import { RefreshTokenDto } from './dtos/refresh.dto';
-import { Role } from 'src/common/enums/roles.enum';
 import { Public } from './decotaros/public.decorator';
 
-@ApiTags('Auth')
+@ApiTags('Autenticação')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Public()
   @ApiOperation({
-    summary: 'Sign in as a student or enterprise',
-    description: 'Sign a new user as student or enterprise.',
+    summary: 'Fazer login',
+    description: 'Autenticar usuário com nome de usuário e senha',
   })
   @ApiOkResponse({
-    description: 'The user has successfully signed in',
+    description: 'Usuário logado com sucesso',
     type: AccessTokenDto,
   })
-  @ApiNotFoundResponse({ description: 'The user could not be found' })
+  @ApiNotFoundResponse({
+    description: 'Usuário não encontrado',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'Usuário não encontrado',
+        error: 'Not Found',
+      },
+    },
+  })
   @ApiUnauthorizedResponse({
-    description: 'The user could not be authenticated',
+    description: 'Credenciais inválidas ou conta inativa',
+    schema: {
+      example: {
+        statusCode: 401,
+        message: 'Credenciais inválidas',
+        error: 'Unauthorized',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Dados de entrada inválidos',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['Nome de usuário deve ter pelo menos 3 caracteres'],
+        error: 'Bad Request',
+      },
+    },
   })
   @HttpCode(HttpStatus.OK)
   @Post('sign-in')
-  signIn(@Body() signInDto: SignInDto) {
+  signIn(@Body() signInDto: SignInDto): Promise<AccessTokenDto> {
     return this.authService.signIn(signInDto.username, signInDto.password);
   }
 
   @Public()
-  @ApiTags('Student')
   @ApiOperation({
-    summary: 'Sign up as a student',
-    description: 'Create and sign up a new user as student.',
+    summary: 'Cadastro de estudante',
+    description:
+      'Criar uma nova conta de estudante com email institucional (ex: @ufpi.edu.br)',
   })
   @ApiOkResponse({
-    description: 'The student has successfully signed up',
+    description: 'Usuário criado e logado com sucesso',
     type: AccessTokenDto,
   })
-  @ApiNotFoundResponse({ description: 'The student could not be found' })
-  @ApiUnauthorizedResponse({
-    description: 'The student could not be authenticated',
-  })
   @ApiConflictResponse({
-    description:
-      '"The student already exists" or "The email is already in use" or "role is not valid"',
+    description: 'Nome de usuário ou email já existe',
     schema: {
       example: {
-        statusCode: HttpStatus.CONFLICT,
-        message: ['The student already exists', 'The email is already in use'],
+        statusCode: 409,
+        message: 'Nome de usuário já existe',
+        error: 'Conflict',
       },
     },
   })
   @ApiUnprocessableEntityResponse({
-    description: 'The model state is invalid',
-  })
-  @HttpCode(HttpStatus.OK)
-  @Post('student/sign-up')
-  signUpWithStudent(@Body() signInDto: SignUpDto) {
-    return this.authService.signUp(
-      signInDto.username,
-      signInDto.email,
-      signInDto.password,
-      Role.STUDENT,
-    );
-  }
-
-  @Public()
-  @ApiTags('Enterprise')
-  @ApiOperation({
-    summary: 'Sign up as a enterprise',
-    description: 'Create and sign up a new user as enterprise.',
-  })
-  @ApiOkResponse({
-    description: 'The enterprise has successfully signed up',
-    type: AccessTokenDto,
-  })
-  @ApiNotFoundResponse({ description: 'The enterprise could not be found' })
-  @ApiUnauthorizedResponse({
-    description: 'The enterprise could not be authenticated',
-  })
-  @ApiConflictResponse({
-    description:
-      '"The enterprise already exists" or "The email is already in use" or "role is not valid"',
+    description: 'Falha ao criar usuário',
     schema: {
       example: {
-        statusCode: HttpStatus.CONFLICT,
+        statusCode: 422,
+        message: 'Falha ao criar usuário',
+        error: 'Unprocessable Entity',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Dados de entrada inválidos',
+    schema: {
+      example: {
+        statusCode: 400,
         message: [
-          'The enterprise already exists',
-          'The email is already in use',
+          'Nome de usuário deve ter pelo menos 3 caracteres',
+          'Email deve ser um endereço de email válido',
+          'Email deve ser de um domínio institucional. Domínios válidos: @ufpi.edu.br, @ufpi.br, @ufc.br, @ifpi.edu.br, etc.',
+          'Senha deve ter pelo menos 8 caracteres e conter pelo menos uma letra maiúscula, uma minúscula, um número e um símbolo',
         ],
+        error: 'Bad Request',
       },
     },
   })
-  @ApiUnprocessableEntityResponse({
-    description: 'The model state is invalid',
-  })
-  @HttpCode(HttpStatus.OK)
-  @Post('enterprise/sign-up')
-  signUpWithEnterprise(@Body() signInDto: SignUpDto) {
-    return this.authService.signUp(
-      signInDto.username,
-      signInDto.email,
-      signInDto.password,
-      Role.ENTERPRISE,
-    );
+  @HttpCode(HttpStatus.CREATED)
+  @Post('sign-up')
+  signUp(@Body() signUpDto: SignUpDto): Promise<AccessTokenDto> {
+    return this.authService.signUp(signUpDto);
   }
 
   @Public()
-  @ApiOperation({ summary: 'Refresh the access token' })
+  @ApiOperation({
+    summary: 'Renovar token de acesso',
+    description:
+      'Obter um novo token de acesso usando um token de renovação válido',
+  })
   @ApiOkResponse({
-    description: 'The access token has been successfully refreshed',
-
+    description: 'Token de acesso renovado com sucesso',
     type: AccessTokenDto,
   })
   @ApiUnauthorizedResponse({
-    description: 'The refresh token is invalid',
+    description: 'Token de renovação inválido ou expirado',
+    schema: {
+      example: {
+        statusCode: 401,
+        message: 'Token de renovação inválido',
+        error: 'Unauthorized',
+      },
+    },
   })
   @ApiNotFoundResponse({
-    description: 'The user could not be found',
+    description: 'Usuário associado ao token não encontrado',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'Usuário não encontrado',
+        error: 'Not Found',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Dados de entrada inválidos',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: ['Token de renovação não pode estar vazio'],
+        error: 'Bad Request',
+      },
+    },
   })
   @HttpCode(HttpStatus.OK)
   @Post('refresh')
-  refresh(@Body() refreshTokenDto: RefreshTokenDto) {
+  refresh(@Body() refreshTokenDto: RefreshTokenDto): Promise<AccessTokenDto> {
     return this.authService.refresh(refreshTokenDto.refreshToken);
   }
 }

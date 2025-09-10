@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { UsersModule } from 'src/users/users.module';
+import { PrismaModule } from '../prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
@@ -9,7 +9,7 @@ import { AuthGuard } from './guards/auth.guard';
 
 @Module({
   imports: [
-    UsersModule,
+    PrismaModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -30,5 +30,6 @@ import { AuthGuard } from './guards/auth.guard';
       useClass: AuthGuard,
     },
   ],
+  exports: [AuthService],
 })
 export class AuthModule {}
