@@ -66,17 +66,17 @@ model Attachment {
   avatarUserId Int? @unique @map("avatar_user_id")
   bannerUserId Int? @unique @map("banner_user_id")
 
-  // Relations for Student curriculum
-  studentId Int? @map("student_id")
+  // Relation for Student curriculum (one-to-one)
+  curriculumStudentId Int? @unique @map("curriculum_student_id")
 
-  avatarUser User?    @relation("UserAvatar", fields: [avatarUserId], references: [id], onDelete: Cascade)
-  bannerUser User?    @relation("UserBanner", fields: [bannerUserId], references: [id], onDelete: Cascade)
-  student    Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  avatarUser        User?    @relation("UserAvatar", fields: [avatarUserId], references: [id], onDelete: Cascade)
+  bannerUser        User?    @relation("UserBanner", fields: [bannerUserId], references: [id], onDelete: Cascade)
+  curriculumStudent Student? @relation("StudentCurriculum", fields: [curriculumStudentId], references: [id], onDelete: Cascade)
 
   // Indexes for performance
   @@index([avatarUserId])
   @@index([bannerUserId])
-  @@index([studentId, type])
+  @@index([curriculumStudentId])
   @@index([type])
   @@index([storageKey])
   @@map("attachments")
@@ -133,9 +133,9 @@ model Student {
   lattes             String? @db.VarChar(255)
 
   // Relations
-  userId      Int          @unique @map("user_id")
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  attachments Attachment[]
+  userId     Int         @unique @map("user_id")
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  curriculum Attachment? @relation("StudentCurriculum")
 
   @@index([course])
   @@map("students")
