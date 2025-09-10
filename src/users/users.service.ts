@@ -4,8 +4,10 @@ import {
   ForbiddenException,
   ConflictException,
   UnprocessableEntityException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 import {
   UserWithFullProfile,
   PrivateUserProfile,
@@ -31,18 +33,32 @@ import {
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(UsersService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private storageService: StorageService,
+  ) {}
 
   /**
    * Busca perfil completo do usuário (privado - para /me)
    */
   async getMyProfile(userId: number): Promise<UserProfileResponseDto> {
+    this.logger.log(`Buscando perfil privado do usuário ID: ${userId}`);
+
     const user = await this.findUserWithFullProfile(userId);
     if (!user) {
+      this.logger.warn(
+        `Perfil privado não encontrado para usuário ID: ${userId}`,
+      );
       throw new NotFoundException('Usuário não encontrado');
     }
 
     const stats = await this.getUserStats(userId);
+
+    this.logger.log(
+      `Perfil privado carregado com sucesso para usuário: ${user.username}`,
+    );
     return this.mapToPrivateProfileDto(user, stats);
   }
 
@@ -50,15 +66,24 @@ export class UsersService {
    * Busca perfil público do usuário
    */
   async getPublicProfile(uuid: string): Promise<PublicUserProfileResponseDto> {
+    this.logger.log(`Buscando perfil público do usuário UUID: ${uuid}`);
+
     const user = await this.findUserByUuidWithProfile(uuid);
     if (!user) {
+      this.logger.warn(`Perfil público não encontrado para UUID: ${uuid}`);
       throw new NotFoundException('Usuário não encontrado');
     }
 
     if (!user.isActive || user.isDeleted) {
+      this.logger.warn(
+        `Tentativa de acesso a perfil inativo/deletado UUID: ${uuid}`,
+      );
       throw new NotFoundException('Perfil não disponível');
     }
 
+    this.logger.log(
+      `Perfil público carregado com sucesso para usuário: ${user.username}`,
+    );
     return this.mapToPublicProfileDto(user);
   }
 
@@ -69,8 +94,11 @@ export class UsersService {
     userId: number,
     updateData: UpdateProfileDto,
   ): Promise<UserProfileResponseDto> {
+    this.logger.log(`Atualizando perfil básico do usuário ID: ${userId}`);
+
     const user = await this.findUserById(userId);
     if (!user) {
+      this.logger.warn(`Usuário não encontrado para atualização ID: ${userId}`);
       throw new NotFoundException('Usuário não encontrado');
     }
 
@@ -89,6 +117,7 @@ export class UsersService {
     }
 
     if (Object.keys(updatePayload).length === 0) {
+      this.logger.log(`Nenhum dado para atualizar no perfil básico do usuário ID: ${userId}`);
       // Se não há dados para atualizar, retorna o perfil atual
       return this.getMyProfile(userId);
     }
@@ -98,6 +127,7 @@ export class UsersService {
       data: updatePayload,
     });
 
+    this.logger.log(`Perfil básico atualizado com sucesso para usuário ID: ${userId}`);
     return this.getMyProfile(userId);
   }
 
@@ -676,5 +706,74 @@ export class UsersService {
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     };
+  }
+
+  /**
+   * Exemplo de método para upload de avatar do usuário
+   * Demonstra como usar o StorageService integrado
+   */
+  async uploadAvatar(
+    userId: number,
+    file: Express.Multer.File,
+  ): Promise<{ avatarUrl: string }> {
+    this.logger.log(`Iniciando upload de avatar para usuário ID: ${userId}`);
+
+    // Faz upload do arquivo usando o StorageService
+    const uploadResult = await this.storageService.uploadFile(
+      file,
+      'profile_picture', // Tipo de attachment
+      userId,
+    );
+
+    // Aqui você poderia salvar a chave de storage no banco de dados
+    // Por exemplo, atualizar o campo avatar do usuário com uploadResult.storageKey
+
+    // Gera URL temporária para acesso ao arquivo
+    const avatarUrl = await this.storageService.generateFileUrl(
+      uploadResult.storageKey,
+      3600, // URL válida por 1 hora
+    );
+
+    this.logger.log(
+      `Upload de avatar concluído com sucesso para usuário ID: ${userId}`,
+    );
+    return { avatarUrl };
+  }
+
+  /**
+   * Exemplo de método para upload de banner do usuário
+   */
+  async uploadBanner(
+    userId: number,
+    file: Express.Multer.File,
+  ): Promise<{ bannerUrl: string }> {
+    this.logger.log(`Iniciando upload de banner para usuário ID: ${userId}`);
+
+    const uploadResult = await this.storageService.uploadFile(
+      file,
+      'banner_picture',
+      userId,
+    );
+
+    const bannerUrl = await this.storageService.generateFileUrl(
+      uploadResult.storageKey,
+      3600,
+    );
+
+    this.logger.log(
+      `Upload de banner concluído com sucesso para usuário ID: ${userId}`,
+    );
+    return { bannerUrl };
+  }
+
+  /**
+   * Exemplo de método para deletar arquivo do usuário
+   */
+  async deleteUserFile(storageKey: string): Promise<void> {
+    this.logger.log(`Deletando arquivo com chave: ${storageKey}`);
+    
+    await this.storageService.deleteFile(storageKey);
+    
+    this.logger.log(`Arquivo deletado com sucesso: ${storageKey}`);
   }
 }

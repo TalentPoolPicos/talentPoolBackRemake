@@ -4,6 +4,7 @@ import {
   NotFoundException,
   UnauthorizedException,
   UnprocessableEntityException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -18,6 +19,8 @@ import { Role } from './enums/role.enum';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
@@ -30,6 +33,8 @@ export class AuthService {
     username: string,
     password: string,
   ): Promise<UserWithProfiles> {
+    this.logger.log(`Validando credenciais para usuário: ${username}`);
+
     const user = (await this.prisma.user.findUnique({
       where: { username },
       include: {
@@ -39,22 +44,27 @@ export class AuthService {
     })) as UserWithProfiles | null;
 
     if (!user) {
+      this.logger.warn(`Tentativa de login com usuário inexistente: ${username}`);
       throw new NotFoundException('Usuário não encontrado');
     }
 
     if (user.isDeleted) {
+      this.logger.warn(`Tentativa de login com conta excluída: ${username}`);
       throw new UnauthorizedException('Conta do usuário foi excluída');
     }
 
     if (!user.isActive) {
+      this.logger.warn(`Tentativa de login com conta inativa: ${username}`);
       throw new UnauthorizedException('Conta do usuário não está ativa');
     }
 
     const isPasswordValid = await compare(password, user.password);
     if (!isPasswordValid) {
+      this.logger.warn(`Tentativa de login com senha inválida: ${username}`);
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
+    this.logger.log(`Login realizado com sucesso para usuário: ${username}`);
     return user;
   }
 
@@ -92,8 +102,11 @@ export class AuthService {
   async signUp(signUpDto: SignUpDto): Promise<AccessTokenDto> {
     const { username, email, password, name, description } = signUpDto;
 
+    this.logger.log(`Tentativa de cadastro para usuário: ${username} (${email})`);
+
     // Validate institutional email (extra validation layer)
     if (!isInstitutionalEmail(email)) {
+      this.logger.warn(`Tentativa de cadastro com email não institucional: ${email}`);
       throw new UnprocessableEntityException(
         'Email deve ser de uma instituição educacional válida',
       );
@@ -108,9 +121,11 @@ export class AuthService {
 
     if (existingUser) {
       if (existingUser.username === username) {
+        this.logger.warn(`Tentativa de cadastro com username já existente: ${username}`);
         throw new ConflictException('Nome de usuário já existe');
       }
       if (existingUser.email === email) {
+        this.logger.warn(`Tentativa de cadastro com email já existente: ${email}`);
         throw new ConflictException('Email já está em uso');
       }
     }
@@ -162,13 +177,16 @@ export class AuthService {
         { expiresIn: '7d' },
       );
 
+      this.logger.log(`Usuário criado com sucesso: ${username} (ID: ${user.id})`);
+
       return {
         access_token: accessToken,
         refresh_token: refreshToken,
         access_token_expires_in: 3600,
         refresh_token_expires_in: 604800,
       };
-    } catch {
+    } catch (error) {
+      this.logger.error(`Erro ao criar usuário ${username}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       throw new UnprocessableEntityException('Falha ao criar usuário');
     }
   }
@@ -177,15 +195,19 @@ export class AuthService {
    * Refresh access token using refresh token
    */
   async refresh(refreshToken: string): Promise<AccessTokenDto> {
+    this.logger.log('Tentativa de renovação de token');
+
     let payload: RefreshPayload;
 
     try {
       payload = this.jwtService.verify<RefreshPayload>(refreshToken);
     } catch {
+      this.logger.warn('Tentativa de renovação com token inválido');
       throw new UnauthorizedException('Token de renovação inválido');
     }
 
     if (!payload.isRefreshToken) {
+      this.logger.warn('Tentativa de renovação com token que não é refresh token');
       throw new UnauthorizedException('Token não é um token de renovação');
     }
 
@@ -198,10 +220,12 @@ export class AuthService {
     })) as UserWithProfiles | null;
 
     if (!user) {
+      this.logger.warn(`Tentativa de renovação para usuário inexistente: ${payload.sub}`);
       throw new NotFoundException('Usuário não encontrado');
     }
 
     if (user.isDeleted || !user.isActive) {
+      this.logger.warn(`Tentativa de renovação para conta inativa: ${user.username}`);
       throw new UnauthorizedException('Conta do usuário não está ativa');
     }
 
@@ -213,6 +237,8 @@ export class AuthService {
     };
 
     const newAccessToken = this.jwtService.sign(newPayload);
+
+    this.logger.log(`Token renovado com sucesso para usuário: ${user.username}`);
 
     return {
       access_token: newAccessToken,
