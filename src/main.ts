@@ -14,7 +14,7 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
-  app.setGlobalPrefix('api/v2');
+  app.setGlobalPrefix('api/v3');
   app.enableShutdownHooks();
 
   if (process.env.ENV === 'production') {
@@ -43,7 +43,7 @@ async function bootstrap() {
         persistAuthorization: true,
         docExpansion: 'none',
       },
-      customCss: theme.getBuffer(SwaggerThemeNameEnum.DARK),
+      customCss: theme.getBuffer(SwaggerThemeNameEnum.DRACULA),
     };
     SwaggerModule.setup('doc', app, document, options);
   }
