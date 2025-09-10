@@ -8,6 +8,7 @@ interface StudentProfile {
   name: string;
   email: string;
   description: string;
+  birthDate: Date;
 }
 
 interface EnterpriseProfile {
@@ -27,12 +28,14 @@ const studentProfiles: StudentProfile[] = [
     email: 'joao.silva@ufpi.edu.br',
     description:
       'Estudante de Ciência da Computação apaixonado por desenvolvimento web e inteligência artificial.',
+    birthDate: new Date('1999-03-15'),
   },
   {
     username: 'maria_santos',
     name: 'Maria Santos',
     email: 'maria.santos@ufpi.edu.br',
     description: 'Desenvolvedora frontend com foco em React e UX/UI Design.',
+    birthDate: new Date('2000-07-22'),
   },
   {
     username: 'pedro_costa',
@@ -40,6 +43,7 @@ const studentProfiles: StudentProfile[] = [
     email: 'pedro.costa@ifpi.edu.br',
     description:
       'Especialista em backend com Python e Django, interessado em arquitetura de microsserviços.',
+    birthDate: new Date('1998-11-08'),
   },
   {
     username: 'ana_oliveira',
@@ -47,6 +51,7 @@ const studentProfiles: StudentProfile[] = [
     email: 'ana.oliveira@ufpi.edu.br',
     description:
       'Data Scientist em formação, trabalha com Machine Learning e análise de dados.',
+    birthDate: new Date('2001-01-30'),
   },
   {
     username: 'carlos_lima',
@@ -54,6 +59,7 @@ const studentProfiles: StudentProfile[] = [
     email: 'carlos.lima@uespi.br',
     description:
       'DevOps enthusiast, ama automação e infraestrutura como código.',
+    birthDate: new Date('1999-09-12'),
   },
   {
     username: 'lucia_ferreira',
@@ -61,6 +67,7 @@ const studentProfiles: StudentProfile[] = [
     email: 'lucia.ferreira@ufpi.edu.br',
     description:
       'Mobile developer focada em Flutter e desenvolvimento multiplataforma.',
+    birthDate: new Date('2000-05-18'),
   },
   {
     username: 'bruno_alves',
@@ -68,6 +75,7 @@ const studentProfiles: StudentProfile[] = [
     email: 'bruno.alves@ifpi.edu.br',
     description:
       'Cybersecurity researcher interessado em ethical hacking e pentesting.',
+    birthDate: new Date('1997-12-03'),
   },
   {
     username: 'camila_rocha',
@@ -75,12 +83,14 @@ const studentProfiles: StudentProfile[] = [
     email: 'camila.rocha@ufpi.edu.br',
     description:
       'Full-stack developer com experiência em Node.js e PostgreSQL.',
+    birthDate: new Date('2000-04-25'),
   },
   {
     username: 'rafael_sousa',
     name: 'Rafael Sousa',
     email: 'rafael.sousa@uespi.br',
     description: 'Game developer apaixonado por Unity e design de jogos indie.',
+    birthDate: new Date('1999-08-14'),
   },
   {
     username: 'juliana_melo',
@@ -88,6 +98,7 @@ const studentProfiles: StudentProfile[] = [
     email: 'juliana.melo@ufpi.edu.br',
     description:
       'QA engineer especializada em testes automatizados e metodologias ágeis.',
+    birthDate: new Date('2001-06-09'),
   },
 ];
 
@@ -162,6 +173,7 @@ async function seedUsers() {
           role: 'student',
           name: profile.name,
           description: profile.description,
+          birthDate: profile.birthDate,
           isActive: true,
           isVerified: true,
           isComplete: true,
