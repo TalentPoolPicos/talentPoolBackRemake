@@ -12,7 +12,7 @@ import { JwtPayload } from './interfaces/payload';
 import { RefreshPayload } from './interfaces/refresh';
 import { UserWithProfiles } from './interfaces/user.interface';
 import { SignUpDto } from './dtos/signup.dto';
-import { UserResponseDto, AccessTokenDto } from './dtos/acess.dto';
+import { AccessTokenDto } from './dtos/acess.dto';
 import { isInstitutionalEmail } from './constants/institutional-emails';
 import { Role } from './enums/role.enum';
 
@@ -83,7 +83,6 @@ export class AuthService {
       refresh_token: refreshToken,
       access_token_expires_in: 3600,
       refresh_token_expires_in: 604800,
-      user: this.mapUserToDto(user),
     };
   }
 
@@ -168,7 +167,6 @@ export class AuthService {
         refresh_token: refreshToken,
         access_token_expires_in: 3600,
         refresh_token_expires_in: 604800,
-        user: this.mapUserToDto(user),
       };
     } catch {
       throw new UnprocessableEntityException('Falha ao criar usuário');
@@ -221,7 +219,6 @@ export class AuthService {
       refresh_token: refreshToken,
       access_token_expires_in: 3600,
       refresh_token_expires_in: 604800,
-      user: this.mapUserToDto(user),
     };
   }
 
@@ -236,24 +233,5 @@ export class AuthService {
         enterprise: true,
       },
     })) as UserWithProfiles | null;
-  }
-
-  /**
-   * Map user entity to DTO
-   */
-  private mapUserToDto(user: UserWithProfiles): UserResponseDto {
-    return {
-      uuid: user.uuid,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      name: user.name || undefined,
-      description: user.description || undefined,
-      isVerified: user.isVerified,
-      isActive: user.isActive,
-      isComplete: user.isComplete,
-      createdAt: user.createdAt.toISOString(),
-      updatedAt: user.updatedAt.toISOString(),
-    };
   }
 }
