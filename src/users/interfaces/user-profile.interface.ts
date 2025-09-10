@@ -14,7 +14,7 @@ import type {
 export interface UserWithFullProfile extends User {
   student?:
     | (Student & {
-        attachments?: Attachment[];
+        curriculum?: Attachment | null;
       })
     | null;
   enterprise?: Enterprise | null;

@@ -244,11 +244,11 @@ export class StudentProfileResponseDto {
   lattes?: string;
 
   @ApiProperty({
-    type: [AttachmentResponseDto],
-    description: 'Currículos anexados',
+    type: AttachmentResponseDto,
+    description: 'Currículo anexado do estudante',
     required: false,
   })
-  attachments?: AttachmentResponseDto[];
+  curriculum?: AttachmentResponseDto;
 
   @ApiProperty({
     type: String,

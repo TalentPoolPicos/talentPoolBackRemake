@@ -24,10 +24,12 @@ export class AuthController {
   @Public()
   @ApiOperation({
     summary: 'Fazer login',
-    description: 'Autenticar usuário com nome de usuário e senha. Após autenticação, use a rota GET /me para obter dados do perfil.',
+    description:
+      'Autenticar usuário com nome de usuário e senha. Após autenticação, use a rota GET /me para obter dados do perfil.',
   })
   @ApiOkResponse({
-    description: 'Usuário logado com sucesso. Use o access_token para acessar rotas protegidas e obter dados via GET /me.',
+    description:
+      'Usuário logado com sucesso. Use o access_token para acessar rotas protegidas e obter dados via GET /me.',
     type: AccessTokenDto,
   })
   @ApiNotFoundResponse({
@@ -73,7 +75,8 @@ export class AuthController {
       'Criar uma nova conta de estudante com email institucional (ex: @ufpi.edu.br). Após cadastro, use a rota GET /me para obter e completar dados do perfil.',
   })
   @ApiOkResponse({
-    description: 'Usuário criado e logado com sucesso. Use o access_token para acessar rotas protegidas e gerenciar perfil via GET/PUT /me.',
+    description:
+      'Usuário criado e logado com sucesso. Use o access_token para acessar rotas protegidas e gerenciar perfil via GET/PUT /me.',
     type: AccessTokenDto,
   })
   @ApiConflictResponse({
@@ -124,7 +127,8 @@ export class AuthController {
       'Obter um novo token de acesso usando um token de renovação válido. Para obter dados atualizados do usuário, use a rota GET /me.',
   })
   @ApiOkResponse({
-    description: 'Token de acesso renovado com sucesso. Use o novo access_token para acessar rotas protegidas.',
+    description:
+      'Token de acesso renovado com sucesso. Use o novo access_token para acessar rotas protegidas.',
     type: AccessTokenDto,
   })
   @ApiUnauthorizedResponse({

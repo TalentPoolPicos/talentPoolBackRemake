@@ -362,7 +362,7 @@ export class UsersService {
       include: {
         student: {
           include: {
-            attachments: true,
+            curriculum: true,
           },
         },
         enterprise: true,
@@ -399,7 +399,7 @@ export class UsersService {
       include: {
         student: {
           include: {
-            attachments: true,
+            curriculum: true,
           },
         },
         enterprise: true,
@@ -510,17 +510,19 @@ export class UsersService {
             course: user.student.course || undefined,
             registrationNumber: user.student.registrationNumber || undefined,
             lattes: user.student.lattes || undefined,
-            attachments: user.student.attachments?.map((att) => ({
-              uuid: att.uuid,
-              filename: att.filename,
-              originalName: att.originalName,
-              mimeType: att.mimeType,
-              size: att.size,
-              type: att.type,
-              url: att.url || undefined,
-              createdAt: att.createdAt.toISOString(),
-              updatedAt: att.updatedAt.toISOString(),
-            })),
+            curriculum: user.student.curriculum
+              ? {
+                  uuid: user.student.curriculum.uuid,
+                  filename: user.student.curriculum.filename,
+                  originalName: user.student.curriculum.originalName,
+                  mimeType: user.student.curriculum.mimeType,
+                  size: user.student.curriculum.size,
+                  type: user.student.curriculum.type,
+                  url: user.student.curriculum.url || undefined,
+                  createdAt: user.student.curriculum.createdAt.toISOString(),
+                  updatedAt: user.student.curriculum.updatedAt.toISOString(),
+                }
+              : undefined,
             createdAt: user.student.createdAt.toISOString(),
             updatedAt: user.student.updatedAt.toISOString(),
           }
@@ -619,17 +621,19 @@ export class UsersService {
             course: user.student.course || undefined,
             registrationNumber: user.student.registrationNumber || undefined,
             lattes: user.student.lattes || undefined,
-            attachments: user.student.attachments?.map((att) => ({
-              uuid: att.uuid,
-              filename: att.filename,
-              originalName: att.originalName,
-              mimeType: att.mimeType,
-              size: att.size,
-              type: att.type,
-              url: att.url || undefined,
-              createdAt: att.createdAt.toISOString(),
-              updatedAt: att.updatedAt.toISOString(),
-            })),
+            curriculum: user.student.curriculum
+              ? {
+                  uuid: user.student.curriculum.uuid,
+                  filename: user.student.curriculum.filename,
+                  originalName: user.student.curriculum.originalName,
+                  mimeType: user.student.curriculum.mimeType,
+                  size: user.student.curriculum.size,
+                  type: user.student.curriculum.type,
+                  url: user.student.curriculum.url || undefined,
+                  createdAt: user.student.curriculum.createdAt.toISOString(),
+                  updatedAt: user.student.curriculum.updatedAt.toISOString(),
+                }
+              : undefined,
             createdAt: user.student.createdAt.toISOString(),
             updatedAt: user.student.updatedAt.toISOString(),
           }
