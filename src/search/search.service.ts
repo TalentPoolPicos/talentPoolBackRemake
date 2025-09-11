@@ -4,11 +4,15 @@ import { MeiliSearch } from 'meilisearch';
 import {
   SearchOptions,
   MeilisearchResponse,
+  JobSearchResponse,
   SearchableUser,
+  SearchableJob,
 } from './dtos/search.dto';
 import { UserPreviewResponseDto } from '../users/dtos/user-response.dto';
+import { JobPreviewDto } from '../jobs/dtos/job-response.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { JobStatus } from '@prisma/client';
 
 // Helper function para mapear resultados do Meilisearch
 function mapHitToUserPreview(hit: Record<string, any>): UserPreviewResponseDto {
@@ -26,11 +30,29 @@ function mapHitToUserPreview(hit: Record<string, any>): UserPreviewResponseDto {
     location: hit.location as string | undefined,
   };
 }
+
+// Helper function para mapear jobs do Meilisearch
+function mapHitToJobPreview(hit: Record<string, any>): JobPreviewDto {
+  return {
+    uuid: hit.uuid as string,
+    title: hit.title as string,
+    status: hit.status as JobStatus,
+    createdAt: hit.createdAt as string,
+    publishedAt: hit.publishedAt as string | undefined,
+    company: {
+      uuid: hit.companyUuid as string,
+      name: hit.companyName as string,
+      username: hit.companyUsername as string,
+      avatarUrl: hit.companyAvatarUrl as string | null | undefined,
+    },
+  };
+}
 @Injectable()
 export class SearchService implements OnModuleInit {
   private readonly logger = new Logger(SearchService.name);
   private client: MeiliSearch;
   private readonly userIndex = 'users';
+  private readonly jobIndex = 'jobs';
 
   constructor(
     private readonly configService: ConfigService,
@@ -54,6 +76,7 @@ export class SearchService implements OnModuleInit {
     try {
       await this.initializeIndexes();
       await this.syncUsersFromDatabase();
+      await this.syncJobsFromDatabase();
       this.logger.log('Meilisearch initialized and synced successfully');
     } catch (error) {
       this.logger.error('Failed to initialize Meilisearch:', error);
@@ -79,10 +102,27 @@ export class SearchService implements OnModuleInit {
       }
     }
 
-    // Configurar atributos searchable e filterable
-    const index = this.client.index(this.userIndex);
+    try {
+      // Criar índice de jobs se não existir
+      await this.client.createIndex(this.jobIndex, { primaryKey: 'uuid' });
+      this.logger.log(`Index '${this.jobIndex}' created`);
+    } catch (error: unknown) {
+      const isIndexExistsError =
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'index_already_exists';
 
-    await index.updateSearchableAttributes([
+      if (isIndexExistsError) {
+        this.logger.log(`Index '${this.jobIndex}' already exists`);
+      } else {
+        throw error;
+      }
+    }
+
+    // Configurar atributos do índice de usuários
+    const userIndex = this.client.index(this.userIndex);
+    await userIndex.updateSearchableAttributes([
       'username',
       'name',
       'email',
@@ -91,7 +131,7 @@ export class SearchService implements OnModuleInit {
       'location',
     ]);
 
-    await index.updateFilterableAttributes([
+    await userIndex.updateFilterableAttributes([
       'role',
       'isVerified',
       'isActive',
@@ -99,7 +139,19 @@ export class SearchService implements OnModuleInit {
       'tags',
     ]);
 
-    await index.updateSortableAttributes(['username', 'name', 'createdAt']);
+    await userIndex.updateSortableAttributes(['username', 'name', 'createdAt']);
+
+    // Configurar atributos do índice de jobs
+    const jobIndex = this.client.index(this.jobIndex);
+    await jobIndex.updateSearchableAttributes(['title']);
+
+    await jobIndex.updateFilterableAttributes(['status', 'companyUuid']);
+
+    await jobIndex.updateSortableAttributes([
+      'createdAt',
+      'publishedAt',
+      'title',
+    ]);
 
     this.logger.log('Search attributes configured');
   }
@@ -133,6 +185,39 @@ export class SearchService implements OnModuleInit {
       this.logger.log(`User ${uuid} deleted from search index`);
     } catch (error) {
       this.logger.error(`Error deleting user from search index:`, error);
+      throw error;
+    }
+  }
+
+  async addJob(jobData: SearchableJob): Promise<void> {
+    try {
+      const index = this.client.index(this.jobIndex);
+      await index.addDocuments([jobData]);
+      this.logger.log(`Job ${jobData.title} added to search index`);
+    } catch (error) {
+      this.logger.error(`Error adding job to search index:`, error);
+      throw error;
+    }
+  }
+
+  async updateJob(jobData: SearchableJob): Promise<void> {
+    try {
+      const index = this.client.index(this.jobIndex);
+      await index.updateDocuments([jobData]);
+      this.logger.log(`Job ${jobData.title} updated in search index`);
+    } catch (error) {
+      this.logger.error(`Error updating job in search index:`, error);
+      throw error;
+    }
+  }
+
+  async deleteJob(uuid: string) {
+    try {
+      const index = this.client.index(this.jobIndex);
+      await index.deleteDocument(uuid);
+      this.logger.log(`Job ${uuid} deleted from search index`);
+    } catch (error) {
+      this.logger.error(`Error deleting job from search index:`, error);
       throw error;
     }
   }
@@ -183,6 +268,51 @@ export class SearchService implements OnModuleInit {
     }
   }
 
+  async searchJobs(
+    query: string,
+    options: SearchOptions,
+  ): Promise<JobSearchResponse> {
+    try {
+      const index = this.client.index(this.jobIndex);
+
+      const searchOptions = {
+        limit: options.limit,
+        offset: options.offset,
+        attributesToRetrieve: [
+          'uuid',
+          'title',
+          'status',
+          'createdAt',
+          'publishedAt',
+          'companyUuid',
+          'companyName',
+          'companyUsername',
+          'companyAvatarUrl',
+        ],
+        filter: 'status = published',
+        sort: ['publishedAt:desc'],
+      };
+
+      const result = await index.search(query, searchOptions);
+
+      this.logger.log(
+        `Job search completed: ${result.hits?.length || 0} results found`,
+      );
+
+      return {
+        hits: (result.hits || []).map(mapHitToJobPreview),
+        total: result.estimatedTotalHits || 0,
+        query: result.query || query,
+        processingTimeMs: result.processingTimeMs || 0,
+        limit: result.limit || options.limit,
+        offset: result.offset || options.offset,
+      };
+    } catch (error) {
+      this.logger.error(`Error searching jobs:`, error);
+      throw error;
+    }
+  }
+
   /**
    * Sincroniza todos os usuários do banco de dados com o Meilisearch
    */
@@ -218,6 +348,48 @@ export class SearchService implements OnModuleInit {
       this.logger.log(`Synced ${searchableUsers.length} users to search index`);
     } catch (error) {
       this.logger.error('Error syncing users from database:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Sincroniza todas as vagas ativas do banco de dados com o Meilisearch
+   */
+  async syncJobsFromDatabase(): Promise<void> {
+    try {
+      this.logger.log('Starting jobs database sync...');
+
+      // Buscar todas as vagas publicadas do banco
+      const jobs = await this.prisma.job.findMany({
+        where: {
+          status: 'published',
+        },
+        include: {
+          enterprise: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      });
+
+      if (jobs.length === 0) {
+        this.logger.log('No published jobs found in database');
+        return;
+      }
+
+      // Converter vagas para formato do Meilisearch
+      const searchableJobs: SearchableJob[] = await Promise.all(
+        jobs.map((job) => this.mapJobToSearchableJob(job)),
+      );
+
+      // Adicionar todas as vagas ao índice
+      const index = this.client.index(this.jobIndex);
+      await index.addDocuments(searchableJobs);
+
+      this.logger.log(`Synced ${searchableJobs.length} jobs to search index`);
+    } catch (error) {
+      this.logger.error('Error syncing jobs from database:', error);
       throw error;
     }
   }
@@ -270,6 +442,42 @@ export class SearchService implements OnModuleInit {
   }
 
   /**
+   * Mapeia uma vaga do banco para o formato SearchableJob
+   */
+  private async mapJobToSearchableJob(job: {
+    id: number;
+    uuid: string;
+    title: string;
+    status: string;
+    createdAt: Date;
+    publishedAt: Date | null;
+    enterprise: {
+      user: {
+        id: number;
+        uuid: string;
+        username: string;
+        name: string | null;
+      };
+    };
+  }): Promise<SearchableJob> {
+    // Gerar URL do avatar da empresa
+    const companyAvatarUrl = await this.getAvatarUrl(job.enterprise.user.id);
+
+    return {
+      id: job.id,
+      uuid: job.uuid,
+      title: job.title,
+      status: job.status,
+      createdAt: job.createdAt.toISOString(),
+      publishedAt: job.publishedAt?.toISOString(),
+      companyUuid: job.enterprise.user.uuid,
+      companyName: job.enterprise.user.name || job.enterprise.user.username,
+      companyUsername: job.enterprise.user.username,
+      companyAvatarUrl: companyAvatarUrl || null,
+    };
+  }
+
+  /**
    * Sincroniza um usuário específico após criação/atualização
    */
   async syncUserAfterChange(userId: number): Promise<void> {
@@ -300,6 +508,44 @@ export class SearchService implements OnModuleInit {
       this.logger.log(`User ${user.username} synced to search index`);
     } catch (error) {
       this.logger.error(`Error syncing user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Sincroniza uma vaga específica após criação/atualização
+   */
+  async syncJobAfterChange(jobId: number): Promise<void> {
+    try {
+      const job = await this.prisma.job.findUnique({
+        where: { id: jobId },
+        include: {
+          enterprise: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      });
+
+      if (!job) {
+        this.logger.warn(`Job with ID ${jobId} not found for sync`);
+        return;
+      }
+
+      if (job.status !== 'published') {
+        // Se a vaga não está publicada, remover do índice
+        await this.deleteJob(job.uuid);
+        return;
+      }
+
+      // Converter e atualizar no índice
+      const searchableJob = await this.mapJobToSearchableJob(job);
+      await this.addJob(searchableJob);
+
+      this.logger.log(`Job ${job.title} synced to search index`);
+    } catch (error) {
+      this.logger.error(`Error syncing job ${jobId}:`, error);
       throw error;
     }
   }

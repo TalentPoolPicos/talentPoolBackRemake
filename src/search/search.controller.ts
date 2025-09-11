@@ -9,7 +9,12 @@ import {
 } from '@nestjs/swagger';
 import { Public } from '../auth/decotaros/public.decorator';
 import { SearchService } from './search.service';
-import { SearchUsersDto, SearchUsersResponseDto } from './dtos/search.dto';
+import {
+  SearchUsersDto,
+  SearchUsersResponseDto,
+  SearchJobsDto,
+  SearchJobsResponseDto,
+} from './dtos/search.dto';
 
 @ApiTags('Search - Public')
 @Public()
@@ -92,6 +97,63 @@ export class SearchController {
     );
 
     this.logger.log(`Search completed: ${result.hits.length} users found`);
+
+    return result;
+  }
+
+  @ApiOperation({
+    summary: 'Pesquisar vagas',
+    description:
+      'Realiza pesquisa de vagas ativas por termo (busca apenas no título)',
+  })
+  @ApiQuery({
+    name: 'q',
+    description: 'Termo de pesquisa (busca apenas no título da vaga)',
+    required: false,
+    example: 'desenvolvedor frontend react',
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Número de resultados por página (1-100)',
+    required: false,
+    type: Number,
+    example: 20,
+  })
+  @ApiQuery({
+    name: 'offset',
+    description: 'Offset para paginação',
+    required: false,
+    type: Number,
+    example: 0,
+  })
+  @ApiOkResponse({
+    description: 'Lista de vagas encontradas',
+    type: SearchJobsResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Parâmetros de pesquisa inválidos',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Erro interno do servidor de busca',
+  })
+  @Get('jobs')
+  async searchJobs(
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    searchDto: SearchJobsDto,
+  ): Promise<SearchJobsResponseDto> {
+    this.logger.log(`Searching jobs with query: ${JSON.stringify(searchDto)}`);
+
+    const { q = '', limit = 20, offset = 0 } = searchDto;
+
+    const result: SearchJobsResponseDto = await this.searchService.searchJobs(
+      q,
+      {
+        limit,
+        offset,
+      },
+    );
+
+    this.logger.log(`Job search completed: ${result.hits.length} jobs found`);
 
     return result;
   }
