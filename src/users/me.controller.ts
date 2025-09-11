@@ -68,6 +68,8 @@ import {
   JobApplicationResponseDto,
   JobListResponseDto,
   ApplicationListResponseDto,
+  StudentApplicationListResponseDto,
+  JobApplicationStudentResponseDto,
 } from '../jobs/dtos/job-response.dto';
 import {
   HasLikedResponseDto,
@@ -1015,7 +1017,7 @@ export class MeController {
   @ApiParam({ name: 'jobUuid', type: String, description: 'UUID da vaga' })
   @ApiCreatedResponse({
     description: 'Candidatura criada com sucesso',
-    type: JobApplicationResponseDto,
+    type: JobApplicationStudentResponseDto,
   })
   @ApiNotFoundResponse({
     description: 'Vaga não encontrada',
@@ -1033,7 +1035,7 @@ export class MeController {
     @Param('jobUuid') jobUuid: string,
     @Body() applyDto: ApplyToJobDto,
     @Request() req: CustomRequest,
-  ): Promise<JobApplicationResponseDto> {
+  ): Promise<JobApplicationStudentResponseDto> {
     return this.jobsService.applyToJob(jobUuid, req.user.sub, applyDto);
   }
 
@@ -1046,12 +1048,12 @@ export class MeController {
   @ApiOperation({ summary: 'Listar minhas candidaturas' })
   @ApiOkResponse({
     description: 'Lista de candidaturas do estudante',
-    type: ApplicationListResponseDto,
+    type: StudentApplicationListResponseDto,
   })
   async getMyApplications(
     @Request() req: CustomRequest,
     @Query() pagination: StudentApplicationsPaginationDto,
-  ): Promise<ApplicationListResponseDto> {
+  ): Promise<StudentApplicationListResponseDto> {
     const limit = pagination.limit || 20;
     const offset = pagination.offset || 0;
 
