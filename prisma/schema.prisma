@@ -45,6 +45,22 @@ enum AttachmentType {
   other
 }
 
+enum JobStatus {
+  draft
+  published
+  paused
+  closed
+  expired
+}
+
+enum ApplicationStatus {
+  pending
+  reviewing
+  approved
+  rejected
+  withdrawn
+}
+
 model Attachment {
   id        Int      @id @default(autoincrement())
   uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -115,10 +131,10 @@ model User {
   socialMedia    SocialMedia[]
   tags           Tag[]
   address        Address?
-  avatar         Attachment?   @relation("UserAvatar")
-  banner         Attachment?   @relation("UserBanner")
-  initiatedLikes Like[]        @relation("LikeInitiator")
-  receivedLikes  Like[]        @relation("LikeReceiver")
+  avatar         Attachment?      @relation("UserAvatar")
+  banner         Attachment?      @relation("UserBanner")
+  initiatedLikes Like[]           @relation("LikeInitiator")
+  receivedLikes  Like[]           @relation("LikeReceiver")
 
   // Constraints to ensure role consistency
   @@index([role])
@@ -137,10 +153,11 @@ model Student {
   lattes             String? @db.VarChar(255)
 
   // Relations
-  userId     Int         @unique @map("user_id")
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  curriculum Attachment? @relation("StudentCurriculum")
-  history    Attachment? @relation("StudentHistory")
+  userId     Int                @unique @map("user_id")
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  curriculum Attachment?        @relation("StudentCurriculum")
+  history    Attachment?        @relation("StudentHistory")
+  applications JobApplication[] @relation("StudentApplications")
 
   @@index([course])
   @@map("students")
@@ -160,6 +177,7 @@ model Enterprise {
   // Relations
   userId Int  @unique @map("user_id")
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobs   Job[] @relation("EnterpriseJobs")
 
   @@index([cnpj])
   @@map("enterprises")
@@ -229,4 +247,58 @@ model Like {
   @@index([initiatorId])
   @@index([receiverId])
   @@map("likes")
+}
+
+model Job {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Job content
+  title       String    @db.VarChar(200)
+  body        String    @db.Text // HTML content from TinyMCE
+  status      JobStatus @default(draft)
+  publishedAt DateTime? @map("published_at")
+  expiresAt   DateTime? @map("expires_at")
+
+  // Relations
+  enterpriseId Int              @map("enterprise_id")
+  enterprise   Enterprise       @relation("EnterpriseJobs", fields: [enterpriseId], references: [id], onDelete: Cascade)
+  applications JobApplication[]
+
+  // Indexes for performance
+  @@index([enterpriseId])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([expiresAt])
+  @@map("jobs")
+}
+
+model JobApplication {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Application content
+  status         ApplicationStatus @default(pending)
+  coverLetter    String?           @map("cover_letter") @db.Text
+  appliedAt      DateTime          @default(now()) @map("applied_at")
+  reviewedAt     DateTime?         @map("reviewed_at")
+  reviewerNotes  String?           @map("reviewer_notes") @db.Text
+
+  // Relations
+  jobId     Int     @map("job_id")
+  studentId Int     @map("student_id")
+  job       Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  student   Student @relation("StudentApplications", fields: [studentId], references: [id], onDelete: Cascade)
+
+  // Prevent duplicate applications
+  @@unique([jobId, studentId])
+  @@index([jobId])
+  @@index([studentId])
+  @@index([status])
+  @@index([appliedAt])
+  @@map("job_applications")
 }
