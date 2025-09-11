@@ -1,4 +1,11 @@
-import { Controller, Get, Query, Logger, ValidationPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Logger,
+  ValidationPipe,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -9,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { Public } from '../auth/decotaros/public.decorator';
 import { SearchService } from './search.service';
+import { SearchSchedulerService } from './search-scheduler.service';
 import { SearchUsersDto, SearchUsersResponseDto } from './dtos/search.dto';
 
 @ApiTags('Pesquisa')
@@ -17,7 +25,10 @@ import { SearchUsersDto, SearchUsersResponseDto } from './dtos/search.dto';
 export class SearchController {
   private readonly logger = new Logger(SearchController.name);
 
-  constructor(private readonly searchService: SearchService) {}
+  constructor(
+    private readonly searchService: SearchService,
+    private readonly searchSchedulerService: SearchSchedulerService,
+  ) {}
 
   @ApiOperation({
     summary: 'Pesquisar usuários',
@@ -94,5 +105,64 @@ export class SearchController {
     this.logger.log(`Search completed: ${result.hits.length} users found`);
 
     return result;
+  }
+
+  @ApiOperation({
+    summary: 'Executar sincronização manual',
+    description:
+      'Executa manualmente a sincronização de usuários com Meilisearch',
+  })
+  @ApiOkResponse({
+    description: 'Sincronização executada com sucesso',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+        executionTime: { type: 'number' },
+      },
+    },
+  })
+  @Post('sync')
+  async manualSync(): Promise<{ message: string; executionTime: number }> {
+    this.logger.log('Manual sync requested');
+    const startTime = Date.now();
+
+    await this.searchSchedulerService.syncUsersToSearchIndex();
+
+    const executionTime = Date.now() - startTime;
+    return {
+      message: 'Sincronização manual executada com sucesso',
+      executionTime,
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Obter estatísticas do índice',
+    description: 'Retorna estatísticas atuais do índice de busca',
+  })
+  @ApiOkResponse({
+    description: 'Estatísticas obtidas com sucesso',
+    schema: {
+      type: 'object',
+      properties: {
+        numberOfDocuments: { type: 'number' },
+        isHealthy: { type: 'boolean' },
+      },
+    },
+  })
+  @Get('stats')
+  async getStats(): Promise<{
+    numberOfDocuments: number;
+    isHealthy: boolean;
+  }> {
+    const [stats, isHealthy] = await Promise.all([
+      this.searchService.getIndexStats(),
+      this.searchService.isHealthy(),
+    ]);
+
+    return {
+      numberOfDocuments: stats.numberOfDocuments,
+      isHealthy,
+    };
   }
 }

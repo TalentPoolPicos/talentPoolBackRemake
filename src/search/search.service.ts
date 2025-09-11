@@ -355,4 +355,36 @@ export class SearchService implements OnModuleInit {
       return null;
     }
   }
+
+  /**
+   * Obtém estatísticas do índice de busca
+   */
+  async getIndexStats(): Promise<{
+    numberOfDocuments: number;
+  }> {
+    try {
+      const index = this.client.index(this.userIndex);
+      const stats = await index.getStats();
+
+      return {
+        numberOfDocuments: stats.numberOfDocuments,
+      };
+    } catch (error) {
+      this.logger.error('Error getting index stats:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Verifica se o Meilisearch está saudável
+   */
+  async isHealthy(): Promise<boolean> {
+    try {
+      const health = await this.client.health();
+      return health.status === 'available';
+    } catch (error) {
+      this.logger.error('Error checking Meilisearch health:', error);
+      return false;
+    }
+  }
 }
