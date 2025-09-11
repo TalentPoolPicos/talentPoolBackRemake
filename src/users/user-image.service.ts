@@ -23,6 +23,12 @@ interface ImageValidationRules {
   allowedFormats: string[];
 }
 
+interface FileValidationRules {
+  maxSizeBytes: number;
+  allowedMimeTypes: string[];
+  allowedExtensions: string[];
+}
+
 @Injectable()
 export class UserImageService {
   private readonly logger = new Logger(UserImageService.name);
@@ -103,6 +109,60 @@ export class UserImageService {
       minHeight: 0,
       maxSizeBytes: 0,
       allowedFormats: [],
+    },
+  };
+
+  // Regras de validação para arquivos que não são imagens
+  private readonly fileRules: Record<AttachmentType, FileValidationRules> = {
+    curriculum: {
+      maxSizeBytes: 15 * 1024 * 1024, // 15MB
+      allowedMimeTypes: ['application/pdf'],
+      allowedExtensions: ['.pdf'],
+    },
+    // Outras regras para outros tipos (não usadas no contexto de arquivo)
+    profile_picture: {
+      maxSizeBytes: 0,
+      allowedMimeTypes: [],
+      allowedExtensions: [],
+    },
+    banner_picture: {
+      maxSizeBytes: 0,
+      allowedMimeTypes: [],
+      allowedExtensions: [],
+    },
+    history: {
+      maxSizeBytes: 0,
+      allowedMimeTypes: [],
+      allowedExtensions: [],
+    },
+    document: {
+      maxSizeBytes: 10 * 1024 * 1024, // 10MB para documentos gerais
+      allowedMimeTypes: [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ],
+      allowedExtensions: ['.pdf', '.doc', '.docx'],
+    },
+    image: {
+      maxSizeBytes: 0,
+      allowedMimeTypes: [],
+      allowedExtensions: [],
+    },
+    video: {
+      maxSizeBytes: 0,
+      allowedMimeTypes: [],
+      allowedExtensions: [],
+    },
+    audio: {
+      maxSizeBytes: 0,
+      allowedMimeTypes: [],
+      allowedExtensions: [],
+    },
+    other: {
+      maxSizeBytes: 0,
+      allowedMimeTypes: [],
+      allowedExtensions: [],
     },
   };
 
@@ -367,5 +427,135 @@ export class UserImageService {
     }
 
     return this.storageService.generateFileUrl(attachment.storageKey, 3600);
+  }
+
+  /**
+   * Valida arquivo não-imagem (como PDFs)
+   */
+  private validateFile(file: Express.Multer.File, type: AttachmentType): void {
+    const rules = this.fileRules[type];
+
+    // Validar tamanho do arquivo
+    if (file.size > rules.maxSizeBytes) {
+      throw new BadRequestException(
+        `Arquivo muito grande. Máximo permitido: ${Math.round(rules.maxSizeBytes / (1024 * 1024))}MB`,
+      );
+    }
+
+    // Validar extensão
+    const fileExtension = file.originalname.split('.').pop()?.toLowerCase();
+    if (
+      !fileExtension ||
+      !rules.allowedExtensions.some((ext) => ext === `.${fileExtension}`)
+    ) {
+      throw new BadRequestException(
+        `Formato não permitido. Formatos aceitos: ${rules.allowedExtensions.join(', ')}`,
+      );
+    }
+
+    // Validar tipo MIME
+    if (!rules.allowedMimeTypes.includes(file.mimetype)) {
+      throw new BadRequestException(
+        `Tipo de arquivo não permitido. Tipos aceitos: ${rules.allowedMimeTypes.join(', ')}`,
+      );
+    }
+
+    this.logger.log(
+      `Arquivo validado: ${file.originalname} (${file.size} bytes, ${file.mimetype})`,
+    );
+  }
+
+  /**
+   * Faz upload de currículo para estudante
+   */
+  async uploadCurriculum(
+    file: Express.Multer.File,
+    userId: number,
+  ): Promise<{ curriculumUrl: string; filename: string }> {
+    this.logger.log(`Iniciando upload de currículo para usuário ${userId}`);
+
+    // Validar o arquivo
+    this.validateFile(file, 'curriculum');
+
+    // Verificar se o usuário é um estudante
+    const student = await this.prisma.student.findUnique({
+      where: { userId },
+      include: { curriculum: true },
+    });
+
+    if (!student) {
+      throw new NotFoundException('Estudante não encontrado');
+    }
+
+    // Se já existe um currículo, deletar o arquivo antigo
+    if (student.curriculum) {
+      try {
+        await this.storageService.deleteFile(student.curriculum.storageKey);
+        await this.prisma.attachment.delete({
+          where: { id: student.curriculum.id },
+        });
+        this.logger.log(
+          `Currículo anterior deletado: ${student.curriculum.storageKey}`,
+        );
+      } catch (error) {
+        this.logger.warn(
+          `Erro ao deletar currículo anterior: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        );
+      }
+    }
+
+    // Upload para MinIO
+    const uploadResult = await this.storageService.uploadFile(
+      file,
+      'curriculum',
+      userId,
+    );
+
+    // Salvar no banco de dados
+    const attachment = await this.prisma.attachment.create({
+      data: {
+        filename: file.originalname,
+        originalName: file.originalname,
+        storageKey: uploadResult.storageKey,
+        size: file.size,
+        mimeType: file.mimetype,
+        type: 'curriculum',
+        curriculumStudentId: student.id,
+      },
+    });
+
+    this.logger.log(
+      `Currículo salvo com sucesso: ${attachment.storageKey} para estudante ${student.id}`,
+    );
+
+    // Gerar URL temporária
+    const curriculumUrl = await this.storageService.generateFileUrl(
+      uploadResult.storageKey,
+      3600,
+    );
+
+    return {
+      curriculumUrl,
+      filename: file.originalname,
+    };
+  }
+
+  /**
+   * Gera URL para currículo do estudante
+   */
+  async getCurriculumUrl(userId: number): Promise<string | null> {
+    const student = await this.prisma.student.findUnique({
+      where: { userId },
+      include: { curriculum: true },
+    });
+
+    if (!student?.curriculum) {
+      return null;
+    }
+
+    return this.storageService.generateFileUrl(
+      student.curriculum.storageKey,
+      3600,
+    );
   }
 }

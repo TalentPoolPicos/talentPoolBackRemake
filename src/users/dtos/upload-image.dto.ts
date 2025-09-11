@@ -30,6 +30,21 @@ export class UploadBannerResponseDto {
   filename: string;
 }
 
+export class UploadCurriculumResponseDto {
+  @ApiProperty({
+    example:
+      'https://minio.example.com/bucket/curriculum/2024/09/user_1/curriculum_123456789.pdf?expires=3600',
+    description: 'URL temporária do currículo carregado',
+  })
+  curriculumUrl: string;
+
+  @ApiProperty({
+    example: 'curriculum_123456789.pdf',
+    description: 'Nome do arquivo gerado',
+  })
+  filename: string;
+}
+
 export class ImageUploadDto {
   @ApiProperty({
     type: 'string',

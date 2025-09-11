@@ -43,20 +43,24 @@ export class UsersService {
   ) {}
 
   /**
-   * Obtém URLs das imagens do usuário (avatar e banner)
+   * Obtém URLs das imagens e documentos do usuário (avatar, banner, curriculum)
    */
-  private async getUserImageUrls(
-    userId: number,
-  ): Promise<{ avatarUrl?: string; bannerUrl?: string }> {
+  private async getUserImageUrls(userId: number): Promise<{
+    avatarUrl?: string;
+    bannerUrl?: string;
+    curriculumUrl?: string;
+  }> {
     try {
-      const [avatarUrl, bannerUrl] = await Promise.all([
+      const [avatarUrl, bannerUrl, curriculumUrl] = await Promise.all([
         this.userImageService.getAvatarUrl(userId),
         this.userImageService.getBannerUrl(userId),
+        this.userImageService.getCurriculumUrl(userId),
       ]);
 
       return {
         avatarUrl: avatarUrl || undefined,
         bannerUrl: bannerUrl || undefined,
+        curriculumUrl: curriculumUrl || undefined,
       };
     } catch (error) {
       this.logger.error(
@@ -612,7 +616,11 @@ export class UsersService {
   private mapToPrivateProfileDto(
     user: UserWithFullProfile,
     stats: UserStats,
-    imageUrls: { avatarUrl?: string; bannerUrl?: string },
+    imageUrls: {
+      avatarUrl?: string;
+      bannerUrl?: string;
+      curriculumUrl?: string;
+    },
   ): UserProfileResponseDto {
     return {
       uuid: user.uuid,
@@ -646,6 +654,7 @@ export class UsersService {
                   updatedAt: user.student.curriculum.updatedAt.toISOString(),
                 }
               : undefined,
+            curriculumUrl: imageUrls.curriculumUrl,
             createdAt: user.student.createdAt.toISOString(),
             updatedAt: user.student.updatedAt.toISOString(),
           }
@@ -702,7 +711,11 @@ export class UsersService {
    */
   private mapToPublicProfileDto(
     user: UserWithFullProfile,
-    imageUrls: { avatarUrl?: string; bannerUrl?: string },
+    imageUrls: {
+      avatarUrl?: string;
+      bannerUrl?: string;
+      curriculumUrl?: string;
+    },
   ): PublicUserProfileResponseDto {
     return {
       uuid: user.uuid,
@@ -734,6 +747,7 @@ export class UsersService {
                   updatedAt: user.student.curriculum.updatedAt.toISOString(),
                 }
               : undefined,
+            curriculumUrl: imageUrls.curriculumUrl,
             createdAt: user.student.createdAt.toISOString(),
             updatedAt: user.student.updatedAt.toISOString(),
           }

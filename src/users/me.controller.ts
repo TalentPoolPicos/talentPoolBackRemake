@@ -42,6 +42,7 @@ import { UserProfileResponseDto } from './dtos/user-response.dto';
 import {
   UploadAvatarResponseDto,
   UploadBannerResponseDto,
+  UploadCurriculumResponseDto,
 } from './dtos/upload-image.dto';
 
 @ApiTags('Meu Perfil')
@@ -517,5 +518,58 @@ export class MeController {
     @UploadedFile() file: Express.Multer.File,
   ): Promise<UploadBannerResponseDto> {
     return this.userImageService.uploadBanner(req.user.sub, file);
+  }
+
+  @ApiOperation({
+    summary: 'Upload de currículo do estudante',
+    description:
+      'Faz upload do currículo em PDF para o perfil do estudante. Substitui o currículo anterior se existir.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Arquivo PDF do currículo',
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Arquivo PDF do currículo (máximo 15MB)',
+        },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiCreatedResponse({
+    description: 'Currículo enviado com sucesso',
+    type: UploadCurriculumResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Arquivo inválido ou não atende aos requisitos',
+    schema: {
+      example: {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Formato não permitido. Formatos aceitos: .pdf',
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'Estudante não encontrado',
+    schema: {
+      example: {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'Estudante não encontrado',
+        error: 'Not Found',
+      },
+    },
+  })
+  @Post('student/curriculum')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadCurriculum(
+    @Request() req: CustomRequest,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<UploadCurriculumResponseDto> {
+    return this.userImageService.uploadCurriculum(file, req.user.sub);
   }
 }
