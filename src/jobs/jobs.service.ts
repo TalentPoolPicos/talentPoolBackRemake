@@ -285,6 +285,7 @@ export class JobsService {
               include: {
                 user: {
                   select: {
+                    id: true,
                     uuid: true,
                     username: true,
                     name: true,
