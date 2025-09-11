@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { UserPreviewResponseDto } from '../users/dtos/user-response.dto';
 
 @Injectable()
 export class LikesService {
@@ -160,7 +161,7 @@ export class LikesService {
   /**
    * Obtém usuários que deram like para o usuário especificado (initiators)
    */
-  async getLikeInitiators(userUuid: string) {
+  async getLikeInitiators(userUuid: string): Promise<UserPreviewResponseDto[]> {
     this.logger.log(`Buscando quem deu like no usuário ${userUuid}`);
 
     // Verificar se o usuário existe
@@ -173,7 +174,7 @@ export class LikesService {
       throw new NotFoundException('Usuário não encontrado');
     }
 
-    // Buscar likes recebidos
+    // Buscar likes recebidos com todos os dados necessários
     const likes = await this.prisma.like.findMany({
       where: { receiverId: user.id },
       include: {
@@ -206,7 +207,7 @@ export class LikesService {
               select: {
                 label: true,
               },
-              take: 5,
+              take: 5, // Máximo 5 tags para preview
             },
           },
         },
@@ -214,37 +215,38 @@ export class LikesService {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Gerar URLs dos avatares e banners
-    const initiatorsWithAvatars = await Promise.all(
+    // Gerar URLs das imagens e mapear para UserPreviewResponseDto
+    const initiatorsWithImages = await Promise.all(
       likes.map(async (like) => {
+        const initiator = like.initiator;
+
+        // Gerar URLs das imagens
         let avatarUrl: string | null = null;
         let bannerUrl: string | null = null;
 
-        // Gerar URL do avatar
-        if (like.initiator.avatar?.storageKey) {
+        if (initiator.avatar?.storageKey) {
           try {
             avatarUrl = await this.storageService.generateFileUrl(
-              like.initiator.avatar.storageKey,
+              initiator.avatar.storageKey,
               3600,
             );
           } catch (error) {
             this.logger.warn(
-              `Erro ao gerar URL do avatar para usuário ${like.initiator.uuid}:`,
+              `Erro ao gerar URL do avatar para usuário ${initiator.uuid}:`,
               error,
             );
           }
         }
 
-        // Gerar URL do banner
-        if (like.initiator.banner?.storageKey) {
+        if (initiator.banner?.storageKey) {
           try {
             bannerUrl = await this.storageService.generateFileUrl(
-              like.initiator.banner.storageKey,
+              initiator.banner.storageKey,
               3600,
             );
           } catch (error) {
             this.logger.warn(
-              `Erro ao gerar URL do banner para usuário ${like.initiator.uuid}:`,
+              `Erro ao gerar URL do banner para usuário ${initiator.uuid}:`,
               error,
             );
           }
@@ -252,49 +254,48 @@ export class LikesService {
 
         // Construir localização a partir do endereço
         let location: string | undefined;
-        if (like.initiator.address?.city || like.initiator.address?.state) {
-          const city = like.initiator.address.city || '';
-          const state = like.initiator.address.state || '';
+        if (initiator.address?.city || initiator.address?.state) {
+          const city = initiator.address.city || '';
+          const state = initiator.address.state || '';
           location = `${city}${city && state ? ', ' : ''}${state}`.trim();
           if (location === '') location = undefined;
         }
 
         // Extrair nomes das tags
-        const mainTags = like.initiator.tags?.map((tag) => tag.label) || [];
+        const mainTags = initiator.tags?.map((tag) => tag.label) || [];
 
         // Truncar descrição para preview (máximo 200 caracteres)
-        let description = like.initiator.description;
+        let description = initiator.description;
         if (description && description.length > 200) {
           description = description.substring(0, 197) + '...';
         }
 
         return {
-          uuid: like.initiator.uuid,
-          username: like.initiator.username,
-          name: like.initiator.name,
-          role: like.initiator.role,
+          uuid: initiator.uuid,
+          username: initiator.username,
+          role: initiator.role,
+          name: initiator.name || undefined,
           description: description || undefined,
-          isVerified: like.initiator.isVerified,
-          isActive: like.initiator.isActive,
-          avatarUrl,
-          bannerUrl,
+          avatarUrl: avatarUrl || null,
+          bannerUrl: bannerUrl || null,
+          isVerified: initiator.isVerified,
+          isActive: initiator.isActive,
           mainTags: mainTags.length > 0 ? mainTags : undefined,
           location: location || undefined,
-          likedAt: like.createdAt,
-        };
+        } as UserPreviewResponseDto;
       }),
     );
 
     this.logger.log(
-      `Encontrados ${initiatorsWithAvatars.length} likes recebidos`,
+      `Encontrados ${initiatorsWithImages.length} likes recebidos`,
     );
-    return initiatorsWithAvatars;
+    return initiatorsWithImages;
   }
 
   /**
    * Obtém usuários que receberam like do usuário especificado (receivers)
    */
-  async getLikeReceivers(userUuid: string) {
+  async getLikeReceivers(userUuid: string): Promise<UserPreviewResponseDto[]> {
     this.logger.log(`Buscando quem recebeu like do usuário ${userUuid}`);
 
     // Verificar se o usuário existe
@@ -307,7 +308,7 @@ export class LikesService {
       throw new NotFoundException('Usuário não encontrado');
     }
 
-    // Buscar likes dados
+    // Buscar likes dados com todos os dados necessários
     const likes = await this.prisma.like.findMany({
       where: { initiatorId: user.id },
       include: {
@@ -340,7 +341,7 @@ export class LikesService {
               select: {
                 label: true,
               },
-              take: 5,
+              take: 5, // Máximo 5 tags para preview
             },
           },
         },
@@ -348,37 +349,38 @@ export class LikesService {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Gerar URLs dos avatares e banners
-    const receiversWithAvatars = await Promise.all(
+    // Gerar URLs das imagens e mapear para UserPreviewResponseDto
+    const receiversWithImages = await Promise.all(
       likes.map(async (like) => {
+        const receiver = like.receiver;
+
+        // Gerar URLs das imagens
         let avatarUrl: string | null = null;
         let bannerUrl: string | null = null;
 
-        // Gerar URL do avatar
-        if (like.receiver.avatar?.storageKey) {
+        if (receiver.avatar?.storageKey) {
           try {
             avatarUrl = await this.storageService.generateFileUrl(
-              like.receiver.avatar.storageKey,
+              receiver.avatar.storageKey,
               3600,
             );
           } catch (error) {
             this.logger.warn(
-              `Erro ao gerar URL do avatar para usuário ${like.receiver.uuid}:`,
+              `Erro ao gerar URL do avatar para usuário ${receiver.uuid}:`,
               error,
             );
           }
         }
 
-        // Gerar URL do banner
-        if (like.receiver.banner?.storageKey) {
+        if (receiver.banner?.storageKey) {
           try {
             bannerUrl = await this.storageService.generateFileUrl(
-              like.receiver.banner.storageKey,
+              receiver.banner.storageKey,
               3600,
             );
           } catch (error) {
             this.logger.warn(
-              `Erro ao gerar URL do banner para usuário ${like.receiver.uuid}:`,
+              `Erro ao gerar URL do banner para usuário ${receiver.uuid}:`,
               error,
             );
           }
@@ -386,40 +388,39 @@ export class LikesService {
 
         // Construir localização a partir do endereço
         let location: string | undefined;
-        if (like.receiver.address?.city || like.receiver.address?.state) {
-          const city = like.receiver.address.city || '';
-          const state = like.receiver.address.state || '';
+        if (receiver.address?.city || receiver.address?.state) {
+          const city = receiver.address.city || '';
+          const state = receiver.address.state || '';
           location = `${city}${city && state ? ', ' : ''}${state}`.trim();
           if (location === '') location = undefined;
         }
 
         // Extrair nomes das tags
-        const mainTags = like.receiver.tags?.map((tag) => tag.label) || [];
+        const mainTags = receiver.tags?.map((tag) => tag.label) || [];
 
         // Truncar descrição para preview (máximo 200 caracteres)
-        let description = like.receiver.description;
+        let description = receiver.description;
         if (description && description.length > 200) {
           description = description.substring(0, 197) + '...';
         }
 
         return {
-          uuid: like.receiver.uuid,
-          username: like.receiver.username,
-          name: like.receiver.name,
-          role: like.receiver.role,
+          uuid: receiver.uuid,
+          username: receiver.username,
+          role: receiver.role,
+          name: receiver.name || undefined,
           description: description || undefined,
-          isVerified: like.receiver.isVerified,
-          isActive: like.receiver.isActive,
-          avatarUrl,
-          bannerUrl,
+          avatarUrl: avatarUrl || null,
+          bannerUrl: bannerUrl || null,
+          isVerified: receiver.isVerified,
+          isActive: receiver.isActive,
           mainTags: mainTags.length > 0 ? mainTags : undefined,
           location: location || undefined,
-          likedAt: like.createdAt,
-        };
+        } as UserPreviewResponseDto;
       }),
     );
 
-    this.logger.log(`Encontrados ${receiversWithAvatars.length} likes dados`);
-    return receiversWithAvatars;
+    this.logger.log(`Encontrados ${receiversWithImages.length} likes dados`);
+    return receiversWithImages;
   }
 }

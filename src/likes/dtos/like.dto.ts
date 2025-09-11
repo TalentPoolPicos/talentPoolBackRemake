@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { UserPreviewResponseDto } from '../../users/dtos/user-response.dto';
 
 /**
  * DTO para resposta de verificação de like
@@ -103,14 +104,6 @@ export class LikeUserDto {
   role: string;
 
   @ApiProperty({
-    type: String,
-    example: 'Desenvolvedor de software apaixonado por tecnologia',
-    description: 'Descrição resumida do usuário (máximo 200 caracteres)',
-    required: false,
-  })
-  description?: string;
-
-  @ApiProperty({
     type: Boolean,
     example: true,
     description: 'Se o usuário está verificado',
@@ -135,31 +128,6 @@ export class LikeUserDto {
 
   @ApiProperty({
     type: String,
-    example:
-      'https://minio.example.com/bucket/banner_picture/banner_123.jpg?expires=3600',
-    description: 'URL temporária do banner do usuário',
-    required: false,
-  })
-  bannerUrl?: string | null;
-
-  @ApiProperty({
-    type: [String],
-    description: 'Lista de tags principais do usuário (máximo 5)',
-    example: ['React', 'Node.js', 'TypeScript'],
-    required: false,
-  })
-  mainTags?: string[];
-
-  @ApiProperty({
-    type: String,
-    example: 'Fortaleza, CE',
-    description: 'Localização do usuário (cidade, estado)',
-    required: false,
-  })
-  location?: string;
-
-  @ApiProperty({
-    type: String,
     example: '2023-01-01T00:00:00.000Z',
     description: 'Data e hora do like',
   })
@@ -171,10 +139,10 @@ export class LikeUserDto {
  */
 export class LikeInitiatorsResponseDto {
   @ApiProperty({
-    type: [LikeUserDto],
+    type: [UserPreviewResponseDto],
     description: 'Lista de usuários que deram like',
   })
-  initiators: LikeUserDto[];
+  initiators: UserPreviewResponseDto[];
 
   @ApiProperty({
     type: Number,
@@ -189,10 +157,10 @@ export class LikeInitiatorsResponseDto {
  */
 export class LikeReceiversResponseDto {
   @ApiProperty({
-    type: [LikeUserDto],
+    type: [UserPreviewResponseDto],
     description: 'Lista de usuários que receberam like',
   })
-  receivers: LikeUserDto[];
+  receivers: UserPreviewResponseDto[];
 
   @ApiProperty({
     type: Number,
