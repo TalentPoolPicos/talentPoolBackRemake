@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,6 +5,241 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model Attachment {
+  id                  Int            @id @default(autoincrement())
+  uuid                String         @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+  filename            String         @db.VarChar(255)
+  originalName        String         @map("original_name") @db.VarChar(255)
+  mimeType            String         @map("mime_type") @db.VarChar(100)
+  size                Int
+  type                AttachmentType
+  storageKey          String         @unique @map("storage_key") @db.VarChar(500)
+  avatarUserId        Int?           @unique @map("avatar_user_id")
+  bannerUserId        Int?           @unique @map("banner_user_id")
+  curriculumStudentId Int?           @unique @map("curriculum_student_id")
+  historyStudentId    Int?           @unique @map("history_student_id")
+  avatarUser          User?          @relation("UserAvatar", fields: [avatarUserId], references: [id], onDelete: Cascade)
+  bannerUser          User?          @relation("UserBanner", fields: [bannerUserId], references: [id], onDelete: Cascade)
+  curriculumStudent   Student?       @relation("StudentCurriculum", fields: [curriculumStudentId], references: [id], onDelete: Cascade)
+  historyStudent      Student?       @relation("StudentHistory", fields: [historyStudentId], references: [id], onDelete: Cascade)
+
+  @@index([avatarUserId])
+  @@index([bannerUserId])
+  @@index([curriculumStudentId])
+  @@index([historyStudentId])
+  @@index([type])
+  @@index([storageKey])
+  @@map("attachments")
+}
+
+model User {
+  id                     Int            @id @default(autoincrement())
+  uuid                   String         @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt              DateTime       @default(now()) @map("created_at")
+  updatedAt              DateTime       @updatedAt @map("updated_at")
+  isVerified             Boolean        @default(false) @map("is_verified")
+  isActive               Boolean        @default(false) @map("is_active")
+  isDeleted              Boolean        @default(false) @map("is_deleted")
+  username               String         @unique @db.VarChar(100)
+  email                  String         @unique
+  password               String
+  role                   Role           @default(student)
+  description            String?        @db.VarChar(255)
+  isComplete             Boolean        @default(false) @map("is_complete")
+  name                   String?        @db.VarChar(100)
+  birthDate              DateTime?      @map("birth_date")
+  address                Address?
+  avatar                 Attachment?    @relation("UserAvatar")
+  banner                 Attachment?    @relation("UserBanner")
+  enterprise             Enterprise?
+  initiatedLikes         Like[]         @relation("LikeInitiator")
+  receivedLikes          Like[]         @relation("LikeReceiver")
+  triggeredNotifications Notification[] @relation("NotificationTrigger")
+  notifications          Notification[] @relation("UserNotifications")
+  socialMedia            SocialMedia[]
+  student                Student?
+  tags                   Tag[]
+
+  @@index([role])
+  @@map("users")
+}
+
+model Student {
+  id                 Int              @id @default(autoincrement())
+  uuid               String           @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+  lattes             String?          @db.VarChar(255)
+  course             String?          @db.VarChar(100)
+  registrationNumber String?          @unique @map("registration_number") @db.VarChar(11)
+  userId             Int              @unique @map("user_id")
+  curriculum         Attachment?      @relation("StudentCurriculum")
+  history            Attachment?      @relation("StudentHistory")
+  applications       JobApplication[] @relation("StudentApplications")
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([course])
+  @@map("students")
+}
+
+model Enterprise {
+  id           Int      @id @default(autoincrement())
+  uuid         String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  fantasyName  String?  @map("fantasy_name") @db.VarChar(100)
+  cnpj         String?  @unique @db.VarChar(18)
+  socialReason String?  @map("social_reason") @db.VarChar(100)
+  userId       Int      @unique @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobs         Job[]    @relation("EnterpriseJobs")
+
+  @@index([cnpj])
+  @@map("enterprises")
+}
+
+model SocialMedia {
+  id        Int             @id @default(autoincrement())
+  uuid      String          @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+  type      SocialMediaType
+  url       String          @db.VarChar(255)
+  userId    Int             @map("user_id")
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("social_media")
+}
+
+model Tag {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  label     String   @db.VarChar(40)
+  userId    Int      @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("tags")
+}
+
+model Address {
+  id           Int      @id @default(autoincrement())
+  uuid         String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  zipCode      String   @map("zip_code") @db.VarChar(10)
+  street       String?  @db.VarChar(100)
+  neighborhood String?  @db.VarChar(100)
+  city         String?  @db.VarChar(100)
+  state        String?  @db.VarChar(100)
+  userId       Int      @unique @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("addresses")
+}
+
+model Like {
+  id          Int      @id @default(autoincrement())
+  uuid        String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  initiatorId Int      @map("initiator_id")
+  receiverId  Int      @map("receiver_id")
+  initiator   User     @relation("LikeInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  receiver    User     @relation("LikeReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([initiatorId, receiverId])
+  @@index([initiatorId])
+  @@index([receiverId])
+  @@map("likes")
+}
+
+model Job {
+  id            Int              @id @default(autoincrement())
+  uuid          String           @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  title         String           @db.VarChar(200)
+  body          String
+  status        JobStatus        @default(draft)
+  publishedAt   DateTime?        @map("published_at")
+  expiresAt     DateTime?        @map("expires_at")
+  enterpriseId  Int              @map("enterprise_id")
+  applications  JobApplication[]
+  enterprise    Enterprise       @relation("EnterpriseJobs", fields: [enterpriseId], references: [id], onDelete: Cascade)
+  notifications Notification[]   @relation("NotificationJob")
+
+  @@index([enterpriseId])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([expiresAt])
+  @@map("jobs")
+}
+
+model JobApplication {
+  id            Int               @id @default(autoincrement())
+  uuid          String            @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+  status        ApplicationStatus @default(pending)
+  coverLetter   String?           @map("cover_letter")
+  appliedAt     DateTime          @default(now()) @map("applied_at")
+  reviewedAt    DateTime?         @map("reviewed_at")
+  reviewerNotes String?           @map("reviewer_notes")
+  jobId         Int               @map("job_id")
+  studentId     Int               @map("student_id")
+  job           Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  student       Student           @relation("StudentApplications", fields: [studentId], references: [id], onDelete: Cascade)
+  notifications Notification[]    @relation("NotificationApplication")
+
+  @@unique([jobId, studentId])
+  @@index([jobId])
+  @@index([studentId])
+  @@index([status])
+  @@index([appliedAt])
+  @@map("job_applications")
+}
+
+model Notification {
+  id                   Int              @id @default(autoincrement())
+  uuid                 String           @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updated_at")
+  type                 NotificationType
+  title                String           @db.VarChar(200)
+  message              String
+  isRead               Boolean          @default(false) @map("is_read")
+  readAt               DateTime?        @map("read_at")
+  metadata             Json?
+  priority             Int              @default(1)
+  expiresAt            DateTime?        @map("expires_at")
+  actionUrl            String?          @map("action_url") @db.VarChar(500)
+  actionType           String?          @map("action_type") @db.VarChar(100)
+  actionData           Json?            @map("action_data")
+  userId               Int              @map("user_id")
+  relatedJobId         Int?             @map("related_job_id")
+  relatedApplicationId Int?             @map("related_application_id")
+  relatedUserId        Int?             @map("related_user_id")
+  relatedApplication   JobApplication?  @relation("NotificationApplication", fields: [relatedApplicationId], references: [id])
+  relatedJob           Job?             @relation("NotificationJob", fields: [relatedJobId], references: [id])
+  relatedUser          User?            @relation("NotificationTrigger", fields: [relatedUserId], references: [id])
+  user                 User             @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([isRead])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@index([relatedJobId])
+  @@index([relatedApplicationId])
+  @@index([relatedUserId])
+  @@map("notifications")
 }
 
 enum Role {
@@ -61,244 +293,16 @@ enum ApplicationStatus {
   withdrawn
 }
 
-model Attachment {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // File metadata
-  filename     String         @db.VarChar(255)
-  originalName String         @map("original_name") @db.VarChar(255)
-  mimeType     String         @map("mime_type") @db.VarChar(100)
-  size         Int // Size in bytes
-  type         AttachmentType
-
-  // File storage info
-  storageKey String @unique @map("storage_key") @db.VarChar(500) // MinIO/S3 key
-
-  // Relations for User avatar and banner
-  avatarUserId Int? @unique @map("avatar_user_id")
-  bannerUserId Int? @unique @map("banner_user_id")
-
-  // Relation for Student curriculum (one-to-one)
-  curriculumStudentId Int? @unique @map("curriculum_student_id")
-
-  // Relation for Student history (one-to-one)
-  historyStudentId Int? @unique @map("history_student_id")
-
-  avatarUser        User?    @relation("UserAvatar", fields: [avatarUserId], references: [id], onDelete: Cascade)
-  bannerUser        User?    @relation("UserBanner", fields: [bannerUserId], references: [id], onDelete: Cascade)
-  curriculumStudent Student? @relation("StudentCurriculum", fields: [curriculumStudentId], references: [id], onDelete: Cascade)
-  historyStudent    Student? @relation("StudentHistory", fields: [historyStudentId], references: [id], onDelete: Cascade)
-
-  // Indexes for performance
-  @@index([avatarUserId])
-  @@index([bannerUserId])
-  @@index([curriculumStudentId])
-  @@index([historyStudentId])
-  @@index([type])
-  @@index([storageKey])
-  @@map("attachments")
-}
-
-model User {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Status fields
-  isVerified Boolean @default(false) @map("is_verified")
-  isActive   Boolean @default(false) @map("is_active")
-  isDeleted  Boolean @default(false) @map("is_deleted")
-  isComplete Boolean @default(false) @map("is_complete")
-
-  // Authentication fields
-  username String @unique @db.VarChar(100)
-  email    String @unique
-  password String
-  role     Role   @default(student)
-
-  // Profile fields
-  name        String?   @db.VarChar(100)
-  description String?   @db.VarChar(255)
-  birthDate   DateTime? @map("birth_date")
-
-  // Relations
-  student        Student?
-  enterprise     Enterprise?
-  socialMedia    SocialMedia[]
-  tags           Tag[]
-  address        Address?
-  avatar         Attachment?      @relation("UserAvatar")
-  banner         Attachment?      @relation("UserBanner")
-  initiatedLikes Like[]           @relation("LikeInitiator")
-  receivedLikes  Like[]           @relation("LikeReceiver")
-
-  // Constraints to ensure role consistency
-  @@index([role])
-  @@map("users")
-}
-
-model Student {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Student-specific fields
-  course             String? @db.VarChar(100)
-  registrationNumber String? @unique @map("registration_number") @db.VarChar(11)
-  lattes             String? @db.VarChar(255)
-
-  // Relations
-  userId     Int                @unique @map("user_id")
-  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  curriculum Attachment?        @relation("StudentCurriculum")
-  history    Attachment?        @relation("StudentHistory")
-  applications JobApplication[] @relation("StudentApplications")
-
-  @@index([course])
-  @@map("students")
-}
-
-model Enterprise {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Enterprise-specific fields
-  fantasyName  String? @map("fantasy_name") @db.VarChar(100)
-  cnpj         String? @unique @db.VarChar(18)
-  socialReason String? @map("social_reason") @db.VarChar(100)
-
-  // Relations
-  userId Int  @unique @map("user_id")
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  jobs   Job[] @relation("EnterpriseJobs")
-
-  @@index([cnpj])
-  @@map("enterprises")
-}
-
-model SocialMedia {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  type SocialMediaType
-  url  String          @db.VarChar(255)
-
-  userId Int  @map("user_id")
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("social_media")
-}
-
-model Tag {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  label String @db.VarChar(40)
-
-  userId Int  @map("user_id")
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("tags")
-}
-
-model Address {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  zipCode      String  @map("zip_code") @db.VarChar(10)
-  street       String? @db.VarChar(100)
-  neighborhood String? @db.VarChar(100)
-  city         String? @db.VarChar(100)
-  state        String? @db.VarChar(100)
-
-  userId Int  @unique @map("user_id")
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("addresses")
-}
-
-model Like {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  initiatorId Int @map("initiator_id")
-  receiverId  Int @map("receiver_id")
-
-  initiator User @relation("LikeInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
-  receiver  User @relation("LikeReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
-
-  // Prevent self-likes and duplicate likes
-  @@unique([initiatorId, receiverId])
-  @@index([initiatorId])
-  @@index([receiverId])
-  @@map("likes")
-}
-
-model Job {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Job content
-  title       String    @db.VarChar(200)
-  body        String    @db.Text // HTML content from TinyMCE
-  status      JobStatus @default(draft)
-  publishedAt DateTime? @map("published_at")
-  expiresAt   DateTime? @map("expires_at")
-
-  // Relations
-  enterpriseId Int              @map("enterprise_id")
-  enterprise   Enterprise       @relation("EnterpriseJobs", fields: [enterpriseId], references: [id], onDelete: Cascade)
-  applications JobApplication[]
-
-  // Indexes for performance
-  @@index([enterpriseId])
-  @@index([status])
-  @@index([publishedAt])
-  @@index([expiresAt])
-  @@map("jobs")
-}
-
-model JobApplication {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Application content
-  status         ApplicationStatus @default(pending)
-  coverLetter    String?           @map("cover_letter") @db.Text
-  appliedAt      DateTime          @default(now()) @map("applied_at")
-  reviewedAt     DateTime?         @map("reviewed_at")
-  reviewerNotes  String?           @map("reviewer_notes") @db.Text
-
-  // Relations
-  jobId     Int     @map("job_id")
-  studentId Int     @map("student_id")
-  job       Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  student   Student @relation("StudentApplications", fields: [studentId], references: [id], onDelete: Cascade)
-
-  // Prevent duplicate applications
-  @@unique([jobId, studentId])
-  @@index([jobId])
-  @@index([studentId])
-  @@index([status])
-  @@index([appliedAt])
-  @@map("job_applications")
+enum NotificationType {
+  job_application_received
+  job_application_updated
+  job_published
+  job_expiring
+  profile_liked
+  profile_viewed
+  review_notes_added
+  system_announcement
+  welcome_message
+  account_verification
+  custom
 }
