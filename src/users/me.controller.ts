@@ -43,6 +43,7 @@ import {
   UploadAvatarResponseDto,
   UploadBannerResponseDto,
   UploadCurriculumResponseDto,
+  UploadHistoryResponseDto,
 } from './dtos/upload-image.dto';
 
 @ApiTags('Meu Perfil')
@@ -571,5 +572,58 @@ export class MeController {
     @UploadedFile() file: Express.Multer.File,
   ): Promise<UploadCurriculumResponseDto> {
     return this.userImageService.uploadCurriculum(file, req.user.sub);
+  }
+
+  @ApiOperation({
+    summary: 'Upload de histórico escolar do estudante',
+    description:
+      'Faz upload do histórico escolar em PDF para o perfil do estudante. Substitui o histórico anterior se existir.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Arquivo PDF do histórico escolar',
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Arquivo PDF do histórico escolar (máximo 15MB)',
+        },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiCreatedResponse({
+    description: 'Histórico enviado com sucesso',
+    type: UploadHistoryResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Arquivo inválido ou não atende aos requisitos',
+    schema: {
+      example: {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Formato não permitido. Formatos aceitos: .pdf',
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'Estudante não encontrado',
+    schema: {
+      example: {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'Estudante não encontrado',
+        error: 'Not Found',
+      },
+    },
+  })
+  @Post('student/history')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadHistory(
+    @Request() req: CustomRequest,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<UploadHistoryResponseDto> {
+    return this.userImageService.uploadHistory(file, req.user.sub);
   }
 }

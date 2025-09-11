@@ -45,6 +45,21 @@ export class UploadCurriculumResponseDto {
   filename: string;
 }
 
+export class UploadHistoryResponseDto {
+  @ApiProperty({
+    example:
+      'https://minio.example.com/bucket/history/2024/09/user_1/history_123456789.pdf?expires=3600',
+    description: 'URL temporária do histórico escolar carregado',
+  })
+  historyUrl: string;
+
+  @ApiProperty({
+    example: 'history_123456789.pdf',
+    description: 'Nome do arquivo gerado',
+  })
+  filename: string;
+}
+
 export class ImageUploadDto {
   @ApiProperty({
     type: 'string',

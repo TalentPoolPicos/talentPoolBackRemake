@@ -69,14 +69,19 @@ model Attachment {
   // Relation for Student curriculum (one-to-one)
   curriculumStudentId Int? @unique @map("curriculum_student_id")
 
+  // Relation for Student history (one-to-one)
+  historyStudentId Int? @unique @map("history_student_id")
+
   avatarUser        User?    @relation("UserAvatar", fields: [avatarUserId], references: [id], onDelete: Cascade)
   bannerUser        User?    @relation("UserBanner", fields: [bannerUserId], references: [id], onDelete: Cascade)
   curriculumStudent Student? @relation("StudentCurriculum", fields: [curriculumStudentId], references: [id], onDelete: Cascade)
+  historyStudent    Student? @relation("StudentHistory", fields: [historyStudentId], references: [id], onDelete: Cascade)
 
   // Indexes for performance
   @@index([avatarUserId])
   @@index([bannerUserId])
   @@index([curriculumStudentId])
+  @@index([historyStudentId])
   @@index([type])
   @@index([storageKey])
   @@map("attachments")
@@ -136,6 +141,7 @@ model Student {
   userId     Int         @unique @map("user_id")
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   curriculum Attachment? @relation("StudentCurriculum")
+  history    Attachment? @relation("StudentHistory")
 
   @@index([course])
   @@map("students")

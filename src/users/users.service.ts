@@ -43,24 +43,28 @@ export class UsersService {
   ) {}
 
   /**
-   * Obtém URLs das imagens e documentos do usuário (avatar, banner, curriculum)
+   * Obtém URLs das imagens e documentos do usuário (avatar, banner, curriculum, history)
    */
   private async getUserImageUrls(userId: number): Promise<{
     avatarUrl?: string;
     bannerUrl?: string;
     curriculumUrl?: string;
+    historyUrl?: string;
   }> {
     try {
-      const [avatarUrl, bannerUrl, curriculumUrl] = await Promise.all([
-        this.userImageService.getAvatarUrl(userId),
-        this.userImageService.getBannerUrl(userId),
-        this.userImageService.getCurriculumUrl(userId),
-      ]);
+      const [avatarUrl, bannerUrl, curriculumUrl, historyUrl] =
+        await Promise.all([
+          this.userImageService.getAvatarUrl(userId),
+          this.userImageService.getBannerUrl(userId),
+          this.userImageService.getCurriculumUrl(userId),
+          this.userImageService.getHistoryUrl(userId),
+        ]);
 
       return {
         avatarUrl: avatarUrl || undefined,
         bannerUrl: bannerUrl || undefined,
         curriculumUrl: curriculumUrl || undefined,
+        historyUrl: historyUrl || undefined,
       };
     } catch (error) {
       this.logger.error(
@@ -620,6 +624,7 @@ export class UsersService {
       avatarUrl?: string;
       bannerUrl?: string;
       curriculumUrl?: string;
+      historyUrl?: string;
     },
   ): UserProfileResponseDto {
     return {
@@ -642,6 +647,7 @@ export class UsersService {
             registrationNumber: user.student.registrationNumber || undefined,
             lattes: user.student.lattes || undefined,
             curriculumUrl: imageUrls.curriculumUrl,
+            historyUrl: imageUrls.historyUrl,
             createdAt: user.student.createdAt.toISOString(),
             updatedAt: user.student.updatedAt.toISOString(),
           }
@@ -702,6 +708,7 @@ export class UsersService {
       avatarUrl?: string;
       bannerUrl?: string;
       curriculumUrl?: string;
+      historyUrl?: string;
     },
   ): PublicUserProfileResponseDto {
     return {
@@ -722,6 +729,7 @@ export class UsersService {
             registrationNumber: user.student.registrationNumber || undefined,
             lattes: user.student.lattes || undefined,
             curriculumUrl: imageUrls.curriculumUrl,
+            historyUrl: imageUrls.historyUrl,
             createdAt: user.student.createdAt.toISOString(),
             updatedAt: user.student.updatedAt.toISOString(),
           }

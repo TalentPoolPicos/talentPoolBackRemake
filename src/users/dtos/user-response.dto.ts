@@ -253,6 +253,14 @@ export class StudentProfileResponseDto {
 
   @ApiProperty({
     type: String,
+    example: 'https://storage.example.com/history.pdf',
+    description: 'URL de acesso ao histórico escolar do estudante',
+    required: false,
+  })
+  historyUrl?: string;
+
+  @ApiProperty({
+    type: String,
     example: '2023-01-01T00:00:00.000Z',
     description: 'Data de criação',
   })

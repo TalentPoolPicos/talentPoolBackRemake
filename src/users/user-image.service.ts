@@ -131,9 +131,9 @@ export class UserImageService {
       allowedExtensions: [],
     },
     history: {
-      maxSizeBytes: 0,
-      allowedMimeTypes: [],
-      allowedExtensions: [],
+      maxSizeBytes: 15 * 1024 * 1024, // 15MB
+      allowedMimeTypes: ['application/pdf'],
+      allowedExtensions: ['.pdf'],
     },
     document: {
       maxSizeBytes: 10 * 1024 * 1024, // 10MB para documentos gerais
@@ -555,6 +555,100 @@ export class UserImageService {
 
     return this.storageService.generateFileUrl(
       student.curriculum.storageKey,
+      3600,
+    );
+  }
+
+  /**
+   * Faz upload de histórico escolar para estudante
+   */
+  async uploadHistory(
+    file: Express.Multer.File,
+    userId: number,
+  ): Promise<{ historyUrl: string; filename: string }> {
+    this.logger.log(`Iniciando upload de histórico para usuário ${userId}`);
+
+    // Validar o arquivo
+    this.validateFile(file, 'history');
+
+    // Verificar se o usuário é um estudante
+    const student = await this.prisma.student.findUnique({
+      where: { userId },
+      include: { history: true },
+    });
+
+    if (!student) {
+      throw new NotFoundException('Estudante não encontrado');
+    }
+
+    // Se já existe um histórico, deletar o arquivo antigo
+    if (student.history) {
+      try {
+        await this.storageService.deleteFile(student.history.storageKey);
+        await this.prisma.attachment.delete({
+          where: { id: student.history.id },
+        });
+        this.logger.log(
+          `Histórico anterior deletado: ${student.history.storageKey}`,
+        );
+      } catch (error) {
+        this.logger.warn(
+          `Erro ao deletar histórico anterior: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        );
+      }
+    }
+
+    // Upload para MinIO
+    const uploadResult = await this.storageService.uploadFile(
+      file,
+      'history',
+      userId,
+    );
+
+    // Salvar no banco de dados
+    const attachment = await this.prisma.attachment.create({
+      data: {
+        filename: file.originalname,
+        originalName: file.originalname,
+        storageKey: uploadResult.storageKey,
+        size: file.size,
+        mimeType: file.mimetype,
+        type: 'history',
+        historyStudentId: student.id,
+      },
+    });
+
+    this.logger.log(
+      `Histórico salvo com sucesso: ${attachment.storageKey} para estudante ${student.id}`,
+    );
+
+    // Gerar URL temporária
+    const historyUrl = await this.storageService.generateFileUrl(
+      uploadResult.storageKey,
+      3600,
+    );
+
+    return {
+      historyUrl,
+      filename: file.originalname,
+    };
+  }
+
+  /**
+   * Gera URL para histórico do estudante
+   */
+  async getHistoryUrl(userId: number): Promise<string | null> {
+    const student = await this.prisma.student.findUnique({
+      where: { userId },
+      include: { history: true },
+    });
+
+    if (!student?.history) {
+      return null;
+    }
+
+    return this.storageService.generateFileUrl(
+      student.history.storageKey,
       3600,
     );
   }
