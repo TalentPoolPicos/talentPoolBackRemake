@@ -34,33 +34,12 @@ export class AuthController {
   })
   @ApiNotFoundResponse({
     description: 'Usuário não encontrado',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Usuário não encontrado',
-        error: 'Not Found',
-      },
-    },
   })
   @ApiUnauthorizedResponse({
     description: 'Credenciais inválidas ou conta inativa',
-    schema: {
-      example: {
-        statusCode: HttpStatus.UNAUTHORIZED,
-        message: 'Credenciais inválidas',
-        error: 'Unauthorized',
-      },
-    },
   })
   @ApiBadRequestResponse({
     description: 'Dados de entrada inválidos',
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: ['Nome de usuário deve ter pelo menos 3 caracteres'],
-        error: 'Bad Request',
-      },
-    },
   })
   @HttpCode(HttpStatus.OK)
   @Post('sign-in')
@@ -81,38 +60,12 @@ export class AuthController {
   })
   @ApiConflictResponse({
     description: 'Nome de usuário ou email já existe',
-    schema: {
-      example: {
-        statusCode: HttpStatus.CONFLICT,
-        message: 'Nome de usuário já existe',
-        error: 'Conflict',
-      },
-    },
   })
   @ApiUnprocessableEntityResponse({
     description: 'Falha ao criar usuário',
-    schema: {
-      example: {
-        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        message: 'Falha ao criar usuário',
-        error: 'Unprocessable Entity',
-      },
-    },
   })
   @ApiBadRequestResponse({
     description: 'Dados de entrada inválidos',
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: [
-          'Nome de usuário deve ter pelo menos 3 caracteres',
-          'Email deve ser um endereço de email válido',
-          'Email deve ser de um domínio institucional. Domínios válidos: @ufpi.edu.br, @ufpi.br, @ufc.br, @ifpi.edu.br, etc.',
-          'Senha deve ter pelo menos 8 caracteres e conter pelo menos uma letra maiúscula, uma minúscula, um número e um símbolo',
-        ],
-        error: 'Bad Request',
-      },
-    },
   })
   @HttpCode(HttpStatus.CREATED)
   @Post('sign-up')
@@ -133,33 +86,12 @@ export class AuthController {
   })
   @ApiUnauthorizedResponse({
     description: 'Token de renovação inválido ou expirado',
-    schema: {
-      example: {
-        statusCode: HttpStatus.UNAUTHORIZED,
-        message: 'Token de renovação inválido',
-        error: 'Unauthorized',
-      },
-    },
   })
   @ApiNotFoundResponse({
     description: 'Usuário associado ao token não encontrado',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Usuário não encontrado',
-        error: 'Not Found',
-      },
-    },
   })
   @ApiBadRequestResponse({
     description: 'Dados de entrada inválidos',
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: ['Token de renovação não pode estar vazio'],
-        error: 'Bad Request',
-      },
-    },
   })
   @HttpCode(HttpStatus.OK)
   @Post('refresh')

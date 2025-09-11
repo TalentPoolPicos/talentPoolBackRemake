@@ -59,13 +59,6 @@ export class UsersController {
   })
   @ApiNotFoundResponse({
     description: 'Usuário não encontrado ou perfil não disponível',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Usuário não encontrado',
-        error: 'Not Found',
-      },
-    },
   })
   @Get(':uuid/preview')
   getUserPreview(@Param('uuid') uuid: string): Promise<UserPreviewResponseDto> {
@@ -88,13 +81,6 @@ export class UsersController {
   })
   @ApiNotFoundResponse({
     description: 'Usuário não encontrado ou perfil não disponível',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Usuário não encontrado',
-        error: 'Not Found',
-      },
-    },
   })
   @Get(':uuid')
   getPublicProfile(
