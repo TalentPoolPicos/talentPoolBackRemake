@@ -29,6 +29,7 @@ import {
 import {
   UserProfileResponseDto,
   PublicUserProfileResponseDto,
+  UserPreviewResponseDto,
   UserStatsResponseDto,
 } from './dtos/user-response.dto';
 
@@ -123,6 +124,31 @@ export class UsersService {
       `Perfil público carregado com sucesso para usuário: ${user.username}`,
     );
     return this.mapToPublicProfileDto(user, imageUrls);
+  }
+
+  /**
+   * Busca preview resumido do usuário
+   */
+  async getUserPreview(uuid: string): Promise<UserPreviewResponseDto> {
+    this.logger.log(`Buscando preview do usuário com UUID: ${uuid}`);
+
+    const user = await this.findUserByUuidWithProfile(uuid);
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    const imageUrls = await this.getUserImageUrls(user.id);
+
+    this.logger.log(
+      `Preview carregado com sucesso para usuário: ${user.username}`,
+    );
+
+    return this.mapToPreviewDto(
+      user,
+      imageUrls.avatarUrl || undefined,
+      imageUrls.bannerUrl || undefined,
+    );
   }
 
   /**
@@ -771,6 +797,62 @@ export class UsersService {
         : undefined,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
+    };
+  }
+
+  /**
+   * Mapeia usuário para DTO de preview (versão resumida)
+   */
+  private mapToPreviewDto(
+    user: {
+      uuid: string;
+      username: string;
+      role: string;
+      name?: string | null;
+      description?: string | null;
+      isVerified: boolean;
+      isActive: boolean;
+      address?: {
+        city?: string | null;
+        state?: string | null;
+      } | null;
+      tags?: Array<{
+        label: string;
+      }>;
+    },
+    avatarUrl?: string,
+    bannerUrl?: string,
+  ): UserPreviewResponseDto {
+    // Construir localização a partir do endereço
+    let location: string | undefined;
+    if (user.address?.city || user.address?.state) {
+      const city = user.address.city || '';
+      const state = user.address.state || '';
+      location = `${city}${city && state ? ', ' : ''}${state}`.trim();
+      if (location === '') location = undefined;
+    }
+
+    // Extrair nomes das tags (máximo 5)
+    const mainTags = user.tags?.map((tag) => tag.label) || [];
+
+    // Truncar descrição para preview (máximo 200 caracteres)
+    let description = user.description;
+    if (description && description.length > 200) {
+      description = description.substring(0, 197) + '...';
+    }
+
+    return {
+      uuid: user.uuid,
+      username: user.username,
+      role: user.role,
+      name: user.name || undefined,
+      description: description || undefined,
+      avatarUrl: avatarUrl || null,
+      bannerUrl: bannerUrl || null,
+      isVerified: user.isVerified,
+      isActive: user.isActive,
+      mainTags: mainTags.length > 0 ? mainTags : undefined,
+      location: location || undefined,
     };
   }
 

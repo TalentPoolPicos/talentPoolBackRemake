@@ -645,3 +645,93 @@ export class PublicUserProfileResponseDto {
   })
   updatedAt: string;
 }
+
+/**
+ * DTO para preview/resumo público do usuário
+ */
+export class UserPreviewResponseDto {
+  @ApiProperty({
+    type: String,
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'UUID único do usuário',
+  })
+  uuid: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'joao_silva',
+    description: 'Nome de usuário',
+  })
+  username: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'student',
+    description: 'Papel do usuário no sistema',
+  })
+  role: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'João Silva',
+    description: 'Nome completo do usuário',
+    required: false,
+  })
+  name?: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'Desenvolvedor de software apaixonado por tecnologia',
+    description: 'Descrição resumida do usuário (máximo 200 caracteres)',
+    required: false,
+  })
+  description?: string;
+
+  @ApiProperty({
+    type: String,
+    example:
+      'https://minio.example.com/bucket/profile_picture/avatar_123.jpg?expires=3600',
+    description: 'URL temporária do avatar do usuário',
+    required: false,
+  })
+  avatarUrl?: string | null;
+
+  @ApiProperty({
+    type: String,
+    example:
+      'https://minio.example.com/bucket/banner_picture/banner_123.jpg?expires=3600',
+    description: 'URL temporária do banner do usuário',
+    required: false,
+  })
+  bannerUrl?: string | null;
+
+  @ApiProperty({
+    type: Boolean,
+    example: true,
+    description: 'Se o usuário está verificado',
+  })
+  isVerified: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    example: true,
+    description: 'Se o usuário está ativo',
+  })
+  isActive: boolean;
+
+  @ApiProperty({
+    type: [String],
+    description: 'Lista de tags principais do usuário (máximo 5)',
+    example: ['React', 'Node.js', 'TypeScript'],
+    required: false,
+  })
+  mainTags?: string[];
+
+  @ApiProperty({
+    type: String,
+    example: 'Fortaleza, CE',
+    description: 'Localização do usuário (cidade, estado)',
+    required: false,
+  })
+  location?: string;
+}
