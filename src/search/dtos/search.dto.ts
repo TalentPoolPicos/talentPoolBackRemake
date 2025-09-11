@@ -1,17 +1,43 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsOptional,
-  IsString,
-  IsNumber,
-  IsArray,
-  Min,
-  Max,
-} from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { IsOptional, IsString, IsNumber, Min, Max } from 'class-validator';
+import { Type } from 'class-transformer';
+import { UserPreviewResponseDto } from '../../users/dtos/user-response.dto';
+
+// Interfaces para o service
+export interface SearchOptions {
+  filter?: string;
+  limit: number;
+  offset: number;
+}
+
+export interface MeilisearchResponse {
+  hits: UserPreviewResponseDto[];
+  total: number;
+  query: string;
+  processingTimeMs: number;
+  limit: number;
+  offset: number;
+}
+
+export interface SearchableUser {
+  uuid: string;
+  username: string;
+  name?: string;
+  email: string;
+  role: string;
+  description?: string;
+  tags?: string[];
+  location?: string;
+  avatarUrl?: string | null;
+  bannerUrl?: string | null;
+  isVerified: boolean;
+  isActive: boolean;
+}
 
 export class SearchUsersDto {
   @ApiProperty({
-    description: 'Termo de pesquisa',
+    description:
+      'Termo de pesquisa (busca em username, email, descrição, localização e tags)',
     example: 'João developer React',
     required: false,
   })
@@ -28,43 +54,6 @@ export class SearchUsersDto {
   @IsOptional()
   @IsString()
   role?: string;
-
-  @ApiProperty({
-    description: 'Filtrar apenas usuários verificados',
-    example: true,
-    required: false,
-  })
-  @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true)
-  isVerified?: boolean;
-
-  @ApiProperty({
-    description: 'Filtro por localização',
-    example: 'Fortaleza, CE',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  location?: string;
-
-  @ApiProperty({
-    description: 'Filtro por tags (separadas por vírgula)',
-    example: 'React,Node.js,TypeScript',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  tags?: string;
-
-  @ApiProperty({
-    description: 'Ordenação dos resultados',
-    example: ['username:asc'],
-    required: false,
-  })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  sort?: string[];
 
   @ApiProperty({
     description: 'Número de resultados por página',
@@ -93,87 +82,12 @@ export class SearchUsersDto {
   offset?: number;
 }
 
-export class SearchUserResultDto {
-  @ApiProperty({
-    description: 'UUID único do usuário',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  uuid: string;
-
-  @ApiProperty({
-    description: 'Nome de usuário',
-    example: 'joao_silva',
-  })
-  username: string;
-
-  @ApiProperty({
-    description: 'Nome completo do usuário',
-    example: 'João Silva',
-    required: false,
-  })
-  name?: string;
-
-  @ApiProperty({
-    description: 'Descrição do usuário',
-    example: 'Desenvolvedor full-stack especializado em React e Node.js',
-    required: false,
-  })
-  description?: string;
-
-  @ApiProperty({
-    description: 'Papel do usuário no sistema',
-    example: 'student',
-    enum: ['student', 'enterprise'],
-  })
-  role: string;
-
-  @ApiProperty({
-    description: 'Se o usuário está verificado',
-    example: true,
-  })
-  isVerified: boolean;
-
-  @ApiProperty({
-    description: 'Se o usuário está ativo',
-    example: true,
-  })
-  isActive: boolean;
-
-  @ApiProperty({
-    description: 'Localização do usuário',
-    example: 'Fortaleza, CE',
-    required: false,
-  })
-  location?: string;
-
-  @ApiProperty({
-    description: 'Tags do usuário',
-    example: ['React', 'Node.js', 'TypeScript'],
-    required: false,
-  })
-  tags?: string[];
-
-  @ApiProperty({
-    description: 'URL temporária do avatar',
-    example: 'https://minio.example.com/bucket/avatar_123.jpg?expires=3600',
-    required: false,
-  })
-  avatarUrl?: string;
-
-  @ApiProperty({
-    description: 'URL temporária do banner',
-    example: 'https://minio.example.com/bucket/banner_123.jpg?expires=3600',
-    required: false,
-  })
-  bannerUrl?: string;
-}
-
 export class SearchUsersResponseDto {
   @ApiProperty({
     description: 'Lista de usuários encontrados',
-    type: [SearchUserResultDto],
+    type: [UserPreviewResponseDto],
   })
-  hits: SearchUserResultDto[];
+  hits: UserPreviewResponseDto[];
 
   @ApiProperty({
     description: 'Total estimado de resultados',
@@ -204,28 +118,4 @@ export class SearchUsersResponseDto {
     example: 0,
   })
   offset: number;
-}
-
-export class SearchStatsResponseDto {
-  @ApiProperty({
-    description: 'Número total de documentos no índice',
-    example: 1250,
-  })
-  numberOfDocuments: number;
-
-  @ApiProperty({
-    description: 'Se o índice está indexando documentos',
-    example: false,
-  })
-  isIndexing: boolean;
-
-  @ApiProperty({
-    description: 'Estatísticas dos campos',
-    example: {
-      username: { count: 1250 },
-      name: { count: 1100 },
-      description: { count: 950 },
-    },
-  })
-  fieldDistribution: Record<string, any>;
 }

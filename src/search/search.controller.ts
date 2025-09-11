@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Logger } from '@nestjs/common';
+import { Controller, Get, Query, Logger, ValidationPipe } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -9,11 +9,7 @@ import {
 } from '@nestjs/swagger';
 import { Public } from '../auth/decotaros/public.decorator';
 import { SearchService } from './search.service';
-import {
-  SearchUsersDto,
-  SearchUsersResponseDto,
-  SearchStatsResponseDto,
-} from './dtos/search.dto';
+import { SearchUsersDto, SearchUsersResponseDto } from './dtos/search.dto';
 
 @ApiTags('Pesquisa')
 @Public()
@@ -26,11 +22,12 @@ export class SearchController {
   @ApiOperation({
     summary: 'Pesquisar usuários',
     description:
-      'Realiza pesquisa de usuários usando Meilisearch com filtros avançados e paginação',
+      'Realiza pesquisa de usuários por termo (username, email, descrição, localização, tags) com filtro opcional por papel',
   })
   @ApiQuery({
     name: 'q',
-    description: 'Termo de pesquisa',
+    description:
+      'Termo de pesquisa (busca em username, email, descrição, localização e tags)',
     required: false,
     example: 'João developer React',
   })
@@ -39,30 +36,6 @@ export class SearchController {
     description: 'Filtro por papel do usuário',
     required: false,
     enum: ['student', 'enterprise'],
-  })
-  @ApiQuery({
-    name: 'isVerified',
-    description: 'Filtrar apenas usuários verificados',
-    required: false,
-    type: Boolean,
-  })
-  @ApiQuery({
-    name: 'location',
-    description: 'Filtro por localização',
-    required: false,
-    example: 'Fortaleza, CE',
-  })
-  @ApiQuery({
-    name: 'tags',
-    description: 'Filtro por tags (separadas por vírgula)',
-    required: false,
-    example: 'React,Node.js,TypeScript',
-  })
-  @ApiQuery({
-    name: 'sort',
-    description: 'Ordenação dos resultados',
-    required: false,
-    example: 'username:asc',
   })
   @ApiQuery({
     name: 'limit',
@@ -90,78 +63,36 @@ export class SearchController {
   })
   @Get('users')
   async searchUsers(
-    @Query() searchDto: SearchUsersDto,
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    searchDto: SearchUsersDto,
   ): Promise<SearchUsersResponseDto> {
     this.logger.log(`Searching users with query: ${JSON.stringify(searchDto)}`);
 
-    const {
-      q = '',
-      role,
-      isVerified,
-      location,
-      tags,
-      sort,
-      limit = 20,
-      offset = 0,
-    } = searchDto;
+    const { q = '', role, limit = 20, offset = 0 } = searchDto;
 
-    // Construir filtros
+    // Construir filtros simples
     const filters: string[] = [];
 
     if (role) {
       filters.push(`role = "${role}"`);
     }
 
-    if (isVerified !== undefined) {
-      filters.push(`isVerified = ${isVerified}`);
-    }
-
     // Sempre filtrar apenas usuários ativos
     filters.push('isActive = true');
 
-    if (location) {
-      filters.push(`location = "${location}"`);
-    }
-
-    if (tags) {
-      const tagList = tags.split(',').map((tag) => tag.trim());
-      const tagFilters = tagList.map((tag) => `tags = "${tag}"`);
-      filters.push(`(${tagFilters.join(' OR ')})`);
-    }
-
     const filter = filters.length > 0 ? filters.join(' AND ') : undefined;
 
-    const result = await this.searchService.searchUsers(q, {
-      filter,
-      limit,
-      offset,
-      sort,
-    });
+    const result: SearchUsersResponseDto = await this.searchService.searchUsers(
+      q,
+      {
+        filter,
+        limit,
+        offset,
+      },
+    );
 
     this.logger.log(`Search completed: ${result.hits.length} users found`);
 
     return result;
-  }
-
-  @ApiOperation({
-    summary: 'Obter estatísticas de pesquisa',
-    description: 'Retorna estatísticas do índice de pesquisa de usuários',
-  })
-  @ApiOkResponse({
-    description: 'Estatísticas obtidas com sucesso',
-    type: SearchStatsResponseDto,
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Erro interno no servidor de pesquisa',
-  })
-  @Get('stats')
-  async getSearchStats(): Promise<SearchStatsResponseDto> {
-    this.logger.log('Getting search statistics');
-
-    const stats = await this.searchService.getSearchStats();
-
-    this.logger.log('Search statistics retrieved successfully');
-
-    return stats;
   }
 }
