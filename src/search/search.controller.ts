@@ -11,7 +11,7 @@ import { Public } from '../auth/decotaros/public.decorator';
 import { SearchService } from './search.service';
 import { SearchUsersDto, SearchUsersResponseDto } from './dtos/search.dto';
 
-@ApiTags('Pesquisa')
+@ApiTags('Search - Public')
 @Public()
 @Controller('search')
 export class SearchController {

@@ -21,7 +21,7 @@ import {
   LikeReceiversResponseDto,
 } from './dtos/like.dto';
 
-@ApiTags('Likes Públicos')
+@ApiTags('Likes - Public')
 @Controller('likes')
 @Public()
 export class LikesController {

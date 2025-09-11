@@ -16,7 +16,7 @@ import { SignUpDto } from './dtos/signup.dto';
 import { RefreshTokenDto } from './dtos/refresh.dto';
 import { Public } from './decotaros/public.decorator';
 
-@ApiTags('Autenticação')
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}

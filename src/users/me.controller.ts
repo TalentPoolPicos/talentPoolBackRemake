@@ -52,7 +52,6 @@ import { Role } from '../auth/enums/role.enum';
 import { Roles } from '../auth/decotaros/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UseGuards } from '@nestjs/common';
-import { JobStatus, ApplicationStatus } from '@prisma/client';
 import {
   CreateJobDto,
   UpdateJobContentDto,
@@ -77,7 +76,7 @@ import {
   UploadHistoryResponseDto,
 } from './dtos/upload-image.dto';
 
-@ApiTags('Meu Perfil')
+@ApiTags('Me')
 @ApiBearerAuth()
 @Controller('me')
 export class MeController {

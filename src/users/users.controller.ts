@@ -13,7 +13,7 @@ import {
   UserPreviewResponseDto,
 } from './dtos/user-response.dto';
 
-@ApiTags('Usuários Públicos')
+@ApiTags('Users - Public')
 @Public() // Tornar todas as rotas deste controller públicas
 @Controller('users')
 export class UsersController {
