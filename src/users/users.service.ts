@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { UserImageService } from './user-image.service';
 import {
   UserWithFullProfile,
   PrivateUserProfile,
@@ -38,7 +39,33 @@ export class UsersService {
   constructor(
     private prisma: PrismaService,
     private storageService: StorageService,
+    private userImageService: UserImageService,
   ) {}
+
+  /**
+   * Obtém URLs das imagens do usuário (avatar e banner)
+   */
+  private async getUserImageUrls(
+    userId: number,
+  ): Promise<{ avatarUrl?: string; bannerUrl?: string }> {
+    try {
+      const [avatarUrl, bannerUrl] = await Promise.all([
+        this.userImageService.getAvatarUrl(userId),
+        this.userImageService.getBannerUrl(userId),
+      ]);
+
+      return {
+        avatarUrl: avatarUrl || undefined,
+        bannerUrl: bannerUrl || undefined,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Erro ao obter URLs das imagens do usuário ${userId}:`,
+        error,
+      );
+      return {};
+    }
+  }
 
   /**
    * Busca perfil completo do usuário (privado - para /me)
@@ -55,11 +82,12 @@ export class UsersService {
     }
 
     const stats = await this.getUserStats(userId);
+    const imageUrls = await this.getUserImageUrls(userId);
 
     this.logger.log(
       `Perfil privado carregado com sucesso para usuário: ${user.username}`,
     );
-    return this.mapToPrivateProfileDto(user, stats);
+    return this.mapToPrivateProfileDto(user, stats, imageUrls);
   }
 
   /**
@@ -81,10 +109,12 @@ export class UsersService {
       throw new NotFoundException('Perfil não disponível');
     }
 
+    const imageUrls = await this.getUserImageUrls(user.id);
+
     this.logger.log(
       `Perfil público carregado com sucesso para usuário: ${user.username}`,
     );
-    return this.mapToPublicProfileDto(user);
+    return this.mapToPublicProfileDto(user, imageUrls);
   }
 
   /**
@@ -117,7 +147,9 @@ export class UsersService {
     }
 
     if (Object.keys(updatePayload).length === 0) {
-      this.logger.log(`Nenhum dado para atualizar no perfil básico do usuário ID: ${userId}`);
+      this.logger.log(
+        `Nenhum dado para atualizar no perfil básico do usuário ID: ${userId}`,
+      );
       // Se não há dados para atualizar, retorna o perfil atual
       return this.getMyProfile(userId);
     }
@@ -127,7 +159,9 @@ export class UsersService {
       data: updatePayload,
     });
 
-    this.logger.log(`Perfil básico atualizado com sucesso para usuário ID: ${userId}`);
+    this.logger.log(
+      `Perfil básico atualizado com sucesso para usuário ID: ${userId}`,
+    );
     return this.getMyProfile(userId);
   }
 
@@ -496,6 +530,7 @@ export class UsersService {
   private mapToPrivateProfileDto(
     user: UserWithFullProfile,
     stats: UserStats,
+    imageUrls: { avatarUrl?: string; bannerUrl?: string },
   ): UserProfileResponseDto {
     return {
       uuid: user.uuid,
@@ -508,32 +543,8 @@ export class UsersService {
       isVerified: user.isVerified,
       isActive: user.isActive,
       isComplete: user.isComplete,
-      avatar: user.avatar
-        ? {
-            uuid: user.avatar.uuid,
-            filename: user.avatar.filename,
-            originalName: user.avatar.originalName,
-            mimeType: user.avatar.mimeType,
-            size: user.avatar.size,
-            type: user.avatar.type,
-            url: user.avatar.url || undefined,
-            createdAt: user.avatar.createdAt.toISOString(),
-            updatedAt: user.avatar.updatedAt.toISOString(),
-          }
-        : undefined,
-      banner: user.banner
-        ? {
-            uuid: user.banner.uuid,
-            filename: user.banner.filename,
-            originalName: user.banner.originalName,
-            mimeType: user.banner.mimeType,
-            size: user.banner.size,
-            type: user.banner.type,
-            url: user.banner.url || undefined,
-            createdAt: user.banner.createdAt.toISOString(),
-            updatedAt: user.banner.updatedAt.toISOString(),
-          }
-        : undefined,
+      avatarUrl: imageUrls.avatarUrl,
+      bannerUrl: imageUrls.bannerUrl,
       student: user.student
         ? {
             uuid: user.student.uuid,
@@ -609,6 +620,7 @@ export class UsersService {
    */
   private mapToPublicProfileDto(
     user: UserWithFullProfile,
+    imageUrls: { avatarUrl?: string; bannerUrl?: string },
   ): PublicUserProfileResponseDto {
     return {
       uuid: user.uuid,
@@ -619,32 +631,8 @@ export class UsersService {
       birthDate: user.birthDate?.toISOString(),
       isVerified: user.isVerified,
       isActive: user.isActive,
-      avatar: user.avatar
-        ? {
-            uuid: user.avatar.uuid,
-            filename: user.avatar.filename,
-            originalName: user.avatar.originalName,
-            mimeType: user.avatar.mimeType,
-            size: user.avatar.size,
-            type: user.avatar.type,
-            url: user.avatar.url || undefined,
-            createdAt: user.avatar.createdAt.toISOString(),
-            updatedAt: user.avatar.updatedAt.toISOString(),
-          }
-        : undefined,
-      banner: user.banner
-        ? {
-            uuid: user.banner.uuid,
-            filename: user.banner.filename,
-            originalName: user.banner.originalName,
-            mimeType: user.banner.mimeType,
-            size: user.banner.size,
-            type: user.banner.type,
-            url: user.banner.url || undefined,
-            createdAt: user.banner.createdAt.toISOString(),
-            updatedAt: user.banner.updatedAt.toISOString(),
-          }
-        : undefined,
+      avatarUrl: imageUrls.avatarUrl,
+      bannerUrl: imageUrls.bannerUrl,
       student: user.student
         ? {
             uuid: user.student.uuid,
@@ -771,9 +759,9 @@ export class UsersService {
    */
   async deleteUserFile(storageKey: string): Promise<void> {
     this.logger.log(`Deletando arquivo com chave: ${storageKey}`);
-    
+
     await this.storageService.deleteFile(storageKey);
-    
+
     this.logger.log(`Arquivo deletado com sucesso: ${storageKey}`);
   }
 }

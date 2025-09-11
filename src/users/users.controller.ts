@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, HttpStatus } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -34,7 +34,7 @@ export class UsersController {
     description: 'Usuário não encontrado ou perfil não disponível',
     schema: {
       example: {
-        statusCode: 404,
+        statusCode: HttpStatus.NOT_FOUND,
         message: 'Usuário não encontrado',
         error: 'Not Found',
       },

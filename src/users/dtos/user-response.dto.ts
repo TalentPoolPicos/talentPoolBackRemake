@@ -433,18 +433,22 @@ export class UserProfileResponseDto {
   isComplete: boolean;
 
   @ApiProperty({
-    type: AttachmentResponseDto,
-    description: 'Avatar do usuário',
+    type: String,
+    example:
+      'https://minio.example.com/bucket/profile_picture/avatar_123.jpg?expires=3600',
+    description: 'URL temporária do avatar do usuário',
     required: false,
   })
-  avatar?: AttachmentResponseDto;
+  avatarUrl?: string;
 
   @ApiProperty({
-    type: AttachmentResponseDto,
-    description: 'Banner do usuário',
+    type: String,
+    example:
+      'https://minio.example.com/bucket/banner_picture/banner_123.jpg?expires=3600',
+    description: 'URL temporária do banner do usuário',
     required: false,
   })
-  banner?: AttachmentResponseDto;
+  bannerUrl?: string;
 
   @ApiProperty({
     type: StudentProfileResponseDto,
@@ -566,18 +570,22 @@ export class PublicUserProfileResponseDto {
   isActive: boolean;
 
   @ApiProperty({
-    type: AttachmentResponseDto,
-    description: 'Avatar do usuário',
+    type: String,
+    example:
+      'https://minio.example.com/bucket/profile_picture/avatar_123.jpg?expires=3600',
+    description: 'URL temporária do avatar do usuário',
     required: false,
   })
-  avatar?: AttachmentResponseDto;
+  avatarUrl?: string;
 
   @ApiProperty({
-    type: AttachmentResponseDto,
-    description: 'Banner do usuário',
+    type: String,
+    example:
+      'https://minio.example.com/bucket/banner_picture/banner_123.jpg?expires=3600',
+    description: 'URL temporária do banner do usuário',
     required: false,
   })
-  banner?: AttachmentResponseDto;
+  bannerUrl?: string;
 
   @ApiProperty({
     type: StudentProfileResponseDto,

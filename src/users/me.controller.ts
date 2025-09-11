@@ -3,11 +3,15 @@ import {
   Get,
   Put,
   Delete,
+  Post,
   Body,
   Request,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
@@ -17,8 +21,12 @@ import {
   ApiForbiddenResponse,
   ApiConflictResponse,
   ApiBadRequestResponse,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiBody,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
+import { UserImageService } from './user-image.service';
 import { CustomRequest } from '../auth/interfaces/custon_request';
 import {
   UpdateProfileDto,
@@ -29,12 +37,19 @@ import {
   UpdateAddressDto,
 } from './dtos/update-profile.dto';
 import { UserProfileResponseDto } from './dtos/user-response.dto';
+import {
+  UploadAvatarResponseDto,
+  UploadBannerResponseDto,
+} from './dtos/upload-image.dto';
 
 @ApiTags('Meu Perfil')
 @ApiBearerAuth()
 @Controller('me')
 export class MeController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly userImageService: UserImageService,
+  ) {}
 
   @ApiOperation({
     summary: 'Obter meu perfil completo',
@@ -49,7 +64,7 @@ export class MeController {
     description: 'Usuário não encontrado',
     schema: {
       example: {
-        statusCode: 404,
+        statusCode: HttpStatus.NOT_FOUND,
         message: 'Usuário não encontrado',
         error: 'Not Found',
       },
@@ -73,7 +88,7 @@ export class MeController {
     description: 'Usuário não encontrado',
     schema: {
       example: {
-        statusCode: 404,
+        statusCode: HttpStatus.NOT_FOUND,
         message: 'Usuário não encontrado',
         error: 'Not Found',
       },
@@ -83,7 +98,7 @@ export class MeController {
     description: 'Dados de entrada inválidos',
     schema: {
       example: {
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: ['Nome deve ter pelo menos 2 caracteres'],
         error: 'Bad Request',
       },
@@ -111,7 +126,7 @@ export class MeController {
     description: 'Usuário ou perfil de estudante não encontrado',
     schema: {
       example: {
-        statusCode: 404,
+        statusCode: HttpStatus.NOT_FOUND,
         message: 'Perfil de estudante não encontrado',
         error: 'Not Found',
       },
@@ -121,7 +136,7 @@ export class MeController {
     description: 'Usuário não é um estudante',
     schema: {
       example: {
-        statusCode: 403,
+        statusCode: HttpStatus.FORBIDDEN,
         message: 'Apenas estudantes podem atualizar perfil de estudante',
         error: 'Forbidden',
       },
@@ -131,7 +146,7 @@ export class MeController {
     description: 'Número de matrícula já está em uso',
     schema: {
       example: {
-        statusCode: 409,
+        statusCode: HttpStatus.CONFLICT,
         message: 'Número de matrícula já está em uso',
         error: 'Conflict',
       },
@@ -141,7 +156,7 @@ export class MeController {
     description: 'Dados de entrada inválidos',
     schema: {
       example: {
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: ['Curso deve ter no máximo 100 caracteres'],
         error: 'Bad Request',
       },
@@ -169,7 +184,7 @@ export class MeController {
     description: 'Usuário ou perfil de empresa não encontrado',
     schema: {
       example: {
-        statusCode: 404,
+        statusCode: HttpStatus.NOT_FOUND,
         message: 'Perfil de empresa não encontrado',
         error: 'Not Found',
       },
@@ -179,7 +194,7 @@ export class MeController {
     description: 'Usuário não é uma empresa',
     schema: {
       example: {
-        statusCode: 403,
+        statusCode: HttpStatus.FORBIDDEN,
         message: 'Apenas empresas podem atualizar perfil de empresa',
         error: 'Forbidden',
       },
@@ -189,7 +204,7 @@ export class MeController {
     description: 'CNPJ já está em uso',
     schema: {
       example: {
-        statusCode: 409,
+        statusCode: HttpStatus.CONFLICT,
         message: 'CNPJ já está em uso',
         error: 'Conflict',
       },
@@ -199,7 +214,7 @@ export class MeController {
     description: 'Dados de entrada inválidos',
     schema: {
       example: {
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: ['CNPJ deve ter no máximo 18 caracteres'],
         error: 'Bad Request',
       },
@@ -226,7 +241,7 @@ export class MeController {
     description: 'Usuário não encontrado',
     schema: {
       example: {
-        statusCode: 404,
+        statusCode: HttpStatus.NOT_FOUND,
         message: 'Usuário não encontrado',
         error: 'Not Found',
       },
@@ -236,7 +251,7 @@ export class MeController {
     description: 'Dados de entrada inválidos',
     schema: {
       example: {
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: ['URL deve ser válida'],
         error: 'Bad Request',
       },
@@ -263,7 +278,7 @@ export class MeController {
     description: 'Usuário não encontrado',
     schema: {
       example: {
-        statusCode: 404,
+        statusCode: HttpStatus.NOT_FOUND,
         message: 'Usuário não encontrado',
         error: 'Not Found',
       },
@@ -273,7 +288,7 @@ export class MeController {
     description: 'Dados de entrada inválidos',
     schema: {
       example: {
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: ['Label da tag deve ter no máximo 40 caracteres'],
         error: 'Bad Request',
       },
@@ -300,7 +315,7 @@ export class MeController {
     description: 'Usuário não encontrado',
     schema: {
       example: {
-        statusCode: 404,
+        statusCode: HttpStatus.NOT_FOUND,
         message: 'Usuário não encontrado',
         error: 'Not Found',
       },
@@ -310,7 +325,7 @@ export class MeController {
     description: 'Dados de entrada inválidos',
     schema: {
       example: {
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: ['CEP deve ser uma string'],
         error: 'Bad Request',
       },
@@ -327,7 +342,7 @@ export class MeController {
 
   @ApiOperation({
     summary: 'Remover endereço',
-    description: 'Remove o endereço do usuário',
+    description: 'Remove o endereço associado ao usuário autenticado',
   })
   @ApiOkResponse({
     description: 'Endereço removido com sucesso',
@@ -337,7 +352,7 @@ export class MeController {
     description: 'Usuário não encontrado',
     schema: {
       example: {
-        statusCode: 404,
+        statusCode: HttpStatus.NOT_FOUND,
         message: 'Usuário não encontrado',
         error: 'Not Found',
       },
@@ -349,5 +364,98 @@ export class MeController {
     @Request() req: CustomRequest,
   ): Promise<UserProfileResponseDto> {
     return this.usersService.removeAddress(req.user.sub);
+  }
+
+  @ApiOperation({
+    summary: 'Upload de avatar',
+    description:
+      'Faz upload do avatar do usuário. Aceita apenas imagens em formato JPEG, PNG ou WebP com dimensões aproximadamente quadradas (150x150 a 1000x1000px).',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Upload de arquivo de avatar',
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Arquivo de imagem para avatar (JPEG, PNG, WebP)',
+        },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiCreatedResponse({
+    description: 'Avatar carregado com sucesso',
+    type: UploadAvatarResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Arquivo inválido ou não atende aos requisitos',
+    schema: {
+      example: {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Dimensões inválidas. Requerido: 150x150 a 1000x1000px',
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'Usuário não encontrado',
+  })
+  @Post('avatar')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadAvatar(
+    @Request() req: CustomRequest,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<UploadAvatarResponseDto> {
+    return this.userImageService.uploadAvatar(req.user.sub, file);
+  }
+
+  @ApiOperation({
+    summary: 'Upload de banner',
+    description:
+      'Faz upload do banner do usuário. Aceita apenas imagens em formato JPEG, PNG ou WebP com formato retangular horizontal (800x300 a 1920x1080px).',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Upload de arquivo de banner',
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Arquivo de imagem para banner (JPEG, PNG, WebP)',
+        },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiCreatedResponse({
+    description: 'Banner carregado com sucesso',
+    type: UploadBannerResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Arquivo inválido ou não atende aos requisitos',
+    schema: {
+      example: {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message:
+          'Proporção inválida. Banner deve ter formato retangular horizontal',
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'Usuário não encontrado',
+  })
+  @Post('banner')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadBanner(
+    @Request() req: CustomRequest,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<UploadBannerResponseDto> {
+    return this.userImageService.uploadBanner(req.user.sub, file);
   }
 }
