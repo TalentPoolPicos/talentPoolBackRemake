@@ -25,6 +25,8 @@ import {
   JobListResponseDto,
   ApplicationListResponseDto,
   JobPreviewDto,
+  JobApplicationStudentResponseDto,
+  StudentApplicationListResponseDto,
 } from './dtos/job-response.dto';
 
 @Injectable()
@@ -229,7 +231,7 @@ export class JobsService {
     jobUuid: string,
     studentId: number,
     applyDto: ApplyToJobDto,
-  ): Promise<JobApplicationResponseDto> {
+  ): Promise<JobApplicationStudentResponseDto> {
     const student = await this.prisma.user.findUnique({
       where: { id: studentId },
       include: { student: true },
@@ -278,10 +280,18 @@ export class JobsService {
       },
       include: {
         job: {
-          select: {
-            uuid: true,
-            title: true,
-            status: true,
+          include: {
+            enterprise: {
+              include: {
+                user: {
+                  select: {
+                    uuid: true,
+                    username: true,
+                    name: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -291,7 +301,7 @@ export class JobsService {
       `Nova candidatura: estudante ${studentId} para vaga ${jobUuid}`,
     );
 
-    return this.mapApplicationToResponse(application, false);
+    return this.mapApplicationToStudentResponse(application);
   }
 
   /**
@@ -607,7 +617,7 @@ export class JobsService {
     status?: ApplicationStatus,
     limit = 20,
     offset = 0,
-  ): Promise<ApplicationListResponseDto> {
+  ): Promise<StudentApplicationListResponseDto> {
     const student = await this.prisma.student.findFirst({
       where: { user: { id: studentId } },
     });
@@ -658,7 +668,7 @@ export class JobsService {
 
     return {
       applications: applications.map((app) =>
-        this.mapApplicationToResponse(app, false),
+        this.mapApplicationToStudentResponse(app),
       ),
       total,
       limit,
@@ -739,6 +749,23 @@ export class JobsService {
               avatarUrl: null,
             }
           : undefined,
+    };
+  }
+
+  /**
+   * Mapear Application para DTO de resposta para estudantes (sem reviewerNotes)
+   */
+  private mapApplicationToStudentResponse(
+    application: any,
+  ): JobApplicationStudentResponseDto {
+    return {
+      uuid: application.uuid,
+      status: application.status,
+      coverLetter: application.coverLetter,
+      appliedAt: application.appliedAt.toISOString(),
+      createdAt: application.createdAt.toISOString(),
+      updatedAt: application.updatedAt.toISOString(),
+      job: this.mapJobToPreview(application.job),
     };
   }
 

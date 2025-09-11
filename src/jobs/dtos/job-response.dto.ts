@@ -280,6 +280,92 @@ export class JobApplicationResponseDto {
 }
 
 /**
+ * DTO para resposta de aplicação - versão para estudantes (sem reviewerNotes)
+ */
+export class JobApplicationStudentResponseDto {
+  @ApiProperty({
+    type: String,
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'UUID único da aplicação',
+  })
+  uuid: string;
+
+  @ApiProperty({
+    enum: ApplicationStatus,
+    example: 'pending',
+    description: 'Status da aplicação',
+  })
+  status: ApplicationStatus;
+
+  @ApiProperty({
+    type: String,
+    example: 'Tenho grande interesse nesta posição...',
+    description: 'Carta de apresentação',
+    required: false,
+  })
+  coverLetter?: string;
+
+  @ApiProperty({
+    type: String,
+    example: '2025-09-11T18:30:00.000Z',
+    description: 'Data da candidatura',
+  })
+  appliedAt: string;
+
+  @ApiProperty({
+    type: String,
+    example: '2025-09-11T18:30:00.000Z',
+    description: 'Data de criação',
+  })
+  createdAt: string;
+
+  @ApiProperty({
+    type: String,
+    example: '2025-09-11T18:30:00.000Z',
+    description: 'Data de atualização',
+  })
+  updatedAt: string;
+
+  @ApiProperty({
+    type: JobPreviewDto,
+    description: 'Informações da vaga',
+  })
+  job: JobPreviewDto;
+}
+
+/**
+ * DTO para resposta de lista de aplicações - versão para estudantes
+ */
+export class StudentApplicationListResponseDto {
+  @ApiProperty({
+    type: [JobApplicationStudentResponseDto],
+    description: 'Lista de candidaturas do estudante',
+  })
+  applications: JobApplicationStudentResponseDto[];
+
+  @ApiProperty({
+    type: Number,
+    example: 15,
+    description: 'Total de candidaturas',
+  })
+  total: number;
+
+  @ApiProperty({
+    type: Number,
+    example: 20,
+    description: 'Limite de itens por página',
+  })
+  limit: number;
+
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    description: 'Offset da paginação',
+  })
+  offset: number;
+}
+
+/**
  * DTO para resposta de lista de vagas
  */
 export class JobListResponseDto {

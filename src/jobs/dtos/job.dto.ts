@@ -252,9 +252,14 @@ export class UpdateApplicationStatusDto {
     example: 'Candidato selecionado para próxima fase...',
     description: 'Notas/comentários do recrutador',
     required: false,
+    minLength: 10,
+    maxLength: 1000,
   })
   @IsOptional()
   @IsString({ message: 'Notas do recrutador devem ser uma string' })
+  @MinLength(10, {
+    message: 'Notas do recrutador devem ter pelo menos 10 caracteres',
+  })
   @MaxLength(1000, {
     message: 'Notas do recrutador devem ter no máximo 1000 caracteres',
   })
@@ -270,9 +275,14 @@ export class AddApplicationNotesDto {
     example:
       'Candidato interessante, aguardando disponibilidade para entrevista...',
     description: 'Notas/comentários do recrutador',
+    minLength: 10,
+    maxLength: 1000,
   })
   @IsString({ message: 'Notas do recrutador devem ser uma string' })
   @IsNotEmpty({ message: 'Notas do recrutador são obrigatórias' })
+  @MinLength(10, {
+    message: 'Notas do recrutador devem ter pelo menos 10 caracteres',
+  })
   @MaxLength(1000, {
     message: 'Notas do recrutador devem ter no máximo 1000 caracteres',
   })
