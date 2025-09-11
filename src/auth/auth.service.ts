@@ -44,7 +44,9 @@ export class AuthService {
     })) as UserWithProfiles | null;
 
     if (!user) {
-      this.logger.warn(`Tentativa de login com usuário inexistente: ${username}`);
+      this.logger.warn(
+        `Tentativa de login com usuário inexistente: ${username}`,
+      );
       throw new NotFoundException('Usuário não encontrado');
     }
 
@@ -102,11 +104,15 @@ export class AuthService {
   async signUp(signUpDto: SignUpDto): Promise<AccessTokenDto> {
     const { username, email, password, name, description } = signUpDto;
 
-    this.logger.log(`Tentativa de cadastro para usuário: ${username} (${email})`);
+    this.logger.log(
+      `Tentativa de cadastro para usuário: ${username} (${email})`,
+    );
 
     // Validate institutional email (extra validation layer)
     if (!isInstitutionalEmail(email)) {
-      this.logger.warn(`Tentativa de cadastro com email não institucional: ${email}`);
+      this.logger.warn(
+        `Tentativa de cadastro com email não institucional: ${email}`,
+      );
       throw new UnprocessableEntityException(
         'Email deve ser de uma instituição educacional válida',
       );
@@ -121,11 +127,15 @@ export class AuthService {
 
     if (existingUser) {
       if (existingUser.username === username) {
-        this.logger.warn(`Tentativa de cadastro com username já existente: ${username}`);
+        this.logger.warn(
+          `Tentativa de cadastro com username já existente: ${username}`,
+        );
         throw new ConflictException('Nome de usuário já existe');
       }
       if (existingUser.email === email) {
-        this.logger.warn(`Tentativa de cadastro com email já existente: ${email}`);
+        this.logger.warn(
+          `Tentativa de cadastro com email já existente: ${email}`,
+        );
         throw new ConflictException('Email já está em uso');
       }
     }
@@ -177,7 +187,9 @@ export class AuthService {
         { expiresIn: '7d' },
       );
 
-      this.logger.log(`Usuário criado com sucesso: ${username} (ID: ${user.id})`);
+      this.logger.log(
+        `Usuário criado com sucesso: ${username} (ID: ${user.id})`,
+      );
 
       return {
         access_token: accessToken,
@@ -186,7 +198,9 @@ export class AuthService {
         refresh_token_expires_in: 604800,
       };
     } catch (error) {
-      this.logger.error(`Erro ao criar usuário ${username}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      this.logger.error(
+        `Erro ao criar usuário ${username}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      );
       throw new UnprocessableEntityException('Falha ao criar usuário');
     }
   }
@@ -207,7 +221,9 @@ export class AuthService {
     }
 
     if (!payload.isRefreshToken) {
-      this.logger.warn('Tentativa de renovação com token que não é refresh token');
+      this.logger.warn(
+        'Tentativa de renovação com token que não é refresh token',
+      );
       throw new UnauthorizedException('Token não é um token de renovação');
     }
 
@@ -220,12 +236,16 @@ export class AuthService {
     })) as UserWithProfiles | null;
 
     if (!user) {
-      this.logger.warn(`Tentativa de renovação para usuário inexistente: ${payload.sub}`);
+      this.logger.warn(
+        `Tentativa de renovação para usuário inexistente: ${payload.sub}`,
+      );
       throw new NotFoundException('Usuário não encontrado');
     }
 
     if (user.isDeleted || !user.isActive) {
-      this.logger.warn(`Tentativa de renovação para conta inativa: ${user.username}`);
+      this.logger.warn(
+        `Tentativa de renovação para conta inativa: ${user.username}`,
+      );
       throw new UnauthorizedException('Conta do usuário não está ativa');
     }
 
@@ -238,7 +258,9 @@ export class AuthService {
 
     const newAccessToken = this.jwtService.sign(newPayload);
 
-    this.logger.log(`Token renovado com sucesso para usuário: ${user.username}`);
+    this.logger.log(
+      `Token renovado com sucesso para usuário: ${user.username}`,
+    );
 
     return {
       access_token: newAccessToken,

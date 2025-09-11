@@ -36,7 +36,7 @@ export class AuthController {
     description: 'Usuário não encontrado',
     schema: {
       example: {
-        statusCode: 404,
+        statusCode: HttpStatus.NOT_FOUND,
         message: 'Usuário não encontrado',
         error: 'Not Found',
       },
@@ -46,7 +46,7 @@ export class AuthController {
     description: 'Credenciais inválidas ou conta inativa',
     schema: {
       example: {
-        statusCode: 401,
+        statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Credenciais inválidas',
         error: 'Unauthorized',
       },
@@ -56,7 +56,7 @@ export class AuthController {
     description: 'Dados de entrada inválidos',
     schema: {
       example: {
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: ['Nome de usuário deve ter pelo menos 3 caracteres'],
         error: 'Bad Request',
       },
@@ -83,7 +83,7 @@ export class AuthController {
     description: 'Nome de usuário ou email já existe',
     schema: {
       example: {
-        statusCode: 409,
+        statusCode: HttpStatus.CONFLICT,
         message: 'Nome de usuário já existe',
         error: 'Conflict',
       },
@@ -93,7 +93,7 @@ export class AuthController {
     description: 'Falha ao criar usuário',
     schema: {
       example: {
-        statusCode: 422,
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         message: 'Falha ao criar usuário',
         error: 'Unprocessable Entity',
       },
@@ -103,7 +103,7 @@ export class AuthController {
     description: 'Dados de entrada inválidos',
     schema: {
       example: {
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: [
           'Nome de usuário deve ter pelo menos 3 caracteres',
           'Email deve ser um endereço de email válido',
@@ -135,7 +135,7 @@ export class AuthController {
     description: 'Token de renovação inválido ou expirado',
     schema: {
       example: {
-        statusCode: 401,
+        statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Token de renovação inválido',
         error: 'Unauthorized',
       },
@@ -145,7 +145,7 @@ export class AuthController {
     description: 'Usuário associado ao token não encontrado',
     schema: {
       example: {
-        statusCode: 404,
+        statusCode: HttpStatus.NOT_FOUND,
         message: 'Usuário não encontrado',
         error: 'Not Found',
       },
@@ -155,7 +155,7 @@ export class AuthController {
     description: 'Dados de entrada inválidos',
     schema: {
       example: {
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: ['Token de renovação não pode estar vazio'],
         error: 'Bad Request',
       },
