@@ -14,6 +14,7 @@ import {
   Logger,
   HttpException,
   InternalServerErrorException,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -57,6 +58,10 @@ import {
   UpdateJobContentDto,
   ApplyToJobDto,
   UpdateApplicationStatusDto,
+  AddApplicationNotesDto,
+  GetApplicationsFilterDto,
+  StudentApplicationsPaginationDto,
+  EnterpriseJobsPaginationDto,
 } from '../jobs/dtos/job.dto';
 import {
   JobResponseDto,
@@ -723,13 +728,19 @@ export class MeController {
     description: 'Lista de vagas da empresa',
     type: JobListResponseDto,
   })
-  async getMyJobs(@Request() req: CustomRequest): Promise<JobListResponseDto> {
+  async getMyJobs(
+    @Request() req: CustomRequest,
+    @Query() pagination: EnterpriseJobsPaginationDto,
+  ): Promise<JobListResponseDto> {
+    const limit = pagination.limit || 20;
+    const offset = pagination.offset || 0;
+
     return this.jobsService.listJobs(
       req.user.sub,
-      undefined,
+      pagination.status,
       req.user.sub,
-      50,
-      0,
+      limit,
+      offset,
     );
   }
 
@@ -893,6 +904,32 @@ export class MeController {
   }
 
   /**
+   * Adicionar notas do recrutador sem alterar status
+   */
+  @Put('enterprise/applications/:uuid/notes')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ENTERPRISE)
+  @ApiOperation({ summary: 'Adicionar notas do recrutador' })
+  @ApiParam({ name: 'uuid', type: String, description: 'UUID da candidatura' })
+  @ApiOkResponse({
+    description: 'Notas adicionadas com sucesso',
+    type: JobApplicationResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Candidatura não encontrada',
+  })
+  @ApiForbiddenResponse({
+    description: 'Você não tem permissão para atualizar esta candidatura',
+  })
+  async addApplicationNotes(
+    @Param('uuid') uuid: string,
+    @Body() notesDto: AddApplicationNotesDto,
+    @Request() req: CustomRequest,
+  ): Promise<JobApplicationResponseDto> {
+    return this.jobsService.addApplicationNotes(uuid, req.user.sub, notesDto);
+  }
+
+  /**
    * Listar candidaturas de uma vaga (apenas empresas)
    */
   @Get('enterprise/jobs/:uuid/applications')
@@ -915,6 +952,57 @@ export class MeController {
     @Request() req: CustomRequest,
   ): Promise<ApplicationListResponseDto> {
     return this.jobsService.getJobApplications(uuid, req.user.sub);
+  }
+
+  /**
+   * Listar todas as candidaturas da empresa
+   */
+  @Get('enterprise/applications')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ENTERPRISE)
+  @ApiOperation({ summary: 'Listar todas as candidaturas da empresa' })
+  @ApiOkResponse({
+    description: 'Lista de candidaturas da empresa',
+    type: ApplicationListResponseDto,
+  })
+  async getAllCompanyApplications(
+    @Request() req: CustomRequest,
+    @Query() filters: GetApplicationsFilterDto,
+  ): Promise<ApplicationListResponseDto> {
+    return this.jobsService.getAllCompanyApplications(req.user.sub, filters);
+  }
+
+  /**
+   * Listar candidaturas filtradas de uma vaga específica
+   */
+  @Get('enterprise/jobs/:uuid/applications/filtered')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ENTERPRISE)
+  @ApiOperation({
+    summary: 'Listar candidaturas filtradas de uma vaga específica',
+    description: 'Permite filtrar candidaturas por status e paginação',
+  })
+  @ApiParam({ name: 'uuid', type: String, description: 'UUID da vaga' })
+  @ApiOkResponse({
+    description: 'Lista filtrada de candidaturas da vaga',
+    type: ApplicationListResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Vaga não encontrada',
+  })
+  @ApiForbiddenResponse({
+    description: 'Você não tem permissão para ver as candidaturas desta vaga',
+  })
+  async getJobApplicationsFiltered(
+    @Param('uuid') uuid: string,
+    @Query() filters: GetApplicationsFilterDto,
+    @Request() req: CustomRequest,
+  ): Promise<ApplicationListResponseDto> {
+    return this.jobsService.getJobApplicationsFiltered(
+      uuid,
+      req.user.sub,
+      filters,
+    );
   }
 
   /**
@@ -962,8 +1050,17 @@ export class MeController {
   })
   async getMyApplications(
     @Request() req: CustomRequest,
+    @Query() pagination: StudentApplicationsPaginationDto,
   ): Promise<ApplicationListResponseDto> {
-    return this.jobsService.getStudentApplications(req.user.sub);
+    const limit = pagination.limit || 20;
+    const offset = pagination.offset || 0;
+
+    return this.jobsService.getStudentApplications(
+      req.user.sub,
+      undefined, // status filter (opcional)
+      limit,
+      offset,
+    );
   }
 
   /**
