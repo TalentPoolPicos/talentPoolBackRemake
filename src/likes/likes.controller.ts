@@ -32,7 +32,7 @@ export class LikesController {
   @ApiOperation({
     summary: 'Listar quem deu like para o usuário',
     description:
-      'Obtém a lista de usuários que deram like para o usuário especificado pelo UUID. Esta é uma rota pública.',
+      'Obtém a lista de usuários que deram like para o usuário especificado pelo UUID. Retorna informações de preview completas de cada usuário.',
   })
   @ApiParam({
     name: 'uuid',
@@ -79,7 +79,7 @@ export class LikesController {
   @ApiOperation({
     summary: 'Listar para quem o usuário deu like',
     description:
-      'Obtém a lista de usuários que receberam like do usuário especificado pelo UUID. Esta é uma rota pública.',
+      'Obtém a lista de usuários que receberam like do usuário especificado pelo UUID. Retorna informações de preview completas de cada usuário.',
   })
   @ApiParam({
     name: 'uuid',

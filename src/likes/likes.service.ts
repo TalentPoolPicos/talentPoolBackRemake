@@ -183,6 +183,7 @@ export class LikesService {
             username: true,
             name: true,
             role: true,
+            description: true,
             isVerified: true,
             isActive: true,
             avatar: {
@@ -190,16 +191,36 @@ export class LikesService {
                 storageKey: true,
               },
             },
+            banner: {
+              select: {
+                storageKey: true,
+              },
+            },
+            address: {
+              select: {
+                city: true,
+                state: true,
+              },
+            },
+            tags: {
+              select: {
+                label: true,
+              },
+              take: 5,
+            },
           },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    // Gerar URLs dos avatares
+    // Gerar URLs dos avatares e banners
     const initiatorsWithAvatars = await Promise.all(
       likes.map(async (like) => {
         let avatarUrl: string | null = null;
+        let bannerUrl: string | null = null;
+
+        // Gerar URL do avatar
         if (like.initiator.avatar?.storageKey) {
           try {
             avatarUrl = await this.storageService.generateFileUrl(
@@ -214,14 +235,51 @@ export class LikesService {
           }
         }
 
+        // Gerar URL do banner
+        if (like.initiator.banner?.storageKey) {
+          try {
+            bannerUrl = await this.storageService.generateFileUrl(
+              like.initiator.banner.storageKey,
+              3600,
+            );
+          } catch (error) {
+            this.logger.warn(
+              `Erro ao gerar URL do banner para usuário ${like.initiator.uuid}:`,
+              error,
+            );
+          }
+        }
+
+        // Construir localização a partir do endereço
+        let location: string | undefined;
+        if (like.initiator.address?.city || like.initiator.address?.state) {
+          const city = like.initiator.address.city || '';
+          const state = like.initiator.address.state || '';
+          location = `${city}${city && state ? ', ' : ''}${state}`.trim();
+          if (location === '') location = undefined;
+        }
+
+        // Extrair nomes das tags
+        const mainTags = like.initiator.tags?.map((tag) => tag.label) || [];
+
+        // Truncar descrição para preview (máximo 200 caracteres)
+        let description = like.initiator.description;
+        if (description && description.length > 200) {
+          description = description.substring(0, 197) + '...';
+        }
+
         return {
           uuid: like.initiator.uuid,
           username: like.initiator.username,
           name: like.initiator.name,
           role: like.initiator.role,
+          description: description || undefined,
           isVerified: like.initiator.isVerified,
           isActive: like.initiator.isActive,
           avatarUrl,
+          bannerUrl,
+          mainTags: mainTags.length > 0 ? mainTags : undefined,
+          location: location || undefined,
           likedAt: like.createdAt,
         };
       }),
@@ -259,6 +317,7 @@ export class LikesService {
             username: true,
             name: true,
             role: true,
+            description: true,
             isVerified: true,
             isActive: true,
             avatar: {
@@ -266,16 +325,36 @@ export class LikesService {
                 storageKey: true,
               },
             },
+            banner: {
+              select: {
+                storageKey: true,
+              },
+            },
+            address: {
+              select: {
+                city: true,
+                state: true,
+              },
+            },
+            tags: {
+              select: {
+                label: true,
+              },
+              take: 5,
+            },
           },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    // Gerar URLs dos avatares
+    // Gerar URLs dos avatares e banners
     const receiversWithAvatars = await Promise.all(
       likes.map(async (like) => {
         let avatarUrl: string | null = null;
+        let bannerUrl: string | null = null;
+
+        // Gerar URL do avatar
         if (like.receiver.avatar?.storageKey) {
           try {
             avatarUrl = await this.storageService.generateFileUrl(
@@ -290,14 +369,51 @@ export class LikesService {
           }
         }
 
+        // Gerar URL do banner
+        if (like.receiver.banner?.storageKey) {
+          try {
+            bannerUrl = await this.storageService.generateFileUrl(
+              like.receiver.banner.storageKey,
+              3600,
+            );
+          } catch (error) {
+            this.logger.warn(
+              `Erro ao gerar URL do banner para usuário ${like.receiver.uuid}:`,
+              error,
+            );
+          }
+        }
+
+        // Construir localização a partir do endereço
+        let location: string | undefined;
+        if (like.receiver.address?.city || like.receiver.address?.state) {
+          const city = like.receiver.address.city || '';
+          const state = like.receiver.address.state || '';
+          location = `${city}${city && state ? ', ' : ''}${state}`.trim();
+          if (location === '') location = undefined;
+        }
+
+        // Extrair nomes das tags
+        const mainTags = like.receiver.tags?.map((tag) => tag.label) || [];
+
+        // Truncar descrição para preview (máximo 200 caracteres)
+        let description = like.receiver.description;
+        if (description && description.length > 200) {
+          description = description.substring(0, 197) + '...';
+        }
+
         return {
           uuid: like.receiver.uuid,
           username: like.receiver.username,
           name: like.receiver.name,
           role: like.receiver.role,
+          description: description || undefined,
           isVerified: like.receiver.isVerified,
           isActive: like.receiver.isActive,
           avatarUrl,
+          bannerUrl,
+          mainTags: mainTags.length > 0 ? mainTags : undefined,
+          location: location || undefined,
           likedAt: like.createdAt,
         };
       }),

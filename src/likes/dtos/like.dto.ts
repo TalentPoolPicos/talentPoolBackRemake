@@ -103,6 +103,14 @@ export class LikeUserDto {
   role: string;
 
   @ApiProperty({
+    type: String,
+    example: 'Desenvolvedor de software apaixonado por tecnologia',
+    description: 'Descrição resumida do usuário (máximo 200 caracteres)',
+    required: false,
+  })
+  description?: string;
+
+  @ApiProperty({
     type: Boolean,
     example: true,
     description: 'Se o usuário está verificado',
@@ -124,6 +132,31 @@ export class LikeUserDto {
     required: false,
   })
   avatarUrl?: string | null;
+
+  @ApiProperty({
+    type: String,
+    example:
+      'https://minio.example.com/bucket/banner_picture/banner_123.jpg?expires=3600',
+    description: 'URL temporária do banner do usuário',
+    required: false,
+  })
+  bannerUrl?: string | null;
+
+  @ApiProperty({
+    type: [String],
+    description: 'Lista de tags principais do usuário (máximo 5)',
+    example: ['React', 'Node.js', 'TypeScript'],
+    required: false,
+  })
+  mainTags?: string[];
+
+  @ApiProperty({
+    type: String,
+    example: 'Fortaleza, CE',
+    description: 'Localização do usuário (cidade, estado)',
+    required: false,
+  })
+  location?: string;
 
   @ApiProperty({
     type: String,
