@@ -641,19 +641,6 @@ export class UsersService {
             course: user.student.course || undefined,
             registrationNumber: user.student.registrationNumber || undefined,
             lattes: user.student.lattes || undefined,
-            curriculum: user.student.curriculum
-              ? {
-                  uuid: user.student.curriculum.uuid,
-                  filename: user.student.curriculum.filename,
-                  originalName: user.student.curriculum.originalName,
-                  mimeType: user.student.curriculum.mimeType,
-                  size: user.student.curriculum.size,
-                  type: user.student.curriculum.type,
-                  url: user.student.curriculum.url || undefined,
-                  createdAt: user.student.curriculum.createdAt.toISOString(),
-                  updatedAt: user.student.curriculum.updatedAt.toISOString(),
-                }
-              : undefined,
             curriculumUrl: imageUrls.curriculumUrl,
             createdAt: user.student.createdAt.toISOString(),
             updatedAt: user.student.updatedAt.toISOString(),
@@ -734,19 +721,6 @@ export class UsersService {
             course: user.student.course || undefined,
             registrationNumber: user.student.registrationNumber || undefined,
             lattes: user.student.lattes || undefined,
-            curriculum: user.student.curriculum
-              ? {
-                  uuid: user.student.curriculum.uuid,
-                  filename: user.student.curriculum.filename,
-                  originalName: user.student.curriculum.originalName,
-                  mimeType: user.student.curriculum.mimeType,
-                  size: user.student.curriculum.size,
-                  type: user.student.curriculum.type,
-                  url: user.student.curriculum.url || undefined,
-                  createdAt: user.student.curriculum.createdAt.toISOString(),
-                  updatedAt: user.student.curriculum.updatedAt.toISOString(),
-                }
-              : undefined,
             curriculumUrl: imageUrls.curriculumUrl,
             createdAt: user.student.createdAt.toISOString(),
             updatedAt: user.student.updatedAt.toISOString(),

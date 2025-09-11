@@ -244,13 +244,6 @@ export class StudentProfileResponseDto {
   lattes?: string;
 
   @ApiProperty({
-    type: AttachmentResponseDto,
-    description: 'Currículo anexado do estudante',
-    required: false,
-  })
-  curriculum?: AttachmentResponseDto;
-
-  @ApiProperty({
     type: String,
     example: 'https://storage.example.com/curriculum.pdf',
     description: 'URL de acesso ao currículo do estudante',

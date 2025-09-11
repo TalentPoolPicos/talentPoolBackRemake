@@ -62,6 +62,7 @@ export class StorageService {
       useSSL: this.config.useSSL,
       accessKey: this.config.accessKey,
       secretKey: this.config.secretKey,
+      region: 'us-east-1', // Região padrão para evitar erros de assinatura
     });
 
     this.logger.log(
@@ -145,6 +146,13 @@ export class StorageService {
         'Attachment-Type': attachmentType,
         ...(userId && { 'User-Id': userId.toString() }),
       };
+
+      this.logger.log(
+        `Tentando upload: bucket=${this.bucketName}, key=${storageKey}, size=${file.size}`,
+      );
+      this.logger.log(
+        `Credenciais: endpoint=${this.config.endpoint}, accessKey=${this.config.accessKey?.substring(0, 4)}...`,
+      );
 
       // Upload para MinIO
       await this.minioClient.putObject(
