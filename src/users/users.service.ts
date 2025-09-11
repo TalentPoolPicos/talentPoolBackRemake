@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
   ConflictException,
+  InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
@@ -968,6 +969,62 @@ export class UsersService {
       `Upload de banner concluído com sucesso para usuário ID: ${userId}`,
     );
     return { bannerUrl };
+  }
+
+  /**
+   * Deleta completamente o perfil do usuário (soft delete)
+   */
+  async deleteMyProfile(userId: number): Promise<{ message: string }> {
+    this.logger.log(`Deletando perfil do usuário ID: ${userId}`);
+
+    // Verificar se o usuário existe
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      this.logger.error(`Usuário não encontrado para deleção: ID ${userId}`);
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    if (user.isDeleted) {
+      this.logger.warn(
+        `Tentativa de deletar usuário já deletado: ID ${userId}`,
+      );
+      throw new ConflictException('Usuário já foi deletado');
+    }
+
+    try {
+      // Soft delete - apenas marca como deletado
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          isDeleted: true,
+          isActive: false,
+        },
+      });
+
+      this.logger.log(`Usuário deletado com sucesso: ID ${userId}`);
+
+      // Remover usuário do índice de busca
+      try {
+        await this.searchService.deleteUser(user.uuid);
+        this.logger.log(`User ${userId} removed from search index`);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to remove user ${userId} from search index`,
+          error,
+        );
+        // Não bloquear a deleção se a remoção do índice falhar
+      }
+
+      return { message: 'Perfil deletado com sucesso' };
+    } catch (error) {
+      this.logger.error(
+        `Erro ao deletar usuário ${userId}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      );
+      throw new InternalServerErrorException('Falha ao deletar perfil');
+    }
   }
 
   /**

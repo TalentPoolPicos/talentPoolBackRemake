@@ -735,3 +735,15 @@ export class UserPreviewResponseDto {
   })
   location?: string;
 }
+
+/**
+ * DTO para resposta de deleção de perfil
+ */
+export class DeleteProfileResponseDto {
+  @ApiProperty({
+    type: String,
+    example: 'Perfil deletado com sucesso',
+    description: 'Mensagem de confirmação da deleção',
+  })
+  message: string;
+}

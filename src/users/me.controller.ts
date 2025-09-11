@@ -42,7 +42,10 @@ import {
   UpdateTagsDto,
   UpdateAddressDto,
 } from './dtos/update-profile.dto';
-import { UserProfileResponseDto } from './dtos/user-response.dto';
+import {
+  UserProfileResponseDto,
+  DeleteProfileResponseDto,
+} from './dtos/user-response.dto';
 import { LikesService } from '../likes/likes.service';
 import {
   HasLikedResponseDto,
@@ -642,5 +645,31 @@ export class MeController {
         'Erro interno no servidor ao remover like',
       );
     }
+  }
+
+  @ApiOperation({
+    summary: 'Deletar meu perfil',
+    description:
+      'Deleta permanentemente o perfil do usuário autenticado. Esta ação não pode ser desfeita.',
+  })
+  @ApiOkResponse({
+    description: 'Perfil deletado com sucesso',
+    type: DeleteProfileResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Usuário não encontrado',
+  })
+  @ApiConflictResponse({
+    description: 'Usuário já foi deletado',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Erro interno do servidor',
+  })
+  @HttpCode(HttpStatus.OK)
+  @Delete()
+  deleteMyProfile(
+    @Request() req: CustomRequest,
+  ): Promise<DeleteProfileResponseDto> {
+    return this.usersService.deleteMyProfile(req.user.sub);
   }
 }
