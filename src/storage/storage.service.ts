@@ -62,7 +62,7 @@ export class StorageService {
       useSSL: this.config.useSSL,
       accessKey: this.config.accessKey,
       secretKey: this.config.secretKey,
-      region: 'us-east-1', // Região padrão para evitar erros de assinatura
+      // Remover região para usar configuração padrão do bitnami
     });
 
     this.logger.log(
@@ -138,15 +138,6 @@ export class StorageService {
         userId,
       );
 
-      // Metadata do arquivo
-      const metadata = {
-        'Content-Type': file.mimetype,
-        'Original-Name': file.originalname,
-        'Upload-Date': new Date().toISOString(),
-        'Attachment-Type': attachmentType,
-        ...(userId && { 'User-Id': userId.toString() }),
-      };
-
       this.logger.log(
         `Tentando upload: bucket=${this.bucketName}, key=${storageKey}, size=${file.size}`,
       );
@@ -154,13 +145,12 @@ export class StorageService {
         `Credenciais: endpoint=${this.config.endpoint}, accessKey=${this.config.accessKey?.substring(0, 4)}...`,
       );
 
-      // Upload para MinIO
+      // Upload para MinIO (sem metadados para evitar problemas de assinatura)
       await this.minioClient.putObject(
         this.bucketName,
         storageKey,
         file.buffer,
         file.size,
-        metadata,
       );
 
       this.logger.log(`Arquivo uploadado: ${storageKey} (${file.size} bytes)`);
