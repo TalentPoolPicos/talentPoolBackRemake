@@ -3,6 +3,7 @@ import {
   Logger,
   BadRequestException,
   NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
@@ -505,24 +506,52 @@ export class UserImageService {
     }
 
     // Upload para MinIO
-    const uploadResult = await this.storageService.uploadFile(
-      file,
-      'curriculum',
-      userId,
-    );
+    let uploadResult: { storageKey: string };
+    try {
+      uploadResult = await this.storageService.uploadFile(
+        file,
+        'curriculum',
+        userId,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Erro no upload para MinIO (currículo): ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      );
+      throw new InternalServerErrorException(
+        'Erro no serviço de armazenamento. Tente novamente mais tarde.',
+      );
+    }
 
     // Salvar no banco de dados
-    const attachment = await this.prisma.attachment.create({
-      data: {
-        filename: file.originalname,
-        originalName: file.originalname,
-        storageKey: uploadResult.storageKey,
-        size: file.size,
-        mimeType: file.mimetype,
-        type: 'curriculum',
-        curriculumStudentId: student.id,
-      },
-    });
+    let attachment: { id: number; storageKey: string };
+    try {
+      attachment = await this.prisma.attachment.create({
+        data: {
+          filename: file.originalname,
+          originalName: file.originalname,
+          storageKey: uploadResult.storageKey,
+          size: file.size,
+          mimeType: file.mimetype,
+          type: 'curriculum',
+          curriculumStudentId: student.id,
+        },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Erro ao salvar currículo no banco: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      );
+      // Tentar limpar o arquivo do storage se a operação do banco falhar
+      try {
+        await this.storageService.deleteFile(uploadResult.storageKey);
+      } catch (deleteError) {
+        this.logger.warn(
+          `Erro ao limpar arquivo após falha no banco: ${deleteError instanceof Error ? deleteError.message : 'Erro desconhecido'}`,
+        );
+      }
+      throw new InternalServerErrorException(
+        'Erro ao salvar currículo. Tente novamente mais tarde.',
+      );
+    }
 
     this.logger.log(
       `Currículo salvo com sucesso: ${attachment.storageKey} para estudante ${student.id}`,
@@ -584,12 +613,14 @@ export class UserImageService {
     // Se já existe um histórico, deletar o arquivo antigo
     if (student.history) {
       try {
-        await this.storageService.deleteFile(student.history.storageKey);
+        await this.storageService.deleteFile(
+          student.history.storageKey as string,
+        );
         await this.prisma.attachment.delete({
-          where: { id: student.history.id },
+          where: { id: student.history.id as number },
         });
         this.logger.log(
-          `Histórico anterior deletado: ${student.history.storageKey}`,
+          `Histórico anterior deletado: ${student.history.storageKey as string}`,
         );
       } catch (error) {
         this.logger.warn(
@@ -599,24 +630,52 @@ export class UserImageService {
     }
 
     // Upload para MinIO
-    const uploadResult = await this.storageService.uploadFile(
-      file,
-      'history',
-      userId,
-    );
+    let uploadResult: { storageKey: string };
+    try {
+      uploadResult = await this.storageService.uploadFile(
+        file,
+        'history',
+        userId,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Erro no upload para MinIO (histórico): ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      );
+      throw new InternalServerErrorException(
+        'Erro no serviço de armazenamento. Tente novamente mais tarde.',
+      );
+    }
 
     // Salvar no banco de dados
-    const attachment = await this.prisma.attachment.create({
-      data: {
-        filename: file.originalname,
-        originalName: file.originalname,
-        storageKey: uploadResult.storageKey,
-        size: file.size,
-        mimeType: file.mimetype,
-        type: 'history',
-        historyStudentId: student.id,
-      },
-    });
+    let attachment: { id: number; storageKey: string };
+    try {
+      attachment = await this.prisma.attachment.create({
+        data: {
+          filename: file.originalname,
+          originalName: file.originalname,
+          storageKey: uploadResult.storageKey,
+          size: file.size,
+          mimeType: file.mimetype,
+          type: 'history',
+          historyStudentId: student.id,
+        },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Erro ao salvar histórico no banco: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      );
+      // Tentar limpar o arquivo do storage se a operação do banco falhar
+      try {
+        await this.storageService.deleteFile(uploadResult.storageKey);
+      } catch (deleteError) {
+        this.logger.warn(
+          `Erro ao limpar arquivo após falha no banco: ${deleteError instanceof Error ? deleteError.message : 'Erro desconhecido'}`,
+        );
+      }
+      throw new InternalServerErrorException(
+        'Erro ao salvar histórico. Tente novamente mais tarde.',
+      );
+    }
 
     this.logger.log(
       `Histórico salvo com sucesso: ${attachment.storageKey} para estudante ${student.id}`,
@@ -648,7 +707,7 @@ export class UserImageService {
     }
 
     return this.storageService.generateFileUrl(
-      student.history.storageKey,
+      student.history.storageKey as string,
       3600,
     );
   }

@@ -11,6 +11,9 @@ import {
   UseInterceptors,
   UploadedFile,
   Param,
+  Logger,
+  HttpException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -26,6 +29,7 @@ import {
   ApiCreatedResponse,
   ApiBody,
   ApiParam,
+  ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UserImageService } from './user-image.service';
@@ -50,6 +54,8 @@ import {
 @ApiBearerAuth()
 @Controller('me')
 export class MeController {
+  private readonly logger = new Logger(MeController.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly userImageService: UserImageService,
@@ -565,13 +571,41 @@ export class MeController {
       },
     },
   })
+  @ApiInternalServerErrorResponse({
+    description: 'Erro interno do servidor durante o upload',
+    schema: {
+      example: {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Erro interno no servidor durante o upload do currículo',
+        error: 'Internal Server Error',
+      },
+    },
+  })
   @Post('student/curriculum')
   @UseInterceptors(FileInterceptor('file'))
-  uploadCurriculum(
+  async uploadCurriculum(
     @Request() req: CustomRequest,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<UploadCurriculumResponseDto> {
-    return this.userImageService.uploadCurriculum(file, req.user.sub);
+    try {
+      return await this.userImageService.uploadCurriculum(file, req.user.sub);
+    } catch (error) {
+      // Log do erro para debugging
+      this.logger.error(
+        `Erro no upload de currículo para usuário ${req.user.sub}:`,
+        error,
+      );
+
+      // Se já é uma HttpException, re-throw para manter o status code correto
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      // Para outros erros, throw InternalServerErrorException
+      throw new InternalServerErrorException(
+        'Erro interno no servidor durante o upload do currículo',
+      );
+    }
   }
 
   @ApiOperation({
@@ -618,12 +652,40 @@ export class MeController {
       },
     },
   })
+  @ApiInternalServerErrorResponse({
+    description: 'Erro interno do servidor durante o upload',
+    schema: {
+      example: {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Erro interno no servidor durante o upload do histórico',
+        error: 'Internal Server Error',
+      },
+    },
+  })
   @Post('student/history')
   @UseInterceptors(FileInterceptor('file'))
-  uploadHistory(
+  async uploadHistory(
     @Request() req: CustomRequest,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<UploadHistoryResponseDto> {
-    return this.userImageService.uploadHistory(file, req.user.sub);
+    try {
+      return await this.userImageService.uploadHistory(file, req.user.sub);
+    } catch (error) {
+      // Log do erro para debugging
+      this.logger.error(
+        `Erro no upload de histórico para usuário ${req.user.sub}:`,
+        error,
+      );
+
+      // Se já é uma HttpException, re-throw para manter o status code correto
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      // Para outros erros, throw InternalServerErrorException
+      throw new InternalServerErrorException(
+        'Erro interno no servidor durante o upload do histórico',
+      );
+    }
   }
 }
