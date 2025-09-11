@@ -3,16 +3,14 @@ import {
   NotFoundException,
   ForbiddenException,
   ConflictException,
-  UnprocessableEntityException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { SearchService } from '../search/search.service';
 import { UserImageService } from './user-image.service';
 import {
   UserWithFullProfile,
-  PrivateUserProfile,
-  PublicUserProfile,
   UserStats,
 } from './interfaces/user-profile.interface';
 import {
@@ -22,15 +20,11 @@ import {
   UpdateSocialMediaDto,
   UpdateTagsDto,
   UpdateAddressDto,
-  SocialMediaDto,
-  TagDto,
-  AddressDto,
 } from './dtos/update-profile.dto';
 import {
   UserProfileResponseDto,
   PublicUserProfileResponseDto,
   UserPreviewResponseDto,
-  UserStatsResponseDto,
 } from './dtos/user-response.dto';
 
 @Injectable()
@@ -41,6 +35,7 @@ export class UsersService {
     private prisma: PrismaService,
     private storageService: StorageService,
     private userImageService: UserImageService,
+    private searchService: SearchService,
   ) {}
 
   /**
@@ -166,7 +161,7 @@ export class UsersService {
       throw new NotFoundException('Usuário não encontrado');
     }
 
-    const updatePayload: any = {};
+    const updatePayload: Record<string, unknown> = {};
 
     if (updateData.name !== undefined) {
       updatePayload.name = updateData.name;
@@ -192,6 +187,13 @@ export class UsersService {
       where: { id: userId },
       data: updatePayload,
     });
+
+    // Sincronizar com Meilisearch
+    try {
+      await this.searchService.syncUserAfterChange(userId);
+    } catch (error) {
+      this.logger.warn(`Failed to sync user ${userId} to search index`, error);
+    }
 
     this.logger.log(
       `Perfil básico atualizado com sucesso para usuário ID: ${userId}`,
@@ -221,7 +223,7 @@ export class UsersService {
       throw new NotFoundException('Perfil de estudante não encontrado');
     }
 
-    const updatePayload: any = {};
+    const updatePayload: Record<string, unknown> = {};
 
     if (updateData.course !== undefined) {
       updatePayload.course = updateData.course;
@@ -250,6 +252,16 @@ export class UsersService {
         where: { id: user.student.id },
         data: updatePayload,
       });
+
+      // Sincronizar com Meilisearch
+      try {
+        await this.searchService.syncUserAfterChange(userId);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to sync user ${userId} to search index:`,
+          error,
+        );
+      }
     }
 
     return this.getMyProfile(userId);
@@ -277,7 +289,7 @@ export class UsersService {
       throw new NotFoundException('Perfil de empresa não encontrado');
     }
 
-    const updatePayload: any = {};
+    const updatePayload: Record<string, unknown> = {};
 
     if (updateData.fantasyName !== undefined) {
       updatePayload.fantasyName = updateData.fantasyName;
@@ -309,6 +321,16 @@ export class UsersService {
         where: { id: user.enterprise.id },
         data: updatePayload,
       });
+
+      // Sincronizar com Meilisearch
+      try {
+        await this.searchService.syncUserAfterChange(userId);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to sync user ${userId} to search index:`,
+          error,
+        );
+      }
     }
 
     return this.getMyProfile(userId);
@@ -418,6 +440,16 @@ export class UsersService {
           })),
         });
       }
+
+      // Sincronizar com Meilisearch
+      try {
+        await this.searchService.syncUserAfterChange(userId);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to sync user ${userId} to search index:`,
+          error,
+        );
+      }
     }
 
     return this.getMyProfile(userId);
@@ -457,6 +489,13 @@ export class UsersService {
     });
 
     this.logger.log(`Tag ${tagUuid} removida com sucesso do usuário ${userId}`);
+
+    // Sincronizar com Meilisearch
+    try {
+      await this.searchService.syncUserAfterChange(userId);
+    } catch (error) {
+      this.logger.warn(`Failed to sync user ${userId} to search index:`, error);
+    }
 
     return this.getMyProfile(userId);
   }
@@ -503,6 +542,16 @@ export class UsersService {
           },
         });
       }
+
+      // Sincronizar com Meilisearch
+      try {
+        await this.searchService.syncUserAfterChange(userId);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to sync user ${userId} to search index:`,
+          error,
+        );
+      }
     }
 
     return this.getMyProfile(userId);
@@ -520,6 +569,13 @@ export class UsersService {
     await this.prisma.address.deleteMany({
       where: { userId },
     });
+
+    // Sincronizar com Meilisearch
+    try {
+      await this.searchService.syncUserAfterChange(userId);
+    } catch (error) {
+      this.logger.warn(`Failed to sync user ${userId} to search index:`, error);
+    }
 
     return this.getMyProfile(userId);
   }

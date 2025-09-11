@@ -613,14 +613,12 @@ export class UserImageService {
     // Se já existe um histórico, deletar o arquivo antigo
     if (student.history) {
       try {
-        await this.storageService.deleteFile(
-          student.history.storageKey as string,
-        );
+        await this.storageService.deleteFile(student.history.storageKey);
         await this.prisma.attachment.delete({
-          where: { id: student.history.id as number },
+          where: { id: student.history.id },
         });
         this.logger.log(
-          `Histórico anterior deletado: ${student.history.storageKey as string}`,
+          `Histórico anterior deletado: ${student.history.storageKey}`,
         );
       } catch (error) {
         this.logger.warn(
@@ -707,7 +705,7 @@ export class UserImageService {
     }
 
     return this.storageService.generateFileUrl(
-      student.history.storageKey as string,
+      student.history.storageKey,
       3600,
     );
   }
