@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { StorageModule } from './storage/storage.module';
 import { LikesModule } from './likes/likes.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { LikesModule } from './likes/likes.module';
     UsersModule,
     StorageModule,
     LikesModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [AppService],
