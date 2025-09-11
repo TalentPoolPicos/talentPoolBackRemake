@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { StorageModule } from './storage/storage.module';
 import { LikesModule } from './likes/likes.module';
 import { SearchModule } from './search/search.module';
+import { JobsModule } from './jobs/jobs.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { SearchModule } from './search/search.module';
     StorageModule,
     LikesModule,
     SearchModule,
+    JobsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
