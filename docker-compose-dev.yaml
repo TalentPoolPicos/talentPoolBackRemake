@@ -24,20 +24,24 @@ services:
     volumes:
       - minio-data:/bitnami/minio/data
 
-  es:
-    image: bitnami/elasticsearch:latest
+  meilisearch:
+    image: getmeili/meilisearch:v1.9
     restart: always
     env_file:
       - dev.env
+    environment:
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+      - MEILI_HTTP_ADDR=0.0.0.0:${MEILI_PORT}
+      - MEILI_ENV=${MEILI_ENV}
     ports:
-      - "9200:${ES_PORT}"
+      - "${MEILI_PORT}:${MEILI_PORT}"
     volumes:
-      - es-data:/usr/share/elasticsearch/data
+      - meilisearch-data:/meili_data
 
 volumes:
   postgres-data:
     driver: local
   minio-data:
     driver: local
-  es-data:
+  meilisearch-data:
     driver: local

@@ -34,17 +34,21 @@ services:
       retries: 3
       start_period: 20s
 
-  es:
-    image: bitnami/elasticsearch:latest
+  meilisearch:
+    image: getmeili/meilisearch:v1.9
     restart: always
     env_file:
       - front.dev.env
-    depends_on:
-      - postgres
+    environment:
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+      - MEILI_HTTP_ADDR=0.0.0.0:7700
+      - MEILI_ENV=${MEILI_ENV}
+    ports:
+      - "7700:7700"
     volumes:
-      - es-data:/usr/share/elasticsearch/data
+      - meilisearch-data:/meili_data
     healthcheck:
-      test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health || exit 1"]
+      test: ["CMD-SHELL", "curl -fs http://localhost:7700/health || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -70,7 +74,7 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-      es:
+      meilisearch:
         condition: service_healthy
 
 volumes:
@@ -78,5 +82,5 @@ volumes:
     driver: local
   minio-data:
     driver: local
-  es-data:
+  meilisearch-data:
     driver: local
