@@ -5,11 +5,12 @@ import { UsersService } from './users.service';
 import { UserImageService } from './user-image.service';
 import { UsersController } from './users.controller';
 import { MeController } from './me.controller';
+import { LikesService } from '../likes/likes.service';
 
 @Module({
   imports: [PrismaModule, StorageModule],
   controllers: [UsersController, MeController],
-  providers: [UsersService, UserImageService],
+  providers: [UsersService, UserImageService, LikesService],
   exports: [UsersService, UserImageService],
 })
 export class UsersModule {}

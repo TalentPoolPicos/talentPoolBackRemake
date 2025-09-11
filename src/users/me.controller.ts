@@ -43,6 +43,12 @@ import {
   UpdateAddressDto,
 } from './dtos/update-profile.dto';
 import { UserProfileResponseDto } from './dtos/user-response.dto';
+import { LikesService } from '../likes/likes.service';
+import {
+  HasLikedResponseDto,
+  GiveLikeResponseDto,
+  RemoveLikeResponseDto,
+} from '../likes/dtos/like.dto';
 import {
   UploadAvatarResponseDto,
   UploadBannerResponseDto,
@@ -59,6 +65,7 @@ export class MeController {
   constructor(
     private readonly usersService: UsersService,
     private readonly userImageService: UserImageService,
+    private readonly likesService: LikesService,
   ) {}
 
   @ApiOperation({
@@ -72,13 +79,6 @@ export class MeController {
   })
   @ApiNotFoundResponse({
     description: 'Usuário não encontrado',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Usuário não encontrado',
-        error: 'Not Found',
-      },
-    },
   })
   @Get()
   getMyProfile(@Request() req: CustomRequest): Promise<UserProfileResponseDto> {
@@ -96,23 +96,9 @@ export class MeController {
   })
   @ApiNotFoundResponse({
     description: 'Usuário não encontrado',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Usuário não encontrado',
-        error: 'Not Found',
-      },
-    },
   })
   @ApiBadRequestResponse({
     description: 'Dados de entrada inválidos',
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: ['Nome deve ter pelo menos 2 caracteres'],
-        error: 'Bad Request',
-      },
-    },
   })
   @HttpCode(HttpStatus.OK)
   @Put()
@@ -134,43 +120,15 @@ export class MeController {
   })
   @ApiNotFoundResponse({
     description: 'Usuário ou perfil de estudante não encontrado',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Perfil de estudante não encontrado',
-        error: 'Not Found',
-      },
-    },
   })
   @ApiForbiddenResponse({
     description: 'Usuário não é um estudante',
-    schema: {
-      example: {
-        statusCode: HttpStatus.FORBIDDEN,
-        message: 'Apenas estudantes podem atualizar perfil de estudante',
-        error: 'Forbidden',
-      },
-    },
   })
   @ApiConflictResponse({
     description: 'Número de matrícula já está em uso',
-    schema: {
-      example: {
-        statusCode: HttpStatus.CONFLICT,
-        message: 'Número de matrícula já está em uso',
-        error: 'Conflict',
-      },
-    },
   })
   @ApiBadRequestResponse({
     description: 'Dados de entrada inválidos',
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: ['Curso deve ter no máximo 100 caracteres'],
-        error: 'Bad Request',
-      },
-    },
   })
   @HttpCode(HttpStatus.OK)
   @Put('student')
@@ -192,43 +150,15 @@ export class MeController {
   })
   @ApiNotFoundResponse({
     description: 'Usuário ou perfil de empresa não encontrado',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Perfil de empresa não encontrado',
-        error: 'Not Found',
-      },
-    },
   })
   @ApiForbiddenResponse({
     description: 'Usuário não é uma empresa',
-    schema: {
-      example: {
-        statusCode: HttpStatus.FORBIDDEN,
-        message: 'Apenas empresas podem atualizar perfil de empresa',
-        error: 'Forbidden',
-      },
-    },
   })
   @ApiConflictResponse({
     description: 'CNPJ já está em uso',
-    schema: {
-      example: {
-        statusCode: HttpStatus.CONFLICT,
-        message: 'CNPJ já está em uso',
-        error: 'Conflict',
-      },
-    },
   })
   @ApiBadRequestResponse({
     description: 'Dados de entrada inválidos',
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: ['CNPJ deve ter no máximo 18 caracteres'],
-        error: 'Bad Request',
-      },
-    },
   })
   @HttpCode(HttpStatus.OK)
   @Put('enterprise')
@@ -249,23 +179,9 @@ export class MeController {
   })
   @ApiNotFoundResponse({
     description: 'Usuário não encontrado',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Usuário não encontrado',
-        error: 'Not Found',
-      },
-    },
   })
   @ApiBadRequestResponse({
     description: 'Dados de entrada inválidos',
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: ['URL deve ser válida'],
-        error: 'Bad Request',
-      },
-    },
   })
   @HttpCode(HttpStatus.OK)
   @Put('social-media')
@@ -291,23 +207,9 @@ export class MeController {
   })
   @ApiNotFoundResponse({
     description: 'Usuário ou rede social não encontrada',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Rede social não encontrada',
-        error: 'Not Found',
-      },
-    },
   })
   @ApiBadRequestResponse({
     description: 'UUID inválido',
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: 'UUID inválido',
-        error: 'Bad Request',
-      },
-    },
   })
   @HttpCode(HttpStatus.OK)
   @Delete('social-media/:uuid')
@@ -328,23 +230,9 @@ export class MeController {
   })
   @ApiNotFoundResponse({
     description: 'Usuário não encontrado',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Usuário não encontrado',
-        error: 'Not Found',
-      },
-    },
   })
   @ApiBadRequestResponse({
     description: 'Dados de entrada inválidos',
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: ['Label da tag deve ter no máximo 40 caracteres'],
-        error: 'Bad Request',
-      },
-    },
   })
   @HttpCode(HttpStatus.OK)
   @Put('tags')
@@ -370,23 +258,9 @@ export class MeController {
   })
   @ApiNotFoundResponse({
     description: 'Usuário ou tag não encontrada',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Tag não encontrada',
-        error: 'Not Found',
-      },
-    },
   })
   @ApiBadRequestResponse({
     description: 'UUID inválido',
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: 'UUID inválido',
-        error: 'Bad Request',
-      },
-    },
   })
   @HttpCode(HttpStatus.OK)
   @Delete('tags/:uuid')
@@ -407,23 +281,9 @@ export class MeController {
   })
   @ApiNotFoundResponse({
     description: 'Usuário não encontrado',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Usuário não encontrado',
-        error: 'Not Found',
-      },
-    },
   })
   @ApiBadRequestResponse({
     description: 'Dados de entrada inválidos',
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: ['CEP deve ser uma string'],
-        error: 'Bad Request',
-      },
-    },
   })
   @HttpCode(HttpStatus.OK)
   @Put('address')
@@ -460,13 +320,6 @@ export class MeController {
   })
   @ApiBadRequestResponse({
     description: 'Arquivo inválido ou não atende aos requisitos',
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: 'Dimensões inválidas. Requerido: 150x150 a 1000x1000px',
-        error: 'Bad Request',
-      },
-    },
   })
   @ApiNotFoundResponse({
     description: 'Usuário não encontrado',
@@ -506,14 +359,6 @@ export class MeController {
   })
   @ApiBadRequestResponse({
     description: 'Arquivo inválido ou não atende aos requisitos',
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message:
-          'Proporção inválida. Banner deve ter formato retangular horizontal',
-        error: 'Bad Request',
-      },
-    },
   })
   @ApiNotFoundResponse({
     description: 'Usuário não encontrado',
@@ -553,33 +398,12 @@ export class MeController {
   })
   @ApiBadRequestResponse({
     description: 'Arquivo inválido ou não atende aos requisitos',
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: 'Formato não permitido. Formatos aceitos: .pdf',
-        error: 'Bad Request',
-      },
-    },
   })
   @ApiNotFoundResponse({
     description: 'Estudante não encontrado',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Estudante não encontrado',
-        error: 'Not Found',
-      },
-    },
   })
   @ApiInternalServerErrorResponse({
     description: 'Erro interno do servidor durante o upload',
-    schema: {
-      example: {
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'Erro interno no servidor durante o upload do currículo',
-        error: 'Internal Server Error',
-      },
-    },
   })
   @Post('student/curriculum')
   @UseInterceptors(FileInterceptor('file'))
@@ -634,33 +458,12 @@ export class MeController {
   })
   @ApiBadRequestResponse({
     description: 'Arquivo inválido ou não atende aos requisitos',
-    schema: {
-      example: {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: 'Formato não permitido. Formatos aceitos: .pdf',
-        error: 'Bad Request',
-      },
-    },
   })
   @ApiNotFoundResponse({
     description: 'Estudante não encontrado',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Estudante não encontrado',
-        error: 'Not Found',
-      },
-    },
   })
   @ApiInternalServerErrorResponse({
     description: 'Erro interno do servidor durante o upload',
-    schema: {
-      example: {
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'Erro interno no servidor durante o upload do histórico',
-        error: 'Internal Server Error',
-      },
-    },
   })
   @Post('student/history')
   @UseInterceptors(FileInterceptor('file'))
@@ -685,6 +488,158 @@ export class MeController {
       // Para outros erros, throw InternalServerErrorException
       throw new InternalServerErrorException(
         'Erro interno no servidor durante o upload do histórico',
+      );
+    }
+  }
+
+  @ApiOperation({
+    summary: 'Verificar se deu like em um usuário',
+    description:
+      'Verifica se o usuário logado deu like em outro usuário especificado pelo UUID.',
+  })
+  @ApiParam({
+    name: 'uuid',
+    description: 'UUID do usuário para verificar o like',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiOkResponse({
+    description: 'Status do like verificado com sucesso',
+    type: HasLikedResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Usuário não encontrado',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Erro interno no servidor',
+  })
+  @Get('likes/:uuid/check')
+  async checkLike(
+    @Request() req: CustomRequest,
+    @Param('uuid') uuid: string,
+  ): Promise<HasLikedResponseDto> {
+    try {
+      const hasLiked = await this.likesService.hasLiked(req.user.sub, uuid);
+
+      return {
+        hasLiked,
+        targetUserUuid: uuid,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Erro ao verificar like do usuário ${req.user.sub} para ${uuid}:`,
+        error,
+      );
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Erro interno no servidor ao verificar like',
+      );
+    }
+  }
+
+  @ApiOperation({
+    summary: 'Dar like em um usuário',
+    description:
+      'Permite ao usuário logado dar like em outro usuário. Não é possível dar like em usuários da mesma categoria (role).',
+  })
+  @ApiParam({
+    name: 'uuid',
+    description: 'UUID do usuário para dar like',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiCreatedResponse({
+    description: 'Like dado com sucesso',
+    type: GiveLikeResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Não é possível dar like em si mesmo ou usuários da mesma categoria',
+  })
+  @ApiConflictResponse({
+    description: 'Like já foi dado para este usuário',
+  })
+  @ApiNotFoundResponse({
+    description: 'Usuário não encontrado',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Erro interno no servidor',
+  })
+  @Post('likes/:uuid')
+  @HttpCode(HttpStatus.CREATED)
+  async giveLike(
+    @Request() req: CustomRequest,
+    @Param('uuid') uuid: string,
+  ): Promise<GiveLikeResponseDto> {
+    try {
+      await this.likesService.giveLike(req.user.sub, uuid);
+
+      return {
+        message: 'Like dado com sucesso',
+        targetUserUuid: uuid,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Erro ao dar like do usuário ${req.user.sub} para ${uuid}:`,
+        error,
+      );
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Erro interno no servidor ao dar like',
+      );
+    }
+  }
+
+  @ApiOperation({
+    summary: 'Remover like de um usuário',
+    description:
+      'Permite ao usuário logado remover o like dado em outro usuário.',
+  })
+  @ApiParam({
+    name: 'uuid',
+    description: 'UUID do usuário para remover like',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiOkResponse({
+    description: 'Like removido com sucesso',
+    type: RemoveLikeResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Usuário ou like não encontrado',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Erro interno no servidor',
+  })
+  @Delete('likes/:uuid')
+  async removeLike(
+    @Request() req: CustomRequest,
+    @Param('uuid') uuid: string,
+  ): Promise<RemoveLikeResponseDto> {
+    try {
+      await this.likesService.removeLike(req.user.sub, uuid);
+
+      return {
+        message: 'Like removido com sucesso',
+        targetUserUuid: uuid,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Erro ao remover like do usuário ${req.user.sub} para ${uuid}:`,
+        error,
+      );
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Erro interno no servidor ao remover like',
       );
     }
   }
