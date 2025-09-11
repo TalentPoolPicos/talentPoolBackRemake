@@ -47,6 +47,24 @@ import {
   DeleteProfileResponseDto,
 } from './dtos/user-response.dto';
 import { LikesService } from '../likes/likes.service';
+import { JobsService } from '../jobs/jobs.service';
+import { Role } from '../auth/enums/role.enum';
+import { Roles } from '../auth/decotaros/roles.decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { UseGuards } from '@nestjs/common';
+import { JobStatus, ApplicationStatus } from '@prisma/client';
+import {
+  CreateJobDto,
+  UpdateJobContentDto,
+  ApplyToJobDto,
+  UpdateApplicationStatusDto,
+} from '../jobs/dtos/job.dto';
+import {
+  JobResponseDto,
+  JobApplicationResponseDto,
+  JobListResponseDto,
+  ApplicationListResponseDto,
+} from '../jobs/dtos/job-response.dto';
 import {
   HasLikedResponseDto,
   GiveLikeResponseDto,
@@ -69,6 +87,7 @@ export class MeController {
     private readonly usersService: UsersService,
     private readonly userImageService: UserImageService,
     private readonly likesService: LikesService,
+    private readonly jobsService: JobsService,
   ) {}
 
   @ApiOperation({
@@ -671,5 +690,309 @@ export class MeController {
     @Request() req: CustomRequest,
   ): Promise<DeleteProfileResponseDto> {
     return this.usersService.deleteMyProfile(req.user.sub);
+  }
+
+  /**
+   * Criar nova vaga (apenas empresas)
+   */
+  @Post('enterprise/jobs')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ENTERPRISE)
+  @ApiOperation({ summary: 'Criar nova vaga' })
+  @ApiCreatedResponse({
+    description: 'Vaga criada com sucesso',
+    type: JobResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Apenas empresas podem criar vagas',
+  })
+  async createJob(
+    @Body() createJobDto: CreateJobDto,
+    @Request() req: CustomRequest,
+  ): Promise<JobResponseDto> {
+    return this.jobsService.createJob(req.user.sub, createJobDto);
+  }
+
+  /**
+   * Listar minhas vagas (apenas empresas)
+   */
+  @Get('enterprise/jobs')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ENTERPRISE)
+  @ApiOperation({ summary: 'Listar minhas vagas' })
+  @ApiOkResponse({
+    description: 'Lista de vagas da empresa',
+    type: JobListResponseDto,
+  })
+  async getMyJobs(@Request() req: CustomRequest): Promise<JobListResponseDto> {
+    return this.jobsService.listJobs(
+      req.user.sub,
+      undefined,
+      req.user.sub,
+      50,
+      0,
+    );
+  }
+
+  /**
+   * Atualizar conteúdo da vaga (título, body, expiresAt) - apenas empresas
+   */
+  @Put('enterprise/jobs/:uuid/content')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ENTERPRISE)
+  @ApiOperation({
+    summary: 'Atualizar conteúdo da vaga',
+    description:
+      'Atualiza apenas o título, conteúdo e data de expiração da vaga. Disponível apenas para vagas em rascunho (draft).',
+  })
+  @ApiParam({ name: 'uuid', type: String, description: 'UUID da vaga' })
+  @ApiOkResponse({
+    description: 'Conteúdo da vaga atualizado com sucesso',
+    type: JobResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Vaga não encontrada',
+  })
+  @ApiForbiddenResponse({
+    description: 'Você não tem permissão para atualizar esta vaga',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Apenas vagas em rascunho (draft) podem ter seu conteúdo editado',
+  })
+  async updateJobContent(
+    @Param('uuid') uuid: string,
+    @Body() updateJobContentDto: UpdateJobContentDto,
+    @Request() req: CustomRequest,
+  ): Promise<JobResponseDto> {
+    return this.jobsService.updateJobContent(
+      uuid,
+      req.user.sub,
+      updateJobContentDto,
+    );
+  }
+
+  /**
+   * Publicar vaga (apenas empresas)
+   */
+  @Put('enterprise/jobs/:uuid/publish')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ENTERPRISE)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Publicar vaga',
+    description: 'Muda o status da vaga para "published" e define publishedAt',
+  })
+  @ApiParam({ name: 'uuid', type: String, description: 'UUID da vaga' })
+  @ApiOkResponse({
+    description: 'Vaga publicada com sucesso',
+    type: JobResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Vaga não encontrada',
+  })
+  @ApiForbiddenResponse({
+    description: 'Você não tem permissão para publicar esta vaga',
+  })
+  async publishJob(
+    @Param('uuid') uuid: string,
+    @Request() req: CustomRequest,
+  ): Promise<JobResponseDto> {
+    return this.jobsService.publishJob(uuid, req.user.sub);
+  }
+
+  /**
+   * Pausar vaga (apenas empresas)
+   */
+  @Put('enterprise/jobs/:uuid/pause')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ENTERPRISE)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Pausar vaga',
+    description: 'Muda o status da vaga para "draft" (rascunho/pausada)',
+  })
+  @ApiParam({ name: 'uuid', type: String, description: 'UUID da vaga' })
+  @ApiOkResponse({
+    description: 'Vaga pausada com sucesso',
+    type: JobResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Vaga não encontrada',
+  })
+  @ApiForbiddenResponse({
+    description: 'Você não tem permissão para pausar esta vaga',
+  })
+  async pauseJob(
+    @Param('uuid') uuid: string,
+    @Request() req: CustomRequest,
+  ): Promise<JobResponseDto> {
+    return this.jobsService.pauseJob(uuid, req.user.sub);
+  }
+
+  /**
+   * Finalizar vaga (apenas empresas)
+   */
+  @Put('enterprise/jobs/:uuid/close')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ENTERPRISE)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Finalizar vaga',
+    description: 'Muda o status da vaga para "closed" (finalizada)',
+  })
+  @ApiParam({ name: 'uuid', type: String, description: 'UUID da vaga' })
+  @ApiOkResponse({
+    description: 'Vaga finalizada com sucesso',
+    type: JobResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Vaga não encontrada',
+  })
+  @ApiForbiddenResponse({
+    description: 'Você não tem permissão para finalizar esta vaga',
+  })
+  async closeJob(
+    @Param('uuid') uuid: string,
+    @Request() req: CustomRequest,
+  ): Promise<JobResponseDto> {
+    return this.jobsService.closeJob(uuid, req.user.sub);
+  }
+
+  /**
+   * Atualizar status de candidatura (apenas empresas)
+   */
+  @Put('enterprise/job-applications/:uuid/status')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ENTERPRISE)
+  @ApiOperation({ summary: 'Atualizar status de candidatura' })
+  @ApiParam({
+    name: 'uuid',
+    type: String,
+    description: 'UUID da candidatura',
+  })
+  @ApiOkResponse({
+    description: 'Status da candidatura atualizado com sucesso',
+    type: JobApplicationResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Candidatura não encontrada',
+  })
+  @ApiForbiddenResponse({
+    description: 'Você não tem permissão para atualizar esta candidatura',
+  })
+  async updateApplicationStatus(
+    @Param('uuid') uuid: string,
+    @Body() updateDto: UpdateApplicationStatusDto,
+    @Request() req: CustomRequest,
+  ): Promise<JobApplicationResponseDto> {
+    return this.jobsService.updateApplicationStatus(
+      uuid,
+      req.user.sub,
+      updateDto,
+    );
+  }
+
+  /**
+   * Listar candidaturas de uma vaga (apenas empresas)
+   */
+  @Get('enterprise/jobs/:uuid/applications')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ENTERPRISE)
+  @ApiOperation({ summary: 'Listar candidaturas de uma vaga' })
+  @ApiParam({ name: 'uuid', type: String, description: 'UUID da vaga' })
+  @ApiOkResponse({
+    description: 'Lista de candidaturas da vaga',
+    type: ApplicationListResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Vaga não encontrada',
+  })
+  @ApiForbiddenResponse({
+    description: 'Você não tem permissão para ver as candidaturas desta vaga',
+  })
+  async getJobApplications(
+    @Param('uuid') uuid: string,
+    @Request() req: CustomRequest,
+  ): Promise<ApplicationListResponseDto> {
+    return this.jobsService.getJobApplications(uuid, req.user.sub);
+  }
+
+  /**
+   * Aplicar para vaga (apenas estudantes)
+   */
+  @Post('student/job-applications/:jobUuid')
+  @UseGuards(RolesGuard)
+  @Roles(Role.STUDENT)
+  @ApiOperation({ summary: 'Aplicar para vaga' })
+  @ApiParam({ name: 'jobUuid', type: String, description: 'UUID da vaga' })
+  @ApiCreatedResponse({
+    description: 'Candidatura criada com sucesso',
+    type: JobApplicationResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Vaga não encontrada',
+  })
+  @ApiForbiddenResponse({
+    description: 'Apenas estudantes podem se candidatar a vagas',
+  })
+  @ApiConflictResponse({
+    description: 'Você já se candidatou a esta vaga',
+  })
+  @ApiBadRequestResponse({
+    description: 'Esta vaga não está disponível ou expirou',
+  })
+  async applyToJob(
+    @Param('jobUuid') jobUuid: string,
+    @Body() applyDto: ApplyToJobDto,
+    @Request() req: CustomRequest,
+  ): Promise<JobApplicationResponseDto> {
+    return this.jobsService.applyToJob(jobUuid, req.user.sub, applyDto);
+  }
+
+  /**
+   * Listar minhas candidaturas (apenas estudantes)
+   */
+  @Get('student/job-applications')
+  @UseGuards(RolesGuard)
+  @Roles(Role.STUDENT)
+  @ApiOperation({ summary: 'Listar minhas candidaturas' })
+  @ApiOkResponse({
+    description: 'Lista de candidaturas do estudante',
+    type: ApplicationListResponseDto,
+  })
+  async getMyApplications(
+    @Request() req: CustomRequest,
+  ): Promise<ApplicationListResponseDto> {
+    return this.jobsService.getStudentApplications(req.user.sub);
+  }
+
+  /**
+   * Remover candidatura (apenas estudantes)
+   */
+  @Delete('student/job-applications/:uuid')
+  @UseGuards(RolesGuard)
+  @Roles(Role.STUDENT)
+  @ApiOperation({ summary: 'Remover candidatura' })
+  @ApiParam({
+    name: 'uuid',
+    type: String,
+    description: 'UUID da candidatura',
+  })
+  @ApiOkResponse({
+    description: 'Candidatura removida com sucesso',
+  })
+  @ApiNotFoundResponse({
+    description: 'Candidatura não encontrada',
+  })
+  @ApiForbiddenResponse({
+    description: 'Você só pode remover suas próprias candidaturas',
+  })
+  async removeApplication(
+    @Param('uuid') uuid: string,
+    @Request() req: CustomRequest,
+  ): Promise<{ message: string }> {
+    await this.jobsService.removeStudentApplication(uuid, req.user.sub);
+    return { message: 'Candidatura removida com sucesso' };
   }
 }
