@@ -38,10 +38,23 @@ services:
     volumes:
       - meilisearch-data:/meili_data
 
+  redis:
+    image: redis:7-alpine
+    restart: always
+    env_file:
+      - dev.env
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
 volumes:
   postgres-data:
     driver: local
   minio-data:
     driver: local
   meilisearch-data:
+    driver: local
+  redis-data:
     driver: local

@@ -54,6 +54,23 @@ services:
       retries: 5
       start_period: 30s
 
+  redis:
+    image: redis:7-alpine
+    restart: always
+    env_file:
+      - front.dev.env
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   api:
     build:
       context: .
@@ -76,6 +93,8 @@ services:
         condition: service_healthy
       meilisearch:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   postgres-data:
@@ -83,4 +102,6 @@ volumes:
   minio-data:
     driver: local
   meilisearch-data:
+    driver: local
+  redis-data:
     driver: local

@@ -20,12 +20,16 @@ services:
       - MINIO_PORT=${MINIO_PORT}
       - MINIO_USE_SSL=${MINIO_USE_SSL}
       - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
     depends_on:
       postgres:
         condition: service_healthy
       minio:
         condition: service_healthy
       meilisearch:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   postgres:
@@ -84,10 +88,27 @@ services:
       retries: 5
       start_period: 30s
 
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 volumes:
   postgres-data:
     driver: local
   minio-data:
     driver: local
   meilisearch-data:
+    driver: local
+  redis-data:
     driver: local
