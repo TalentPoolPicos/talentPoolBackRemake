@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
+import { SearchService } from '../search/search.service';
 import { compare, hash } from 'bcrypt';
 import { JwtPayload } from './interfaces/payload';
 import { RefreshPayload } from './interfaces/refresh';
@@ -24,6 +25,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private searchService: SearchService,
   ) {}
 
   /**
@@ -190,6 +192,18 @@ export class AuthService {
       this.logger.log(
         `Usuário criado com sucesso: ${username} (ID: ${user.id})`,
       );
+
+      // Sincronizar usuário com Meilisearch
+      try {
+        await this.searchService.syncUserAfterChange(user.id);
+        this.logger.log(`User ${username} synced to search index`);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to sync user ${username} to search index:`,
+          error,
+        );
+        // Não bloquear o cadastro se a sincronização falhar
+      }
 
       return {
         access_token: accessToken,
