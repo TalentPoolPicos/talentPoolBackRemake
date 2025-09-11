@@ -7,7 +7,92 @@ import {
   IsDateString,
   MaxLength,
   MinLength,
+  IsNotEmpty,
+  IsNumber,
+  Min,
+  Max,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+/**
+ * DTO para parâmetros de paginação (estudantes)
+ */
+export class StudentApplicationsPaginationDto {
+  @ApiProperty({
+    type: Number,
+    example: 20,
+    description: 'Número de itens por página',
+    required: false,
+    minimum: 1,
+    maximum: 100,
+    default: 20,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({}, { message: 'Limite deve ser um número' })
+  @Min(1, { message: 'Limite deve ser pelo menos 1' })
+  @Max(100, { message: 'Limite deve ser no máximo 100' })
+  limit?: number;
+
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    description: 'Número de itens para pular (offset)',
+    required: false,
+    minimum: 0,
+    default: 0,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({}, { message: 'Offset deve ser um número' })
+  @Min(0, { message: 'Offset deve ser pelo menos 0' })
+  offset?: number;
+}
+
+/**
+ * DTO para parâmetros de paginação (vagas da empresa)
+ */
+export class EnterpriseJobsPaginationDto {
+  @ApiProperty({
+    type: Number,
+    example: 20,
+    description: 'Número de vagas por página',
+    required: false,
+    minimum: 1,
+    maximum: 100,
+    default: 20,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({}, { message: 'Limite deve ser um número' })
+  @Min(1, { message: 'Limite deve ser pelo menos 1' })
+  @Max(100, { message: 'Limite deve ser no máximo 100' })
+  limit?: number;
+
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    description: 'Número de vagas para pular (offset)',
+    required: false,
+    minimum: 0,
+    default: 0,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({}, { message: 'Offset deve ser um número' })
+  @Min(0, { message: 'Offset deve ser pelo menos 0' })
+  offset?: number;
+
+  @ApiProperty({
+    enum: JobStatus,
+    example: 'published',
+    description: 'Filtrar por status da vaga',
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(JobStatus, { message: 'Status deve ser um valor válido' })
+  status?: JobStatus;
+}
 
 /**
  * DTO para criar uma nova vaga
@@ -32,17 +117,6 @@ export class CreateJobDto {
   })
   @IsString({ message: 'Conteúdo deve ser uma string' })
   body: string;
-
-  @ApiProperty({
-    enum: JobStatus,
-    example: 'draft',
-    description: 'Status da vaga',
-    required: false,
-    default: 'draft',
-  })
-  @IsOptional()
-  @IsEnum(JobStatus, { message: 'Status deve ser um valor válido' })
-  status?: JobStatus;
 
   @ApiProperty({
     type: String,
@@ -185,4 +259,65 @@ export class UpdateApplicationStatusDto {
     message: 'Notas do recrutador devem ter no máximo 1000 caracteres',
   })
   reviewerNotes?: string;
+}
+
+/**
+ * DTO para adicionar notas do recrutador sem alterar status
+ */
+export class AddApplicationNotesDto {
+  @ApiProperty({
+    type: String,
+    example:
+      'Candidato interessante, aguardando disponibilidade para entrevista...',
+    description: 'Notas/comentários do recrutador',
+  })
+  @IsString({ message: 'Notas do recrutador devem ser uma string' })
+  @IsNotEmpty({ message: 'Notas do recrutador são obrigatórias' })
+  @MaxLength(1000, {
+    message: 'Notas do recrutador devem ter no máximo 1000 caracteres',
+  })
+  reviewerNotes: string;
+}
+
+/**
+ * DTO para filtros de candidaturas
+ */
+export class GetApplicationsFilterDto {
+  @ApiProperty({
+    enum: ApplicationStatus,
+    example: 'pending',
+    description: 'Filtrar por status da aplicação',
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(ApplicationStatus, { message: 'Status deve ser um valor válido' })
+  status?: ApplicationStatus;
+
+  @ApiProperty({
+    type: Number,
+    example: 20,
+    description: 'Número de resultados por página',
+    minimum: 1,
+    maximum: 100,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({}, { message: 'Limit deve ser um número' })
+  @Min(1, { message: 'Limit deve ser pelo menos 1' })
+  @Max(100, { message: 'Limit deve ser no máximo 100' })
+  limit?: number;
+
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    description: 'Offset para paginação',
+    minimum: 0,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({}, { message: 'Offset deve ser um número' })
+  @Min(0, { message: 'Offset deve ser pelo menos 0' })
+  offset?: number;
 }

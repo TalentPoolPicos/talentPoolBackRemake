@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { SearchService } from '../search/search.service';
 import { JobStatus, ApplicationStatus, Role } from '@prisma/client';
 import {
   CreateJobDto,
@@ -15,12 +16,15 @@ import {
   UpdateJobContentDto,
   ApplyToJobDto,
   UpdateApplicationStatusDto,
+  AddApplicationNotesDto,
+  GetApplicationsFilterDto,
 } from './dtos/job.dto';
 import {
   JobResponseDto,
   JobApplicationResponseDto,
   JobListResponseDto,
   ApplicationListResponseDto,
+  JobPreviewDto,
 } from './dtos/job-response.dto';
 
 @Injectable()
@@ -44,6 +48,7 @@ export class JobsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
+    private readonly searchService: SearchService,
   ) {}
 
   /**
@@ -68,10 +73,9 @@ export class JobsService {
     const jobData = {
       title: createJobDto.title,
       body: createJobDto.body,
-      status: createJobDto.status ?? this.JOB_STATUS.DRAFT,
+      status: this.JOB_STATUS.DRAFT, // Sempre criado como draft
       enterpriseId: company.enterprise.id,
-      publishedAt:
-        createJobDto.status === this.JOB_STATUS.PUBLISHED ? new Date() : null,
+      publishedAt: null, // Sempre null no draft
       expiresAt: createJobDto.expiresAt
         ? new Date(createJobDto.expiresAt)
         : null,
@@ -102,6 +106,15 @@ export class JobsService {
     });
 
     this.logger.log(`Vaga criada com sucesso: ${job.uuid}`);
+
+    // Sincronizar com Meilisearch se a vaga foi criada como publicada
+    if (job.status === this.JOB_STATUS.PUBLISHED) {
+      try {
+        await this.searchService.syncJobAfterChange(job.id);
+      } catch (error) {
+        this.logger.warn(`Failed to sync job to search index: ${error}`);
+      }
+    }
 
     return this.mapJobToResponse(job, null);
   }
@@ -352,6 +365,241 @@ export class JobsService {
   }
 
   /**
+   * Adicionar notas do recrutador sem alterar status
+   */
+  async addApplicationNotes(
+    applicationUuid: string,
+    companyId: number,
+    notesDto: AddApplicationNotesDto,
+  ): Promise<JobApplicationResponseDto> {
+    const application = await this.prisma.jobApplication.findUnique({
+      where: { uuid: applicationUuid },
+      include: {
+        job: {
+          include: {
+            enterprise: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Candidatura não encontrada');
+    }
+
+    if (application.job.enterprise.user.id !== companyId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para atualizar esta candidatura',
+      );
+    }
+
+    const updatedApplication = await this.prisma.jobApplication.update({
+      where: { uuid: applicationUuid },
+      data: {
+        reviewerNotes: notesDto.reviewerNotes,
+        reviewedAt: new Date(),
+      },
+      include: {
+        job: {
+          include: {
+            enterprise: {
+              include: {
+                user: {
+                  select: {
+                    username: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        student: {
+          include: {
+            user: {
+              select: {
+                uuid: true,
+                username: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    this.logger.log(`Notas adicionadas à candidatura: ${applicationUuid}`);
+
+    return this.mapApplicationToResponse(updatedApplication, true);
+  }
+
+  /**
+   * Listar candidaturas filtradas para uma vaga específica
+   */
+  async getJobApplicationsFiltered(
+    jobUuid: string,
+    companyId: number,
+    filters: GetApplicationsFilterDto,
+  ): Promise<ApplicationListResponseDto> {
+    const job = await this.prisma.job.findUnique({
+      where: { uuid: jobUuid },
+      include: {
+        enterprise: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    if (!job) {
+      throw new NotFoundException('Vaga não encontrada');
+    }
+
+    if (job.enterprise.user.id !== companyId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para acessar esta vaga',
+      );
+    }
+
+    const where: any = { jobId: job.id };
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    const limit = filters.limit || 20;
+    const offset = filters.offset || 0;
+
+    const [applications, total] = await Promise.all([
+      this.prisma.jobApplication.findMany({
+        where,
+        include: {
+          job: {
+            include: {
+              enterprise: {
+                include: {
+                  user: {
+                    select: {
+                      username: true,
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          student: {
+            include: {
+              user: {
+                select: {
+                  uuid: true,
+                  username: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: [
+          { status: 'asc' }, // Priorizar pending, depois approved, etc.
+          { appliedAt: 'desc' },
+        ],
+        take: limit,
+        skip: offset,
+      }),
+      this.prisma.jobApplication.count({ where }),
+    ]);
+
+    return {
+      applications: applications.map((app) =>
+        this.mapApplicationToResponse(app, true),
+      ),
+      total,
+      limit,
+      offset,
+    };
+  }
+
+  /**
+   * Listar todas as candidaturas da empresa (todas as vagas)
+   */
+  async getAllCompanyApplications(
+    companyId: number,
+    filters: GetApplicationsFilterDto,
+  ): Promise<ApplicationListResponseDto> {
+    const enterprise = await this.prisma.enterprise.findFirst({
+      where: { user: { id: companyId } },
+    });
+
+    if (!enterprise) {
+      throw new NotFoundException('Empresa não encontrada');
+    }
+
+    const where: any = {
+      job: {
+        enterpriseId: enterprise.id,
+      },
+    };
+
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    const limit = filters.limit || 20;
+    const offset = filters.offset || 0;
+
+    const [applications, total] = await Promise.all([
+      this.prisma.jobApplication.findMany({
+        where,
+        include: {
+          job: {
+            include: {
+              enterprise: {
+                include: {
+                  user: {
+                    select: {
+                      username: true,
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          student: {
+            include: {
+              user: {
+                select: {
+                  uuid: true,
+                  username: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: [{ status: 'asc' }, { appliedAt: 'desc' }],
+        take: limit,
+        skip: offset,
+      }),
+      this.prisma.jobApplication.count({ where }),
+    ]);
+
+    return {
+      applications: applications.map((app) =>
+        this.mapApplicationToResponse(app, true),
+      ),
+      total,
+      limit,
+      offset,
+    };
+  }
+
+  /**
    * Listar candidaturas do estudante
    */
   async getStudentApplications(
@@ -378,10 +626,17 @@ export class JobsService {
         where,
         include: {
           job: {
-            select: {
-              uuid: true,
-              title: true,
-              status: true,
+            include: {
+              enterprise: {
+                include: {
+                  user: {
+                    select: {
+                      username: true,
+                      name: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -391,6 +646,15 @@ export class JobsService {
       }),
       this.prisma.jobApplication.count({ where }),
     ]);
+
+    this.logger.log(
+      `Found ${applications.length} applications for student ${studentId}`,
+    );
+    if (applications.length > 0) {
+      this.logger.log(
+        `First application structure: ${JSON.stringify(applications[0], null, 2)}`,
+      );
+    }
 
     return {
       applications: applications.map((app) =>
@@ -430,6 +694,26 @@ export class JobsService {
   }
 
   /**
+   * Mapear Job para preview DTO
+   */
+  private mapJobToPreview(job: any): JobPreviewDto {
+    return {
+      uuid: job.uuid,
+      title: job.title,
+      status: job.status,
+      createdAt: job.createdAt?.toISOString() || new Date().toISOString(),
+      publishedAt: job.publishedAt?.toISOString(),
+      company: {
+        uuid: job.enterprise?.uuid || '',
+        username: job.enterprise?.user?.username || '',
+        name:
+          job.enterprise?.user?.name || job.enterprise?.user?.username || '',
+        avatarUrl: null,
+      },
+    };
+  }
+
+  /**
    * Mapear Application para DTO de resposta
    */
   private mapApplicationToResponse(
@@ -443,11 +727,9 @@ export class JobsService {
       appliedAt: application.appliedAt.toISOString(),
       reviewedAt: application.reviewedAt?.toISOString(),
       reviewerNotes: application.reviewerNotes,
-      job: {
-        uuid: application.job.uuid,
-        title: application.job.title,
-        status: application.job.status,
-      },
+      createdAt: application.createdAt.toISOString(),
+      updatedAt: application.updatedAt.toISOString(),
+      job: this.mapJobToPreview(application.job),
       student:
         includeStudent && application.student
           ? {
@@ -457,8 +739,6 @@ export class JobsService {
               avatarUrl: null,
             }
           : undefined,
-      createdAt: application.createdAt.toISOString(),
-      updatedAt: application.updatedAt.toISOString(),
     };
   }
 
@@ -796,6 +1076,15 @@ export class JobsService {
       },
     });
 
+    // Sincronizar com o Meilisearch
+    try {
+      await this.searchService.syncJobAfterChange(updatedJob.id);
+    } catch (error) {
+      this.logger.warn(
+        `Falha ao sincronizar vaga ${updatedJob.uuid} com Meilisearch após atualização de conteúdo: ${error.message}`,
+      );
+    }
+
     return this.mapJobToResponse(updatedJob, null);
   }
 
@@ -883,6 +1172,15 @@ export class JobsService {
         },
       },
     });
+
+    // Sincronizar com o Meilisearch
+    try {
+      await this.searchService.syncJobAfterChange(updatedJob.id);
+    } catch (error) {
+      this.logger.warn(
+        `Falha ao sincronizar vaga ${updatedJob.uuid} com Meilisearch após mudança de status: ${error.message}`,
+      );
+    }
 
     return this.mapJobToResponse(updatedJob, null);
   }

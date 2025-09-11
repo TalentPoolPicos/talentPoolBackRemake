@@ -2,7 +2,124 @@ import { ApiProperty } from '@nestjs/swagger';
 import { JobStatus, ApplicationStatus } from '@prisma/client';
 
 /**
- * DTO para resposta de vaga
+ * DTO para preview da empresa
+ */
+export class CompanyPreviewDto {
+  @ApiProperty({
+    type: String,
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'UUID da empresa',
+  })
+  uuid: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'techcorp_oficial',
+    description: 'Username da empresa',
+  })
+  username: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'TechCorp Solutions',
+    description: 'Nome da empresa',
+    required: false,
+  })
+  name?: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'https://storage.example.com/avatars/company.jpg',
+    description: 'URL do avatar da empresa',
+    required: false,
+  })
+  avatarUrl?: string | null;
+}
+
+/**
+ * DTO para preview do estudante
+ */
+export class StudentPreviewDto {
+  @ApiProperty({
+    type: String,
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'UUID do estudante',
+  })
+  uuid: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'joao_silva',
+    description: 'Username do estudante',
+  })
+  username: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'João Silva',
+    description: 'Nome do estudante',
+    required: false,
+  })
+  name?: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'https://storage.example.com/avatars/student.jpg',
+    description: 'URL do avatar do estudante',
+    required: false,
+  })
+  avatarUrl?: string | null;
+}
+
+/**
+ * DTO para preview da vaga (informações essenciais)
+ */
+export class JobPreviewDto {
+  @ApiProperty({
+    type: String,
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'UUID único da vaga',
+  })
+  uuid: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'Desenvolvedor Frontend React',
+    description: 'Título da vaga',
+  })
+  title: string;
+
+  @ApiProperty({
+    enum: JobStatus,
+    example: 'published',
+    description: 'Status da vaga',
+  })
+  status: JobStatus;
+
+  @ApiProperty({
+    type: String,
+    example: '2025-09-11T18:30:00.000Z',
+    description: 'Data de criação',
+  })
+  createdAt: string;
+
+  @ApiProperty({
+    type: String,
+    example: '2025-09-11T18:30:00.000Z',
+    description: 'Data de publicação',
+    required: false,
+  })
+  publishedAt?: string;
+
+  @ApiProperty({
+    type: CompanyPreviewDto,
+    description: 'Informações da empresa',
+  })
+  company: CompanyPreviewDto;
+}
+
+/**
+ * DTO para resposta completa da vaga
  */
 export class JobResponseDto {
   @ApiProperty({
@@ -64,15 +181,10 @@ export class JobResponseDto {
   expiresAt?: string;
 
   @ApiProperty({
-    type: Object,
+    type: CompanyPreviewDto,
     description: 'Informações da empresa',
   })
-  company: {
-    uuid: string;
-    username: string;
-    name?: string;
-    avatarUrl?: string | null;
-  };
+  company: CompanyPreviewDto;
 
   @ApiProperty({
     type: Number,
@@ -125,41 +237,11 @@ export class JobApplicationResponseDto {
 
   @ApiProperty({
     type: String,
-    example: '2025-09-12T10:15:00.000Z',
-    description: 'Data de revisão',
-    required: false,
-  })
-  reviewedAt?: string;
-
-  @ApiProperty({
-    type: String,
     example: 'Candidato selecionado para próxima fase...',
     description: 'Notas do recrutador',
     required: false,
   })
   reviewerNotes?: string;
-
-  @ApiProperty({
-    type: Object,
-    description: 'Informações da vaga',
-  })
-  job: {
-    uuid: string;
-    title: string;
-    status: JobStatus;
-  };
-
-  @ApiProperty({
-    type: Object,
-    description: 'Informações do estudante (visível apenas para empresas)',
-    required: false,
-  })
-  student?: {
-    uuid: string;
-    username: string;
-    name?: string;
-    avatarUrl?: string | null;
-  };
 
   @ApiProperty({
     type: String,
@@ -174,6 +256,27 @@ export class JobApplicationResponseDto {
     description: 'Data de atualização',
   })
   updatedAt: string;
+
+  @ApiProperty({
+    type: String,
+    example: '2025-09-12T10:15:00.000Z',
+    description: 'Data de revisão',
+    required: false,
+  })
+  reviewedAt?: string;
+
+  @ApiProperty({
+    type: JobPreviewDto,
+    description: 'Informações da vaga',
+  })
+  job: JobPreviewDto;
+
+  @ApiProperty({
+    type: StudentPreviewDto,
+    description: 'Informações do estudante (visível apenas para empresas)',
+    required: false,
+  })
+  student?: StudentPreviewDto;
 }
 
 /**
