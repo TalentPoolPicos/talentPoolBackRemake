@@ -314,6 +314,50 @@ export class UsersService {
   }
 
   /**
+   * Deleta uma rede social específica do usuário
+   */
+  async deleteSocialMedia(
+    userId: number,
+    socialMediaUuid: string,
+  ): Promise<UserProfileResponseDto> {
+    this.logger.log(
+      `Deletando rede social ${socialMediaUuid} do usuário ID: ${userId}`,
+    );
+
+    const user = await this.findUserById(userId);
+    if (!user) {
+      this.logger.warn(`Usuário não encontrado para ID: ${userId}`);
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    // Verifica se a rede social existe e pertence ao usuário
+    const socialMedia = await this.prisma.socialMedia.findFirst({
+      where: {
+        uuid: socialMediaUuid,
+        userId,
+      },
+    });
+
+    if (!socialMedia) {
+      this.logger.warn(
+        `Rede social ${socialMediaUuid} não encontrada para usuário ${userId}`,
+      );
+      throw new NotFoundException('Rede social não encontrada');
+    }
+
+    // Remove a rede social
+    await this.prisma.socialMedia.delete({
+      where: { uuid: socialMediaUuid },
+    });
+
+    this.logger.log(
+      `Rede social ${socialMediaUuid} removida com sucesso do usuário ${userId}`,
+    );
+
+    return this.getMyProfile(userId);
+  }
+
+  /**
    * Atualiza tags do usuário
    */
   async updateTags(
@@ -341,6 +385,44 @@ export class UsersService {
         });
       }
     }
+
+    return this.getMyProfile(userId);
+  }
+
+  /**
+   * Deleta uma tag específica do usuário
+   */
+  async deleteTag(
+    userId: number,
+    tagUuid: string,
+  ): Promise<UserProfileResponseDto> {
+    this.logger.log(`Deletando tag ${tagUuid} do usuário ID: ${userId}`);
+
+    const user = await this.findUserById(userId);
+    if (!user) {
+      this.logger.warn(`Usuário não encontrado para ID: ${userId}`);
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    // Verifica se a tag existe e pertence ao usuário
+    const tag = await this.prisma.tag.findFirst({
+      where: {
+        uuid: tagUuid,
+        userId,
+      },
+    });
+
+    if (!tag) {
+      this.logger.warn(`Tag ${tagUuid} não encontrada para usuário ${userId}`);
+      throw new NotFoundException('Tag não encontrada');
+    }
+
+    // Remove a tag
+    await this.prisma.tag.delete({
+      where: { uuid: tagUuid },
+    });
+
+    this.logger.log(`Tag ${tagUuid} removida com sucesso do usuário ${userId}`);
 
     return this.getMyProfile(userId);
   }

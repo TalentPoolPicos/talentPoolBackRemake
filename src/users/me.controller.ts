@@ -10,6 +10,7 @@ import {
   HttpStatus,
   UseInterceptors,
   UploadedFile,
+  Param,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -24,6 +25,7 @@ import {
   ApiConsumes,
   ApiCreatedResponse,
   ApiBody,
+  ApiParam,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UserImageService } from './user-image.service';
@@ -267,6 +269,48 @@ export class MeController {
   }
 
   @ApiOperation({
+    summary: 'Deletar rede social',
+    description: 'Remove uma rede social específica do perfil do usuário',
+  })
+  @ApiParam({
+    name: 'uuid',
+    description: 'UUID da rede social a ser removida',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiOkResponse({
+    description: 'Rede social removida com sucesso',
+    type: UserProfileResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Usuário ou rede social não encontrada',
+    schema: {
+      example: {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'Rede social não encontrada',
+        error: 'Not Found',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'UUID inválido',
+    schema: {
+      example: {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'UUID inválido',
+        error: 'Bad Request',
+      },
+    },
+  })
+  @HttpCode(HttpStatus.OK)
+  @Delete('social-media/:uuid')
+  deleteSocialMedia(
+    @Request() req: CustomRequest,
+    @Param('uuid') uuid: string,
+  ): Promise<UserProfileResponseDto> {
+    return this.usersService.deleteSocialMedia(req.user.sub, uuid);
+  }
+
+  @ApiOperation({
     summary: 'Atualizar tags',
     description: 'Atualiza a lista de tags/habilidades do usuário',
   })
@@ -304,6 +348,48 @@ export class MeController {
   }
 
   @ApiOperation({
+    summary: 'Deletar tag',
+    description: 'Remove uma tag específica do perfil do usuário',
+  })
+  @ApiParam({
+    name: 'uuid',
+    description: 'UUID da tag a ser removida',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiOkResponse({
+    description: 'Tag removida com sucesso',
+    type: UserProfileResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Usuário ou tag não encontrada',
+    schema: {
+      example: {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'Tag não encontrada',
+        error: 'Not Found',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'UUID inválido',
+    schema: {
+      example: {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'UUID inválido',
+        error: 'Bad Request',
+      },
+    },
+  })
+  @HttpCode(HttpStatus.OK)
+  @Delete('tags/:uuid')
+  deleteTag(
+    @Request() req: CustomRequest,
+    @Param('uuid') uuid: string,
+  ): Promise<UserProfileResponseDto> {
+    return this.usersService.deleteTag(req.user.sub, uuid);
+  }
+
+  @ApiOperation({
     summary: 'Atualizar endereço',
     description: 'Atualiza ou cria o endereço do usuário',
   })
@@ -338,32 +424,6 @@ export class MeController {
     @Body() updateData: UpdateAddressDto,
   ): Promise<UserProfileResponseDto> {
     return this.usersService.updateAddress(req.user.sub, updateData);
-  }
-
-  @ApiOperation({
-    summary: 'Remover endereço',
-    description: 'Remove o endereço associado ao usuário autenticado',
-  })
-  @ApiOkResponse({
-    description: 'Endereço removido com sucesso',
-    type: UserProfileResponseDto,
-  })
-  @ApiNotFoundResponse({
-    description: 'Usuário não encontrado',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Usuário não encontrado',
-        error: 'Not Found',
-      },
-    },
-  })
-  @HttpCode(HttpStatus.OK)
-  @Delete('address')
-  removeAddress(
-    @Request() req: CustomRequest,
-  ): Promise<UserProfileResponseDto> {
-    return this.usersService.removeAddress(req.user.sub);
   }
 
   @ApiOperation({
