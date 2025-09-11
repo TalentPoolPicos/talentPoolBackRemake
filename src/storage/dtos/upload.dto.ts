@@ -19,5 +19,4 @@ export interface UploadResult {
   size: number;
   type: AttachmentType;
   storageKey: string;
-  url?: string;
 }

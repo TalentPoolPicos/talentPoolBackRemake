@@ -155,9 +155,6 @@ export class StorageService {
 
       this.logger.log(`Arquivo uploadado: ${storageKey} (${file.size} bytes)`);
 
-      // Gerar URL de acesso (opcional)
-      const url = await this.generateFileUrl(storageKey);
-
       return {
         filename,
         originalName: file.originalname,
@@ -165,7 +162,6 @@ export class StorageService {
         size: file.size,
         type: attachmentType,
         storageKey,
-        url,
       };
     } catch (error) {
       this.logger.error(

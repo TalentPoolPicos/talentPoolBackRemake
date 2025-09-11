@@ -59,8 +59,7 @@ model Attachment {
   type         AttachmentType
 
   // File storage info
-  storageKey String  @unique @map("storage_key") @db.VarChar(500) // MinIO/S3 key
-  url        String? @db.VarChar(1000) // Generated URL (can be regenerated)
+  storageKey String @unique @map("storage_key") @db.VarChar(500) // MinIO/S3 key
 
   // Relations for User avatar and banner
   avatarUserId Int? @unique @map("avatar_user_id")

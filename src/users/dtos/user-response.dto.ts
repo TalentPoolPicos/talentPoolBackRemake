@@ -49,14 +49,6 @@ export class AttachmentResponseDto {
 
   @ApiProperty({
     type: String,
-    example: 'https://storage.example.com/files/profile-picture.jpg',
-    description: 'URL para acesso ao arquivo',
-    required: false,
-  })
-  url?: string;
-
-  @ApiProperty({
-    type: String,
     example: '2023-01-01T00:00:00.000Z',
     description: 'Data de criação',
   })
