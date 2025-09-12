@@ -11,7 +11,7 @@ import {
   NOTIFICATION_QUEUES,
   NOTIFICATION_JOBS,
 } from './constants/queue.constants';
-import { NotificationType } from '@prisma/client';
+import { NotificationType, Role } from '@prisma/client';
 
 @Injectable()
 export class NotificationsService {
@@ -20,12 +20,6 @@ export class NotificationsService {
   constructor(
     @InjectQueue(NOTIFICATION_QUEUES.NOTIFICATIONS)
     private readonly notificationsQueue: Queue,
-    @InjectQueue(NOTIFICATION_QUEUES.EMAIL_NOTIFICATIONS)
-    private readonly emailQueue: Queue,
-    @InjectQueue(NOTIFICATION_QUEUES.PUSH_NOTIFICATIONS)
-    private readonly pushQueue: Queue,
-    @InjectQueue(NOTIFICATION_QUEUES.WEBSOCKET_NOTIFICATIONS)
-    private readonly websocketQueue: Queue,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -70,249 +64,6 @@ export class NotificationsService {
     } catch (error) {
       this.logger.error('Failed to create notification:', error.stack);
       throw new Error(`Failed to create notification: ${error.message}`);
-    }
-  }
-
-  /**
-   * Enviar notificação por email
-   */
-  async sendEmailNotification(
-    createNotificationDto: CreateNotificationDto,
-    emailData?: {
-      subject?: string;
-      template?: string;
-      attachments?: any[];
-    },
-    options?: NotificationJobOptions,
-  ) {
-    try {
-      const jobData: NotificationJobData = {
-        ...createNotificationDto,
-        expiresAt: createNotificationDto.expiresAt
-          ? new Date(createNotificationDto.expiresAt)
-          : undefined,
-        metadata: {
-          ...createNotificationDto.metadata,
-          email: emailData,
-        },
-      };
-
-      const job = await this.emailQueue.add(
-        NOTIFICATION_JOBS.CREATE_NOTIFICATION,
-        jobData,
-        {
-          priority: options?.priority || 2,
-          delay: options?.delay || 0,
-          attempts: options?.attempts || 5,
-          backoff: options?.backoff || {
-            type: 'exponential',
-            delay: 3000,
-          },
-        },
-      );
-
-      this.logger.log(
-        `Email notification job ${job.id} created for user ${createNotificationDto.userId}`,
-      );
-
-      return {
-        success: true,
-        jobId: job.id,
-        message: 'Email notification queued successfully',
-      };
-    } catch (error) {
-      this.logger.error('Failed to send email notification:', error.stack);
-      throw new Error(`Failed to send email notification: ${error.message}`);
-    }
-  }
-
-  /**
-   * Enviar push notification
-   */
-  async sendPushNotification(
-    createNotificationDto: CreateNotificationDto,
-    pushData?: {
-      deviceTokens?: string[];
-      sound?: string;
-      badge?: number;
-      icon?: string;
-      image?: string;
-      clickAction?: string;
-    },
-    options?: NotificationJobOptions,
-  ) {
-    try {
-      const jobData: NotificationJobData = {
-        ...createNotificationDto,
-        expiresAt: createNotificationDto.expiresAt
-          ? new Date(createNotificationDto.expiresAt)
-          : undefined,
-        metadata: {
-          ...createNotificationDto.metadata,
-          push: pushData,
-        },
-      };
-
-      const job = await this.pushQueue.add(
-        NOTIFICATION_JOBS.CREATE_NOTIFICATION,
-        jobData,
-        {
-          priority: options?.priority || 1,
-          delay: options?.delay || 0,
-          attempts: options?.attempts || 3,
-          backoff: options?.backoff || {
-            type: 'exponential',
-            delay: 1000,
-          },
-        },
-      );
-
-      this.logger.log(
-        `Push notification job ${job.id} created for user ${createNotificationDto.userId}`,
-      );
-
-      return {
-        success: true,
-        jobId: job.id,
-        message: 'Push notification queued successfully',
-      };
-    } catch (error) {
-      this.logger.error('Failed to send push notification:', error.stack);
-      throw new Error(`Failed to send push notification: ${error.message}`);
-    }
-  }
-
-  /**
-   * Enviar notificação via WebSocket
-   */
-  async sendWebSocketNotification(
-    createNotificationDto: CreateNotificationDto,
-    websocketData?: {
-      room?: string;
-      event?: string;
-      broadcast?: boolean;
-    },
-    options?: NotificationJobOptions,
-  ) {
-    try {
-      const jobData: NotificationJobData = {
-        ...createNotificationDto,
-        expiresAt: createNotificationDto.expiresAt
-          ? new Date(createNotificationDto.expiresAt)
-          : undefined,
-        metadata: {
-          ...createNotificationDto.metadata,
-          websocket: websocketData,
-        },
-      };
-
-      const job = await this.websocketQueue.add(
-        NOTIFICATION_JOBS.CREATE_NOTIFICATION,
-        jobData,
-        {
-          priority: options?.priority || 3,
-          delay: options?.delay || 0,
-          attempts: options?.attempts || 2,
-          backoff: options?.backoff || {
-            type: 'fixed',
-            delay: 500,
-          },
-        },
-      );
-
-      this.logger.log(
-        `WebSocket notification job ${job.id} created for user ${createNotificationDto.userId}`,
-      );
-
-      return {
-        success: true,
-        jobId: job.id,
-        message: 'WebSocket notification queued successfully',
-      };
-    } catch (error) {
-      this.logger.error('Failed to send WebSocket notification:', error.stack);
-      throw new Error(
-        `Failed to send WebSocket notification: ${error.message}`,
-      );
-    }
-  }
-
-  /**
-   * Método conveniente para enviar notificação completa (múltiplos canais)
-   */
-  async sendFullNotification(
-    createNotificationDto: CreateNotificationDto,
-    channels: {
-      email?: boolean;
-      push?: boolean;
-      websocket?: boolean;
-    } = { email: true, push: true, websocket: true },
-    extraData?: {
-      emailData?: any;
-      pushData?: any;
-      websocketData?: any;
-    },
-    options?: NotificationJobOptions,
-  ) {
-    const results: Array<{
-      type: string;
-      result: {
-        success: boolean;
-        jobId?: string;
-        message: string;
-      };
-    }> = [];
-
-    try {
-      // Sempre criar a notificação no banco
-      const notificationResult = await this.createNotification(
-        createNotificationDto,
-        options,
-      );
-      results.push({ type: 'notification', result: notificationResult });
-
-      // Enviar por email se solicitado
-      if (channels.email) {
-        const emailResult = await this.sendEmailNotification(
-          createNotificationDto,
-          extraData?.emailData,
-          options,
-        );
-        results.push({ type: 'email', result: emailResult });
-      }
-
-      // Enviar push notification se solicitado
-      if (channels.push) {
-        const pushResult = await this.sendPushNotification(
-          createNotificationDto,
-          extraData?.pushData,
-          options,
-        );
-        results.push({ type: 'push', result: pushResult });
-      }
-
-      // Enviar WebSocket se solicitado
-      if (channels.websocket) {
-        const websocketResult = await this.sendWebSocketNotification(
-          createNotificationDto,
-          extraData?.websocketData,
-          options,
-        );
-        results.push({ type: 'websocket', result: websocketResult });
-      }
-
-      this.logger.log(
-        `Full notification sent for user ${createNotificationDto.userId} across ${results.length} channels`,
-      );
-
-      return {
-        success: true,
-        results,
-        message: 'Full notification sent successfully',
-      };
-    } catch (error) {
-      this.logger.error('Failed to send full notification:', error.stack);
-      throw new Error(`Failed to send full notification: ${error.message}`);
     }
   }
 
@@ -452,22 +203,417 @@ export class NotificationsService {
   }
 
   /**
-   * Obter estatísticas das filas
+   * Enviar notificação para usuário específico
    */
-  async getQueueStats() {
-    const [notificationsStats, emailStats, pushStats, websocketStats] =
-      await Promise.all([
-        this.notificationsQueue.getJobCounts(),
-        this.emailQueue.getJobCounts(),
-        this.pushQueue.getJobCounts(),
-        this.websocketQueue.getJobCounts(),
-      ]);
+  async sendNotificationToUser(
+    userId: number,
+    type: NotificationType,
+    title: string,
+    message: string,
+    options?: {
+      priority?: number;
+      metadata?: any;
+      actionUrl?: string;
+      actionType?: string;
+      actionData?: any;
+      relatedJobId?: number;
+      relatedApplicationId?: number;
+      relatedUserId?: number;
+      expiresAt?: Date;
+    },
+  ) {
+    const createNotificationDto: CreateNotificationDto = {
+      type,
+      title,
+      message,
+      userId,
+      priority: options?.priority || 1,
+      metadata: options?.metadata,
+      actionUrl: options?.actionUrl,
+      actionType: options?.actionType,
+      actionData: options?.actionData,
+      relatedJobId: options?.relatedJobId,
+      relatedApplicationId: options?.relatedApplicationId,
+      relatedUserId: options?.relatedUserId,
+      expiresAt: options?.expiresAt?.toISOString(),
+    };
+
+    return this.createNotification(createNotificationDto);
+  }
+
+  /**
+   * Enviar notificação para todos os usuários de um papel específico
+   */
+  async sendNotificationToRole(
+    role: Role,
+    type: NotificationType,
+    title: string,
+    message: string,
+    options?: {
+      priority?: number;
+      metadata?: any;
+      actionUrl?: string;
+      actionType?: string;
+      actionData?: any;
+      relatedJobId?: number;
+      expiresAt?: Date;
+    },
+  ) {
+    // Buscar todos os usuários do papel especificado
+    const users = await this.prisma.user.findMany({
+      where: { role },
+      select: { id: true },
+    });
+
+    const notifications = users.map((user) => ({
+      type,
+      title,
+      message,
+      userId: user.id,
+      priority: options?.priority || 1,
+      metadata: { ...options?.metadata, role },
+      actionUrl: options?.actionUrl,
+      actionType: options?.actionType,
+      actionData: options?.actionData,
+      relatedJobId: options?.relatedJobId,
+      expiresAt: options?.expiresAt?.toISOString(),
+    }));
+
+    // Enviar todas as notificações em paralelo
+    const results = await Promise.all(
+      notifications.map((notification) =>
+        this.createNotification(notification),
+      ),
+    );
+
+    this.logger.log(
+      `Sent ${results.length} notifications to users with role: ${role}`,
+    );
 
     return {
-      notifications: notificationsStats,
-      email: emailStats,
-      push: pushStats,
-      websocket: websocketStats,
+      success: true,
+      message: `Sent ${results.length} notifications to role: ${role}`,
+      count: results.length,
+      results,
     };
+  }
+
+  /**
+   * Broadcast notificação para todos os usuários
+   */
+  async broadcastNotification(
+    type: NotificationType,
+    title: string,
+    message: string,
+    options?: {
+      priority?: number;
+      metadata?: any;
+      actionUrl?: string;
+      actionType?: string;
+      actionData?: any;
+      relatedJobId?: number;
+      expiresAt?: Date;
+    },
+  ) {
+    // Buscar todos os usuários ativos
+    const users = await this.prisma.user.findMany({
+      select: { id: true },
+    });
+
+    const notifications = users.map((user) => ({
+      type,
+      title,
+      message,
+      userId: user.id,
+      priority: options?.priority || 1,
+      metadata: { ...options?.metadata, broadcast: true },
+      actionUrl: options?.actionUrl,
+      actionType: options?.actionType,
+      actionData: options?.actionData,
+      relatedJobId: options?.relatedJobId,
+      expiresAt: options?.expiresAt?.toISOString(),
+    }));
+
+    // Enviar todas as notificações em paralelo
+    const results = await Promise.all(
+      notifications.map((notification) =>
+        this.createNotification(notification),
+      ),
+    );
+
+    this.logger.log(`Broadcasted ${results.length} notifications to all users`);
+
+    return {
+      success: true,
+      message: `Broadcasted ${results.length} notifications to all users`,
+      count: results.length,
+      results,
+    };
+  }
+
+  /**
+   * Métodos específicos para tipos de notificação comuns
+   */
+
+  /**
+   * Notificação de nova candidatura
+   */
+  async notifyNewJobApplication(
+    enterpriseUserId: number,
+    studentUserId: number,
+    jobId: number,
+    applicationId: number,
+    studentName: string,
+    jobTitle: string,
+  ) {
+    return this.sendNotificationToUser(
+      enterpriseUserId,
+      NotificationType.job_application_received,
+      'Nova candidatura recebida',
+      `${studentName} se candidatou para a vaga "${jobTitle}"`,
+      {
+        priority: 2,
+        relatedJobId: jobId,
+        relatedApplicationId: applicationId,
+        relatedUserId: studentUserId,
+        actionUrl: `/enterprise/applications/${applicationId}`,
+        actionType: 'view_application',
+        actionData: { applicationId, jobId, studentUserId },
+      },
+    );
+  }
+
+  /**
+   * Notificação de candidatura aprovada
+   */
+  async notifyApplicationApproved(
+    studentUserId: number,
+    enterpriseUserId: number,
+    jobId: number,
+    applicationId: number,
+    jobTitle: string,
+    enterpriseName: string,
+  ) {
+    return this.sendNotificationToUser(
+      studentUserId,
+      NotificationType.job_application_updated,
+      'Candidatura aprovada!',
+      `Parabéns! Sua candidatura para "${jobTitle}" na ${enterpriseName} foi aprovada`,
+      {
+        priority: 3,
+        relatedJobId: jobId,
+        relatedApplicationId: applicationId,
+        relatedUserId: enterpriseUserId,
+        actionUrl: `/student/applications/${applicationId}`,
+        actionType: 'view_approved_application',
+        actionData: { applicationId, jobId, enterpriseUserId },
+      },
+    );
+  }
+
+  /**
+   * Notificação de candidatura rejeitada
+   */
+  async notifyApplicationRejected(
+    studentUserId: number,
+    enterpriseUserId: number,
+    jobId: number,
+    applicationId: number,
+    jobTitle: string,
+    enterpriseName: string,
+  ) {
+    return this.sendNotificationToUser(
+      studentUserId,
+      NotificationType.job_application_updated,
+      'Candidatura não aprovada',
+      `Sua candidatura para "${jobTitle}" na ${enterpriseName} não foi aprovada desta vez`,
+      {
+        priority: 2,
+        relatedJobId: jobId,
+        relatedApplicationId: applicationId,
+        relatedUserId: enterpriseUserId,
+        actionUrl: `/student/applications/${applicationId}`,
+        actionType: 'view_rejected_application',
+        actionData: { applicationId, jobId, enterpriseUserId },
+      },
+    );
+  }
+
+  /**
+   * Notificação de nova vaga publicada (para estudantes)
+   */
+  async notifyNewJobPosted(
+    jobId: number,
+    jobTitle: string,
+    enterpriseName: string,
+    jobLocation?: string,
+  ) {
+    return this.sendNotificationToRole(
+      Role.student,
+      NotificationType.job_published,
+      'Nova vaga disponível!',
+      `Nova vaga "${jobTitle}" publicada pela ${enterpriseName}${
+        jobLocation ? ` em ${jobLocation}` : ''
+      }`,
+      {
+        priority: 1,
+        relatedJobId: jobId,
+        actionUrl: `/jobs/${jobId}`,
+        actionType: 'view_job',
+        actionData: { jobId },
+      },
+    );
+  }
+
+  /**
+   * Notificação de perfil curtido
+   */
+  async notifyProfileLiked(
+    receiverUserId: number,
+    likerUserId: number,
+    likerName: string,
+  ) {
+    return this.sendNotificationToUser(
+      receiverUserId,
+      NotificationType.profile_liked,
+      'Alguém curtiu seu perfil!',
+      `${likerName} curtiu seu perfil`,
+      {
+        priority: 1,
+        relatedUserId: likerUserId,
+        actionUrl: `/users/${likerUserId}`,
+        actionType: 'view_profile',
+        actionData: { userId: likerUserId },
+      },
+    );
+  }
+
+  /**
+   * Notificação de boas-vindas
+   */
+  async notifyWelcome(userId: number, userName: string) {
+    return this.sendNotificationToUser(
+      userId,
+      NotificationType.welcome_message,
+      'Bem-vindo à plataforma!',
+      `Olá ${userName}, seja bem-vindo à nossa plataforma de talentos!`,
+      {
+        priority: 1,
+        actionUrl: '/profile/setup',
+        actionType: 'setup_profile',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 dias
+      },
+    );
+  }
+
+  /**
+   * Notificação de manutenção do sistema
+   */
+  async notifySystemMaintenance(
+    scheduledDate: Date,
+    duration: string,
+    description?: string,
+  ) {
+    return this.broadcastNotification(
+      NotificationType.system_announcement,
+      'Manutenção programada',
+      `Manutenção do sistema agendada para ${scheduledDate.toLocaleDateString()} com duração de ${duration}${
+        description ? `. ${description}` : ''
+      }`,
+      {
+        priority: 3,
+        metadata: {
+          scheduledDate: scheduledDate.toISOString(),
+          duration,
+          description,
+        },
+        expiresAt: new Date(scheduledDate.getTime() + 24 * 60 * 60 * 1000), // Expira 24h após a manutenção
+      },
+    );
+  }
+
+  /**
+   * Remover notificações lidas antigas automaticamente
+   * Este método é executado via schedule para limpar o banco de dados
+   */
+  async cleanupOldReadNotifications(daysOld: number = 30): Promise<void> {
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+
+      const result = await this.prisma.notification.deleteMany({
+        where: {
+          isRead: true,
+          readAt: {
+            lt: cutoffDate,
+          },
+        },
+      });
+
+      this.logger.log(
+        `Limpeza automática: ${result.count} notificações lidas antigas foram removidas (mais de ${daysOld} dias)`,
+      );
+
+      return;
+    } catch (error) {
+      this.logger.error(
+        'Erro durante a limpeza automática de notificações antigas:',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Remover notificações expiradas automaticamente
+   * Remove notificações que passaram da data de expiração
+   */
+  async cleanupExpiredNotifications(): Promise<void> {
+    try {
+      const now = new Date();
+
+      const result = await this.prisma.notification.deleteMany({
+        where: {
+          expiresAt: {
+            lt: now,
+          },
+        },
+      });
+
+      this.logger.log(
+        `Limpeza de expiração: ${result.count} notificações expiradas foram removidas`,
+      );
+
+      return;
+    } catch (error) {
+      this.logger.error(
+        'Erro durante a limpeza de notificações expiradas:',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Limpeza geral de notificações
+   * Combina limpeza de notificações lidas antigas e expiradas
+   */
+  async performScheduledCleanup(): Promise<void> {
+    this.logger.log('Iniciando limpeza agendada de notificações...');
+
+    try {
+      // Limpar notificações lidas com mais de 30 dias
+      await this.cleanupOldReadNotifications(30);
+
+      // Limpar notificações expiradas
+      await this.cleanupExpiredNotifications();
+
+      this.logger.log('Limpeza agendada de notificações concluída com sucesso');
+    } catch (error) {
+      this.logger.error(
+        'Erro durante a limpeza agendada de notificações:',
+        error,
+      );
+    }
   }
 }

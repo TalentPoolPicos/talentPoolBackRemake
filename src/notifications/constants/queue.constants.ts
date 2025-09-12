@@ -1,8 +1,5 @@
 export const NOTIFICATION_QUEUES = {
   NOTIFICATIONS: 'notifications',
-  EMAIL_NOTIFICATIONS: 'email-notifications',
-  PUSH_NOTIFICATIONS: 'push-notifications',
-  WEBSOCKET_NOTIFICATIONS: 'websocket-notifications',
 } as const;
 
 export const NOTIFICATION_JOBS = {

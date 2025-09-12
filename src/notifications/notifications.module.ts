@@ -1,14 +1,27 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { NotificationsService } from './notifications.service';
 import { NotificationProcessor } from './notification.processor';
+import { NotificationsGateway } from './gateways/notifications.gateway';
+import { NotificationDatabaseService } from './notification-database.service';
+import { NotificationManagerService } from './notification-manager.service';
+import { NotificationCleanupService } from './notification-cleanup.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { NOTIFICATION_QUEUES } from './constants/queue.constants';
 
 @Module({
   imports: [
     PrismaModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '24h' },
+      }),
+      inject: [ConfigService],
+    }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -24,50 +37,31 @@ import { NOTIFICATION_QUEUES } from './constants/queue.constants';
       }),
       inject: [ConfigService],
     }),
-    BullModule.registerQueue(
-      {
-        name: NOTIFICATION_QUEUES.NOTIFICATIONS,
-        defaultJobOptions: {
-          attempts: 3,
-          backoff: {
-            type: 'exponential',
-            delay: 2000,
-          },
+    BullModule.registerQueue({
+      name: NOTIFICATION_QUEUES.NOTIFICATIONS,
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 2000,
         },
       },
-      {
-        name: NOTIFICATION_QUEUES.EMAIL_NOTIFICATIONS,
-        defaultJobOptions: {
-          attempts: 5,
-          backoff: {
-            type: 'exponential',
-            delay: 3000,
-          },
-        },
-      },
-      {
-        name: NOTIFICATION_QUEUES.PUSH_NOTIFICATIONS,
-        defaultJobOptions: {
-          attempts: 3,
-          backoff: {
-            type: 'exponential',
-            delay: 1000,
-          },
-        },
-      },
-      {
-        name: NOTIFICATION_QUEUES.WEBSOCKET_NOTIFICATIONS,
-        defaultJobOptions: {
-          attempts: 2,
-          backoff: {
-            type: 'fixed',
-            delay: 500,
-          },
-        },
-      },
-    ),
+    }),
   ],
-  providers: [NotificationsService, NotificationProcessor],
-  exports: [NotificationsService],
+  providers: [
+    NotificationsService,
+    NotificationProcessor,
+    NotificationsGateway,
+    NotificationDatabaseService,
+    NotificationManagerService,
+    NotificationCleanupService,
+  ],
+  exports: [
+    NotificationsService,
+    NotificationsGateway,
+    NotificationDatabaseService,
+    NotificationManagerService,
+    NotificationCleanupService,
+  ],
 })
 export class NotificationsModule {}
