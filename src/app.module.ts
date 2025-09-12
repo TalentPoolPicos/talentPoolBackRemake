@@ -10,6 +10,7 @@ import { StorageModule } from './storage/storage.module';
 import { LikesModule } from './likes/likes.module';
 import { SearchModule } from './search/search.module';
 import { JobsModule } from './jobs/jobs.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { JobsModule } from './jobs/jobs.module';
     JobsModule,
     AuthModule,
     LikesModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
