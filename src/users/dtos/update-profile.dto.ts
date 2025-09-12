@@ -189,6 +189,21 @@ export class TagDto {
 }
 
 /**
+ * DTO para adicionar uma tag
+ */
+export class AddTagDto {
+  @ApiProperty({
+    type: String,
+    example: 'React',
+    description: 'Label da tag a ser adicionada',
+  })
+  @IsString({ message: 'Label da tag deve ser uma string' })
+  @MinLength(1, { message: 'Label da tag deve ter pelo menos 1 caractere' })
+  @MaxLength(40, { message: 'Label da tag deve ter no máximo 40 caracteres' })
+  label: string;
+}
+
+/**
  * DTO para atualizar tags
  */
 export class UpdateTagsDto {
@@ -220,6 +235,124 @@ export class AddressDto {
   @ApiProperty({
     type: String,
     example: 'Rua das Flores, 123',
+    description: 'Rua do endereço',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: 'Rua deve ser uma string' })
+  @MaxLength(100, { message: 'Rua deve ter no máximo 100 caracteres' })
+  street?: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'Centro',
+    description: 'Bairro do endereço',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: 'Bairro deve ser uma string' })
+  @MaxLength(100, { message: 'Bairro deve ter no máximo 100 caracteres' })
+  neighborhood?: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'Teresina',
+    description: 'Cidade do endereço',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: 'Cidade deve ser uma string' })
+  @MaxLength(100, { message: 'Cidade deve ter no máximo 100 caracteres' })
+  city?: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'Piauí',
+    description: 'Estado do endereço',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: 'Estado deve ser uma string' })
+  @MaxLength(100, { message: 'Estado deve ter no máximo 100 caracteres' })
+  state?: string;
+}
+
+/**
+ * DTO para criar endereço (CEP obrigatório)
+ */
+export class CreateAddressDto {
+  @ApiProperty({
+    type: String,
+    example: '64000-000',
+    description: 'CEP do endereço (obrigatório)',
+  })
+  @IsString({ message: 'CEP deve ser uma string' })
+  @MaxLength(10, { message: 'CEP deve ter no máximo 10 caracteres' })
+  zipCode: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'Rua das Flores',
+    description: 'Rua do endereço',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: 'Rua deve ser uma string' })
+  @MaxLength(100, { message: 'Rua deve ter no máximo 100 caracteres' })
+  street?: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'Centro',
+    description: 'Bairro do endereço',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: 'Bairro deve ser uma string' })
+  @MaxLength(100, { message: 'Bairro deve ter no máximo 100 caracteres' })
+  neighborhood?: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'Teresina',
+    description: 'Cidade do endereço',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: 'Cidade deve ser uma string' })
+  @MaxLength(100, { message: 'Cidade deve ter no máximo 100 caracteres' })
+  city?: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'Piauí',
+    description: 'Estado do endereço',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: 'Estado deve ser uma string' })
+  @MaxLength(100, { message: 'Estado deve ter no máximo 100 caracteres' })
+  state?: string;
+}
+
+/**
+ * DTO para atualizar endereço (todos os campos opcionais)
+ */
+export class UpdateAddressDirectDto {
+  @ApiProperty({
+    type: String,
+    example: '64000-000',
+    description: 'CEP do endereço',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: 'CEP deve ser uma string' })
+  @MaxLength(10, { message: 'CEP deve ter no máximo 10 caracteres' })
+  zipCode?: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'Rua das Flores',
     description: 'Rua do endereço',
     required: false,
   })

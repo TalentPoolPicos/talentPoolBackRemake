@@ -3,6 +3,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { StorageModule } from '../storage/storage.module';
 import { SearchModule } from '../search/search.module';
 import { JobsModule } from '../jobs/jobs.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { UsersService } from './users.service';
 import { UserImageService } from './user-image.service';
 import { UsersController } from './users.controller';
@@ -16,6 +17,7 @@ import { JobsService } from '../jobs/jobs.service';
     StorageModule,
     forwardRef(() => SearchModule),
     forwardRef(() => JobsModule),
+    NotificationsModule,
   ],
   controllers: [UsersController, MeController],
   providers: [UsersService, UserImageService, LikesService, JobsService],

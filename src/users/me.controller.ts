@@ -30,6 +30,7 @@ import {
   ApiCreatedResponse,
   ApiBody,
   ApiParam,
+  ApiQuery,
   ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
@@ -40,8 +41,9 @@ import {
   UpdateStudentProfileDto,
   UpdateEnterpriseProfileDto,
   UpdateSocialMediaDto,
-  UpdateTagsDto,
-  UpdateAddressDto,
+  AddTagDto,
+  CreateAddressDto,
+  UpdateAddressDirectDto,
 } from './dtos/update-profile.dto';
 import {
   UserProfileResponseDto,
@@ -82,6 +84,7 @@ import {
   UploadCurriculumResponseDto,
   UploadHistoryResponseDto,
 } from './dtos/upload-image.dto';
+import { NotificationManagerService } from '../notifications/notification-manager.service';
 
 @ApiTags('Me')
 @ApiBearerAuth()
@@ -94,6 +97,7 @@ export class MeController {
     private readonly userImageService: UserImageService,
     private readonly likesService: LikesService,
     private readonly jobsService: JobsService,
+    private readonly notificationManager: NotificationManagerService,
   ) {}
 
   @ApiOperation({
@@ -249,11 +253,11 @@ export class MeController {
   }
 
   @ApiOperation({
-    summary: 'Atualizar tags',
-    description: 'Atualiza a lista de tags/habilidades do usuário',
+    summary: 'Adicionar tag',
+    description: 'Adiciona uma nova tag/habilidade ao perfil do usuário',
   })
   @ApiOkResponse({
-    description: 'Tags atualizadas com sucesso',
+    description: 'Tag adicionada com sucesso',
     type: UserProfileResponseDto,
   })
   @ApiNotFoundResponse({
@@ -263,12 +267,12 @@ export class MeController {
     description: 'Dados de entrada inválidos',
   })
   @HttpCode(HttpStatus.OK)
-  @Put('tags')
-  updateTags(
+  @Post('tags')
+  addTag(
     @Request() req: CustomRequest,
-    @Body() updateData: UpdateTagsDto,
+    @Body() addTagData: AddTagDto,
   ): Promise<UserProfileResponseDto> {
-    return this.usersService.updateTags(req.user.sub, updateData);
+    return this.usersService.addTag(req.user.sub, addTagData);
   }
 
   @ApiOperation({
@@ -300,8 +304,31 @@ export class MeController {
   }
 
   @ApiOperation({
+    summary: 'Criar endereço',
+    description: 'Cria um novo endereço para o usuário (CEP obrigatório)',
+  })
+  @ApiOkResponse({
+    description: 'Endereço criado com sucesso',
+    type: UserProfileResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Usuário não encontrado',
+  })
+  @ApiBadRequestResponse({
+    description: 'Dados de entrada inválidos ou CEP não fornecido',
+  })
+  @HttpCode(HttpStatus.CREATED)
+  @Post('address')
+  createAddress(
+    @Request() req: CustomRequest,
+    @Body() createData: CreateAddressDto,
+  ): Promise<UserProfileResponseDto> {
+    return this.usersService.createAddress(req.user.sub, createData);
+  }
+
+  @ApiOperation({
     summary: 'Atualizar endereço',
-    description: 'Atualiza ou cria o endereço do usuário',
+    description: 'Atualiza o endereço do usuário (todos os campos opcionais)',
   })
   @ApiOkResponse({
     description: 'Endereço atualizado com sucesso',
@@ -315,11 +342,11 @@ export class MeController {
   })
   @HttpCode(HttpStatus.OK)
   @Put('address')
-  updateAddress(
+  updateAddressDirect(
     @Request() req: CustomRequest,
-    @Body() updateData: UpdateAddressDto,
+    @Body() updateData: UpdateAddressDirectDto,
   ): Promise<UserProfileResponseDto> {
-    return this.usersService.updateAddress(req.user.sub, updateData);
+    return this.usersService.updateAddressDirect(req.user.sub, updateData);
   }
 
   @ApiOperation({
@@ -1092,5 +1119,206 @@ export class MeController {
   ): Promise<{ message: string }> {
     await this.jobsService.removeStudentApplication(uuid, req.user.sub);
     return { message: 'Candidatura removida com sucesso' };
+  }
+
+  // ================================
+  // ROTAS DE NOTIFICAÇÕES
+  // ================================
+
+  @ApiOperation({
+    summary: 'Obter minhas notificações',
+    description: `
+Retorna as notificações do usuário autenticado com paginação e filtros.
+
+**💡 Dica:** Para receber notificações em tempo real, conecte-se também ao WebSocket:
+\`\`\`javascript
+const socket = io('http://localhost:3000/notifications', {
+  auth: { token: 'your-jwt-token' }
+});
+socket.on('notification', (notification) => {
+  console.log('Nova notificação:', notification);
+});
+\`\`\`
+
+**📡 Fluxo recomendado:**
+1. Use esta rota para carregar o histórico
+2. Conecte ao WebSocket para receber novas em tempo real
+3. Use PUT /notifications/:id/read para marcar como lidas
+    `,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Número da página (padrão: 1)',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Limite de itens por página (padrão: 20)',
+    example: 20,
+  })
+  @ApiQuery({
+    name: 'unreadOnly',
+    required: false,
+    description: 'Filtrar apenas notificações não lidas',
+    example: false,
+  })
+  @ApiOkResponse({
+    description: 'Notificações obtidas com sucesso',
+    schema: {
+      type: 'object',
+      properties: {
+        notifications: {
+          type: 'object',
+          properties: {
+            notifications: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'number', example: 1 },
+                  title: { type: 'string', example: 'Nova vaga disponível' },
+                  message: {
+                    type: 'string',
+                    example: 'Uma nova vaga foi publicada!',
+                  },
+                  type: {
+                    type: 'string',
+                    example: 'job_published',
+                  },
+                  isRead: { type: 'boolean', example: false },
+                  createdAt: {
+                    type: 'string',
+                    example: '2025-09-12T10:30:00Z',
+                  },
+                  readAt: {
+                    type: 'string',
+                    nullable: true,
+                    example: null,
+                  },
+                },
+              },
+            },
+          },
+        },
+        unreadCount: { type: 'number', example: 5 },
+        stats: {
+          type: 'object',
+          properties: {
+            total: { type: 'number', example: 25 },
+            unread: { type: 'number', example: 5 },
+            byType: {
+              type: 'object',
+              example: {
+                job_published: 10,
+                profile_liked: 8,
+                system_announcement: 7,
+              },
+            },
+          },
+        },
+        pagination: {
+          type: 'object',
+          properties: {
+            page: { type: 'number', example: 1 },
+            limit: { type: 'number', example: 20 },
+            total: { type: 'number', example: 25 },
+          },
+        },
+      },
+    },
+  })
+  @Get('notifications')
+  async getMyNotifications(
+    @Request() req: CustomRequest,
+    @Query('page') page = 1,
+    @Query('limit') limit = 20,
+    @Query('unreadOnly') unreadOnly = false,
+  ) {
+    const notifications = await this.notificationManager.getUserNotifications(
+      req.user.sub,
+      typeof unreadOnly === 'string' ? unreadOnly === 'true' : unreadOnly,
+    );
+
+    const unreadCount = await this.notificationManager.getUnreadCount(
+      req.user.sub,
+    );
+    const stats = await this.notificationManager.getUserNotificationStats(
+      req.user.sub,
+    );
+
+    return {
+      notifications,
+      unreadCount,
+      stats,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: notifications.notifications.length,
+      },
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Marcar notificação como lida',
+    description: 'Marca uma notificação específica como lida',
+  })
+  @ApiOkResponse({
+    description: 'Notificação marcada como lida com sucesso',
+  })
+  @Put('notifications/:id/read')
+  async markNotificationAsRead(
+    @Param('id') notificationId: string,
+    @Request() req: CustomRequest,
+  ): Promise<{ message: string; success: boolean }> {
+    const success = await this.notificationManager.markAsRead(
+      parseInt(notificationId),
+      req.user.sub,
+    );
+
+    return {
+      message: success
+        ? 'Notificação marcada como lida com sucesso'
+        : 'Notificação não encontrada ou já lida',
+      success,
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Marcar todas as notificações como lidas',
+    description: 'Marca todas as notificações do usuário como lidas',
+  })
+  @ApiOkResponse({
+    description: 'Notificações marcadas como lidas com sucesso',
+  })
+  @Put('notifications/read-all')
+  async markAllNotificationsAsRead(
+    @Request() req: CustomRequest,
+  ): Promise<{ message: string; count: number }> {
+    const count = await this.notificationManager.markAllAsRead(req.user.sub);
+
+    return {
+      message: `${count} notificações marcadas como lidas`,
+      count,
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Obter contagem de notificações não lidas',
+    description: 'Retorna apenas a contagem de notificações não lidas',
+  })
+  @ApiOkResponse({
+    description: 'Contagem obtida com sucesso',
+  })
+  @Get('notifications/unread-count')
+  async getUnreadNotificationsCount(
+    @Request() req: CustomRequest,
+  ): Promise<{ unreadCount: number }> {
+    const unreadCount = await this.notificationManager.getUnreadCount(
+      req.user.sub,
+    );
+
+    return { unreadCount };
   }
 }

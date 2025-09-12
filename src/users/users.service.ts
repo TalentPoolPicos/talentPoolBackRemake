@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   ConflictException,
   InternalServerErrorException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
@@ -20,7 +21,10 @@ import {
   UpdateEnterpriseProfileDto,
   UpdateSocialMediaDto,
   UpdateTagsDto,
+  AddTagDto,
   UpdateAddressDto,
+  CreateAddressDto,
+  UpdateAddressDirectDto,
 } from './dtos/update-profile.dto';
 import {
   UserProfileResponseDto,
@@ -415,6 +419,48 @@ export class UsersService {
   }
 
   /**
+   * Adiciona uma nova tag ao usuário
+   */
+  async addTag(
+    userId: number,
+    addTagData: AddTagDto,
+  ): Promise<UserProfileResponseDto> {
+    const user = await this.findUserById(userId);
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    // Verifica se a tag já existe para o usuário
+    const existingTag = await this.prisma.tag.findFirst({
+      where: {
+        userId,
+        label: addTagData.label,
+      },
+    });
+
+    if (existingTag) {
+      throw new BadRequestException('Tag já existe para este usuário');
+    }
+
+    // Adiciona a nova tag
+    await this.prisma.tag.create({
+      data: {
+        userId,
+        label: addTagData.label,
+      },
+    });
+
+    // Sincronizar com Meilisearch
+    try {
+      await this.searchService.syncUserAfterChange(userId);
+    } catch (error) {
+      this.logger.warn(`Failed to sync user ${userId} to search index:`, error);
+    }
+
+    return this.getMyProfile(userId);
+  }
+
+  /**
    * Atualiza tags do usuário
    */
   async updateTags(
@@ -502,7 +548,109 @@ export class UsersService {
   }
 
   /**
-   * Atualiza endereço do usuário
+   * Cria endereço do usuário (CEP obrigatório)
+   */
+  async createAddress(
+    userId: number,
+    createData: CreateAddressDto,
+  ): Promise<UserProfileResponseDto> {
+    const user = await this.findUserById(userId);
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    // Verifica se já existe um endereço
+    const existingAddress = await this.prisma.address.findUnique({
+      where: { userId },
+    });
+
+    if (existingAddress) {
+      throw new BadRequestException(
+        'Usuário já possui um endereço. Use PUT para atualizar.',
+      );
+    }
+
+    // Cria novo endereço
+    await this.prisma.address.create({
+      data: {
+        userId,
+        zipCode: createData.zipCode,
+        street: createData.street,
+        neighborhood: createData.neighborhood,
+        city: createData.city,
+        state: createData.state,
+      },
+    });
+
+    // Sincronizar com Meilisearch
+    try {
+      await this.searchService.syncUserAfterChange(userId);
+    } catch (error) {
+      this.logger.warn(`Failed to sync user ${userId} to search index:`, error);
+    }
+
+    return this.getMyProfile(userId);
+  }
+
+  /**
+   * Atualiza endereço do usuário (todos os campos opcionais)
+   */
+  async updateAddressDirect(
+    userId: number,
+    updateData: UpdateAddressDirectDto,
+  ): Promise<UserProfileResponseDto> {
+    const user = await this.findUserById(userId);
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    // Verifica se existe endereço
+    const existingAddress = await this.prisma.address.findUnique({
+      where: { userId },
+    });
+
+    if (!existingAddress) {
+      throw new NotFoundException(
+        'Usuário não possui endereço. Use POST para criar.',
+      );
+    }
+
+    // Monta o objeto de atualização apenas com campos fornecidos e não vazios
+    const updateFields: any = {};
+    if (updateData.zipCode !== undefined && updateData.zipCode !== '')
+      updateFields.zipCode = updateData.zipCode;
+    if (updateData.street !== undefined && updateData.street !== '')
+      updateFields.street = updateData.street;
+    if (updateData.neighborhood !== undefined && updateData.neighborhood !== '')
+      updateFields.neighborhood = updateData.neighborhood;
+    if (updateData.city !== undefined && updateData.city !== '')
+      updateFields.city = updateData.city;
+    if (updateData.state !== undefined && updateData.state !== '')
+      updateFields.state = updateData.state;
+
+    // Só atualiza se houver campos para atualizar
+    if (Object.keys(updateFields).length > 0) {
+      await this.prisma.address.update({
+        where: { userId },
+        data: updateFields,
+      });
+
+      // Sincronizar com Meilisearch
+      try {
+        await this.searchService.syncUserAfterChange(userId);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to sync user ${userId} to search index:`,
+          error,
+        );
+      }
+    }
+
+    return this.getMyProfile(userId);
+  }
+
+  /**
+   * Atualiza endereço do usuário (método legado)
    */
   async updateAddress(
     userId: number,
