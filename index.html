@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentPool API - Interface de Testes WebSocket</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: 0; min-height: 100vh; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    .header { background: #fff; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); padding: 32px; margin-bottom: 32px; text-align: center; }
+    .header h1 { color: #5a67d8; margin: 0 0 8px 0; font-size: 2.5rem; }
+    .header p { color: #64748b; margin: 0; font-size: 1.1rem; }
+    .auth { background: #fff; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); padding: 32px; max-width: 400px; margin: 0 auto; }
+    .main { background: #fff; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); padding: 32px; }
+    .main-tabs { display: flex; gap: 4px; margin-bottom: 32px; background: #f8fafc; padding: 6px; border-radius: 12px; }
+    .main-tab { padding: 12px 24px; border-radius: 8px; background: transparent; border: none; cursor: pointer; font-weight: 600; transition: all 0.3s; color: #64748b; }
+    .main-tab.active { background: #fff; color: #5a67d8; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .section { background: #f8fafc; border-radius: 16px; padding: 32px; margin-bottom: 32px; border-left: 4px solid #5a67d8; }
+    .section h2 { color: #5a67d8; margin: 0 0 28px 0; display: flex; align-items: center; gap: 12px; font-size: 1.4rem; }
+    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 28px; }
+    .form-group { margin-bottom: 24px; }
+    .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #374151; font-size: 15px; }
+    .form-group input, .form-group textarea, .form-group select { 
+      width: 100%; 
+      padding: 16px 20px; 
+      border: 2px solid #e2e8f0; 
+      border-radius: 12px; 
+      font-size: 15px; 
+      transition: all 0.3s ease; 
+      background-color: #f8fafc;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { 
+      outline: none; 
+      border-color: #5a67d8; 
+      background-color: #ffffff;
+      box-shadow: 0 0 0 4px rgba(90, 103, 216, 0.1);
+      transform: translateY(-1px);
+    }
+    .form-group input:hover, .form-group textarea:hover, .form-group select:hover {
+      border-color: #cbd5e0;
+      background-color: #ffffff;
+    }
+    .form-group small {
+      display: block;
+      margin-top: 6px;
+      font-size: 13px;
+      color: #64748b;
+    }
+    .form-group.full-width { flex: 1 1 100%; }
+    .actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
+    .btn-success { background: linear-gradient(90deg,#38a169,#2f855a); }
+    .btn-secondary { background: linear-gradient(90deg,#718096,#4a5568); }
+    .websocket-status { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; padding: 12px; background: #f8fafc; border-radius: 8px; }
+
+    /* Notification Styles */
+    .notification-item {
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: white;
+    }
+
+    .notification-item:hover {
+      background-color: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .notification-item.unread {
+      border-left: 4px solid #3b82f6;
+      background-color: #eff6ff;
+    }
+
+    .notification-item.read {
+      opacity: 0.7;
+    }
+
+    .notification-badge {
+      background: #ef4444;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    /* Toast Notifications */
+    .notification-toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      max-width: 400px;
+      animation: slideInRight 0.3s ease;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .realtime-notifications {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 15px;
+      background: #fafafa;
+      min-height: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .realtime-notifications:empty::before {
+      content: "Notificações em tempo real aparecerão aqui...";
+      color: #64748b;
+      font-style: italic;
+      display: block;
+      text-align: center;
+      padding: 50px 20px;
+    }
+    .notification-badge { background: #e53e3e; color: white; border-radius: 12px; padding: 4px 8px; font-size: 12px; font-weight: bold; }
+    .realtime-notifications { max-height: 300px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; background: #fafafa; }
+    .notification-item { background: white; border-radius: 6px; padding: 12px; margin-bottom: 8px; border-left: 4px solid #667eea; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .notification-item.unread { border-left-color: #e53e3e; background: #fef5f5; }
+    .notification-item.success { border-left-color: #38a169; background: #f0fff4; }
+    .notification-item.warning { border-left-color: #ed8936; background: #fffaf0; }
+    .notification-toast { position: fixed; top: 20px; right: 20px; background: white; border-radius: 8px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-left: 4px solid #667eea; z-index: 1000; animation: slideIn 0.3s ease; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .btn { background: linear-gradient(90deg,#667eea,#764ba2); color: #fff; border: none; border-radius: 10px; padding: 14px 24px; font-weight: 600; cursor: pointer; margin-right: 16px; margin-bottom: 16px; transition: all 0.3s ease; font-size: 14px; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+    .btn-danger { background: linear-gradient(90deg,#e53e3e,#c53030); }
+    .btn-success { background: linear-gradient(90deg,#38a169,#2f855a); }
+    .btn-secondary { background: linear-gradient(90deg,#6b7280,#4b5563); }
+    .response-area { background: #1a202c; color: #e2e8f0; border-radius: 8px; padding: 16px; margin-top: 16px; font-size: 13px; max-height: 300px; overflow: auto; font-family: 'Courier New', monospace; }
+    .hidden { display: none; }
+    .sub-tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
+    .sub-tab { padding: 12px 20px; border-radius: 8px 8px 0 0; background: transparent; border: none; cursor: pointer; font-weight: 600; color: #64748b; transition: all 0.3s; }
+    .sub-tab.active { background: #5a67d8; color: #fff; }
+    .sub-content { margin-top: 16px; }
+    .actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .status-indicator { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .status-online { background: #d4edda; color: #155724; }
+    .status-offline { background: #f8d7da; color: #721c24; }
+    @media (max-width: 800px) { 
+      .container { padding: 16px; } 
+      .main-tabs { flex-wrap: wrap; }
+      .form-row { grid-template-columns: 1fr; }
+      .actions-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>TalentPool - Perfil & Testes</h1>
+      <p>Faça login e teste todas as rotas do seu perfil!</p>
+    </div>
+    <div class="auth" id="authSection">
+      <h2>🔐 Fazer Login</h2>
+      <div class="form-group">
+        <label>Nome de Usuário</label>
+        <input type="text" id="loginUsername" placeholder="Seu nome de usuário">
+        <small style="color: #64748b;">Mínimo 3 caracteres</small>
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="loginPassword" placeholder="Sua senha forte">
+        <small style="color: #64748b;">8+ caracteres, maiúscula, minúscula, número e símbolo</small>
+      </div>
+      <button class="btn" onclick="login()">🔑 Entrar</button>
+      <div id="loginResponse" class="response-area"></div>
+    </div>
+    <div class="main hidden" id="mainSection">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2 style="margin: 0; color: #374151;">🎯 TalentPool Dashboard</h2>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <span id="tokenInfo" class="status-indicator status-online">Conectado</span>
+          <button class="btn btn-danger" onclick="logout()">🚪 Logout</button>
+        </div>
+      </div>
+
+      <!-- Abas Principais -->
+      <div class="main-tabs">
+        <button class="main-tab active" onclick="showMainTab('profile')">👤 Perfil</button>
+        <button id="academic-tab-button" class="main-tab" onclick="showMainTab('academic')" style="display: none;">🎓 Acadêmico</button>
+        <button id="professional-tab-button" class="main-tab" onclick="showMainTab('professional')" style="display: none;">💼 Profissional</button>
+        <button class="main-tab" onclick="showMainTab('media')">📁 Mídia & Uploads</button>
+        <button class="main-tab" onclick="showMainTab('social')">💖 Social & Likes</button>
+        <button class="main-tab" onclick="showMainTab('notifications')">🔔 Notificações</button>
+      </div>
+
+      <!-- CONTEÚDO DA ABA PERFIL -->
+      <div id="profile-tab" class="tab-content active">
+        <div class="section">
+          <h2>👤 Informações Básicas</h2>
+          <div class="actions-grid">
+            <button class="btn" onclick="getMyProfile()">📄 Buscar Perfil</button>
+            <button class="btn" onclick="updateProfile()">💾 Atualizar</button>
+            <button class="btn btn-danger" onclick="deleteProfile()">🗑️ Deletar Perfil</button>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nome Completo</label>
+              <input id="profileName" placeholder="Seu nome completo">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input id="profileEmail" type="email" placeholder="seu@email.com" readonly>
+              <small>Email não pode ser alterado</small>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Data de Nascimento</label>
+              <input id="profileBirthDate" type="date" placeholder="1999-03-15">
+            </div>
+            <div class="form-group">
+              <label>Biografia</label>
+              <textarea id="profileBio" rows="3" placeholder="Conte um pouco sobre você..."></textarea>
+            </div>
+          </div>
+          <div id="profileResponse" class="response-area"></div>
+        </div>
+
+        <div class="section">
+          <h2>🌐 Redes Sociais</h2>
+          <div class="actions-grid">
+            <button class="btn" onclick="addSocialMedia()">➕ Adicionar Rede</button>
+            <button class="btn btn-danger" onclick="removeSocialMedia()">🗑️ Remover Rede</button>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Plataforma</label>
+              <select id="socialPlatform">
+                <option value="">Selecione uma plataforma</option>
+                <option value="x">X (Twitter)</option>
+                <option value="facebook">Facebook</option>
+                <option value="instagram">Instagram</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="youtube">YouTube</option>
+                <option value="tiktok">TikTok</option>
+                <option value="github">GitHub</option>
+                <option value="gitlab">GitLab</option>
+                <option value="reddit">Reddit</option>
+                <option value="telegram">Telegram</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="discord">Discord</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>URL da Rede Social</label>
+              <input id="socialUrl" placeholder="https://linkedin.com/in/seu-perfil">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>UUID para Remover</label>
+            <input id="socialUuidToDelete" placeholder="UUID da rede social para deletar">
+          </div>
+          <div id="socialResponse" class="response-area"></div>
+        </div>
+
+        <div class="section">
+          <h2>🏷️ Tags & Habilidades</h2>
+          <p style="margin-bottom: 20px; color: #64748b; font-style: italic;">
+            💡 Adicione ou remova tags individualmente. Cada tag representa uma habilidade ou tecnologia.
+          </p>
+          <div class="actions-grid">
+            <button class="btn" onclick="addTag()">➕ Adicionar Tag</button>
+            <button class="btn btn-danger" onclick="removeTag()">🗑️ Remover Tag</button>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nova Habilidade/Tag</label>
+              <input id="newTag" placeholder="JavaScript, React, Python...">
+            </div>
+            <div class="form-group">
+              <label>UUID para Remover</label>
+              <input id="tagUuidToDelete" placeholder="UUID da tag para deletar">
+            </div>
+          </div>
+          <div id="tagsResponse" class="response-area"></div>
+        </div>
+
+        <div class="section">
+          <h2>📍 Localização</h2>
+          <p style="margin-bottom: 20px; color: #64748b; font-style: italic;">
+            💡 <strong>Criar:</strong> Use quando não tem endereço (CEP obrigatório). <strong>Atualizar:</strong> Preencha apenas os campos que deseja modificar.
+          </p>
+          <div class="actions-grid">
+            <button class="btn" onclick="createAddress()">➕ Criar Endereço</button>
+            <button class="btn btn-secondary" onclick="updateAddress()">📝 Atualizar Endereço</button>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>CEP</label>
+              <input id="addressCep" placeholder="00000-000">
+              <small>Obrigatório para criar novo endereço</small>
+            </div>
+            <div class="form-group">
+              <label>Rua</label>
+              <input id="addressStreet" placeholder="Nome da rua">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Bairro</label>
+              <input id="addressNeighborhood" placeholder="Nome do bairro">
+            </div>
+            <div class="form-group">
+              <label>Cidade</label>
+              <input id="addressCity" placeholder="São Paulo">
+            </div>
+            <div class="form-group">
+              <label>Estado</label>
+              <input id="addressState" placeholder="SP">
+            </div>
+          </div>
+          <div id="addressResponse" class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- CONTEÚDO DA ABA ACADÊMICO -->
+      <div id="academic-tab" class="tab-content">
+        <div class="section">
+          <h2>🎓 Dados de Estudante</h2>
+          <button class="btn" onclick="updateStudentProfile()">💾 Atualizar Dados Acadêmicos</button>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Curso</label>
+              <input id="studentCourse" placeholder="Ciência da Computação, Engenharia..." maxlength="100">
+            </div>
+            <div class="form-group">
+              <label>Número de Matrícula</label>
+              <input id="studentRegistrationNumber" placeholder="20201234567" maxlength="11">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label>Currículo Lattes</label>
+              <input id="studentLattes" placeholder="http://lattes.cnpq.br/1234567890123456" maxlength="255">
+            </div>
+          </div>
+          <div id="studentResponse" class="response-area"></div>
+        </div>
+
+        <div class="section">
+          <h2>� Documentos Acadêmicos</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+            <div style="background: #fff; padding: 20px; border-radius: 12px; border: 2px dashed #e2e8f0;">
+              <h3>📄 Currículo (PDF)</h3>
+              <input type="file" id="curriculumFile" accept=".pdf" style="margin-bottom: 12px;">
+              <button class="btn" onclick="uploadCurriculum()">📄 Upload Currículo</button>
+            </div>
+            <div style="background: #fff; padding: 20px; border-radius: 12px; border: 2px dashed #e2e8f0;">
+              <h3>📚 Histórico Escolar</h3>
+              <input type="file" id="historyFile" accept=".pdf" style="margin-bottom: 12px;">
+              <button class="btn" onclick="uploadHistory()">📚 Upload Histórico</button>
+            </div>
+          </div>
+          <div id="academicUploadsResponse" class="response-area"></div>
+        </div>
+
+        <div class="section">
+          <h2>�📝 Candidaturas a Vagas</h2>
+          <div class="sub-tabs">
+            <button class="sub-tab active" onclick="showSubTab('apply')">➕ Candidatar-se</button>
+            <button class="sub-tab" onclick="showSubTab('my-applications')">📋 Minhas Candidaturas</button>
+            <button class="sub-tab" onclick="showSubTab('cancel')">❌ Cancelar</button>
+          </div>
+          
+          <div id="apply-subtab" class="sub-content">
+            <h3>➕ Candidatar-se a uma Vaga</h3>
+            <div class="form-group">
+              <label>UUID da Vaga</label>
+              <input id="applyJobUuid" placeholder="UUID da vaga desejada">
+              <small>Digite o UUID completo da vaga para se candidatar</small>
+            </div>
+            <div class="form-group">
+              <label>Carta de Apresentação (Opcional)</label>
+              <textarea id="applyCoverLetter" rows="4" placeholder="Escreva uma carta de apresentação personalizada..." maxlength="2000" oninput="updateCharCount()"></textarea>
+              <small id="charCount" style="color: #64748b;">0/2000 caracteres</small>
+            </div>
+            <button class="btn" onclick="applyToJob()">📝 Enviar Candidatura</button>
+          </div>
+
+          <div id="my-applications-subtab" class="sub-content hidden">
+            <h3>� Minhas Candidaturas</h3>
+            <button class="btn" onclick="getMyApplications()">🔄 Carregar Candidaturas</button>
+          </div>
+
+          <div id="cancel-subtab" class="sub-content hidden">
+            <h3>❌ Cancelar Candidatura</h3>
+            <button class="btn btn-danger" onclick="cancelApplication()">🗑️ Cancelar</button>
+            <div class="form-group">
+              <label>UUID da Candidatura</label>
+              <input id="cancelApplicationUuid" placeholder="UUID da candidatura a cancelar">
+            </div>
+          </div>
+          
+          <div id="applicationsResponse" class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- CONTEÚDO DA ABA PROFISSIONAL -->
+      <div id="professional-tab" class="tab-content">
+        <div class="section">
+          <h2>🏢 Dados da Empresa</h2>
+          <button class="btn" onclick="updateEnterpriseProfile()">💾 Atualizar Dados da Empresa</button>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nome Fantasia</label>
+              <input id="enterpriseName" placeholder="Tech Solutions LTDA" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label>CNPJ</label>
+              <input id="enterpriseCnpj" placeholder="00.000.000/0000-00" maxlength="18">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Razão Social</label>
+            <textarea id="enterpriseDescription" rows="3" placeholder="TechPicos Tecnologia e Inovação Ltda." maxlength="100"></textarea>
+          </div>
+          <div id="enterpriseResponse" class="response-area"></div>
+        </div>
+
+        <div class="section">
+          <h2>💼 Gestão de Vagas</h2>
+          <div class="sub-tabs">
+            <button class="sub-tab active" onclick="showSubTab('create-job')">➕ Criar</button>
+            <button class="sub-tab" onclick="showSubTab('list-jobs')">📋 Listar</button>
+            <button class="sub-tab" onclick="showSubTab('manage-jobs')">⚙️ Gerenciar</button>
+            <button class="sub-tab" onclick="showSubTab('job-applications')">👥 Candidaturas</button>
+          </div>
+
+          <div id="create-job-subtab" class="sub-content">
+            <h3>➕ Criar Nova Vaga</h3>
+            <button class="btn" onclick="createJob()">🚀 Publicar Vaga</button>
+            <div class="form-group">
+              <label>Título da Vaga</label>
+              <input id="jobTitle" placeholder="Desenvolvedor Frontend Senior" maxlength="200">
+            </div>
+            <div class="form-group">
+              <label>Descrição Detalhada</label>
+              <textarea id="jobDescription" rows="6" placeholder="Descreva a vaga, requisitos, benefícios..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Data de Expiração (Opcional)</label>
+              <input type="datetime-local" id="jobExpiresAt" placeholder="Data limite para candidaturas">
+            </div>
+          </div>
+
+          <div id="list-jobs-subtab" class="sub-content hidden">
+            <h3>📋 Minhas Vagas Publicadas</h3>
+            <button class="btn" onclick="getMyJobs()">🔄 Carregar Vagas</button>
+          </div>
+
+          <div id="manage-jobs-subtab" class="sub-content hidden">
+            <h3>⚙️ Gerenciar Vaga Específica</h3>
+            <div class="form-group">
+              <label>UUID da Vaga</label>
+              <input id="jobUuid" placeholder="UUID da vaga para gerenciar">
+            </div>
+            
+            <div class="form-group">
+              <label>Novo Título da Vaga</label>
+              <input id="editJobTitle" placeholder="Novo título da vaga" maxlength="200">
+            </div>
+            <div class="form-group">
+              <label>Nova Descrição</label>
+              <textarea id="editJobDescription" rows="6" placeholder="Nova descrição da vaga..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Nova Data de Expiração</label>
+              <input type="datetime-local" id="editJobExpiresAt">
+            </div>
+            
+            <div class="actions-grid">
+              <button class="btn" onclick="updateJobContent()">📝 Atualizar Conteúdo</button>
+              <button class="btn btn-success" onclick="publishJob()">🚀 Publicar</button>
+              <button class="btn btn-secondary" onclick="pauseJob()">⏸️ Pausar</button>
+              <button class="btn btn-danger" onclick="closeJob()">🔒 Fechar</button>
+            </div>
+          </div>
+
+          <div id="job-applications-subtab" class="sub-content hidden">
+            <h3>👥 Candidaturas por Vaga</h3>
+            <div class="form-group">
+              <label>UUID da Vaga</label>
+              <input id="applicationsJobUuid" placeholder="UUID da vaga para ver candidaturas">
+            </div>
+            <div class="actions-grid">
+              <button class="btn" onclick="getJobApplications()">👥 Ver Candidaturas</button>
+              <button class="btn" onclick="getFilteredApplications()">🔍 Filtrar por Status</button>
+            </div>
+            <div class="form-group">
+              <label>Filtro por Status (para segunda opção)</label>
+              <select id="applicationStatusFilter">
+                <option value="">Todos</option>
+                <option value="pending">Pendente</option>
+                <option value="reviewing">Em Análise</option>
+                <option value="approved">Aprovado</option>
+                <option value="rejected">Rejeitado</option>
+                <option value="withdrawn">Retirado</option>
+              </select>
+            </div>
+            <div id="applicationsJobResponse" class="response-area"></div>
+          </div>
+
+          <div id="jobsResponse" class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- CONTEÚDO DA ABA MÍDIA & UPLOADS -->
+      <div id="media-tab" class="tab-content">
+        <div class="section">
+          <h2>� Upload de Arquivos</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+            <div style="background: #fff; padding: 20px; border-radius: 12px; border: 2px dashed #e2e8f0;">
+              <h3>📸 Avatar do Perfil</h3>
+              <input type="file" id="avatarFile" accept="image/*" style="margin-bottom: 12px;">
+              <button class="btn" onclick="uploadAvatar()">📸 Upload Avatar</button>
+            </div>
+            <div style="background: #fff; padding: 20px; border-radius: 12px; border: 2px dashed #e2e8f0;">
+              <h3>🖼️ Banner do Perfil</h3>
+              <input type="file" id="bannerFile" accept="image/*" style="margin-bottom: 12px;">
+              <button class="btn" onclick="uploadBanner()">🖼️ Upload Banner</button>
+            </div>
+          </div>
+          <div id="uploadsResponse" class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- CONTEÚDO DA ABA SOCIAL & LIKES -->
+      <div id="social-tab" class="tab-content">
+        <div class="section">
+          <h2>💖 Sistema de Likes</h2>
+          <div class="actions-grid">
+            <button class="btn" onclick="checkIfLiked()">🔍 Verificar Like</button>
+            <button class="btn btn-success" onclick="giveLike()">💖 Dar Like</button>
+            <button class="btn btn-danger" onclick="removeLike()">💔 Remover Like</button>
+          </div>
+          <div class="form-group">
+            <label>UUID do Usuário</label>
+            <input id="likeUserUuid" placeholder="UUID do usuário para interagir">
+          </div>
+          <div id="likesResponse" class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- CONTEÚDO DA ABA NOTIFICAÇÕES -->
+      <div id="notifications-tab" class="tab-content">
+        <div class="section">
+          <h2>🔔 Central de Notificações</h2>
+          
+          <!-- Status de Conexão WebSocket -->
+          <div class="websocket-status">
+            <span id="wsStatus" class="status-indicator status-offline">WebSocket: Desconectado</span>
+            <span id="unreadBadge" class="notification-badge" style="display: none;">0</span>
+          </div>
+          
+          <div class="actions-grid">
+            <button class="btn" onclick="connectWebSocket()">� Conectar WebSocket</button>
+            <button class="btn" onclick="getMyNotifications()">� Carregar Notificações</button>
+            <button class="btn" onclick="getUnreadCount()">🔢 Contar Não Lidas</button>
+            <button class="btn btn-success" onclick="markAllAsRead()">✅ Marcar Todas Lidas</button>
+          </div>
+          
+          <div class="form-group">
+            <label>ID da Notificação (para marcar como lida)</label>
+            <div style="display: flex; gap: 12px;">
+              <input id="notificationId" type="number" placeholder="123">
+              <button class="btn" onclick="markNotificationAsRead()">✅ Marcar Como Lida</button>
+            </div>
+          </div>
+          
+          <!-- Container para notificações em tempo real -->
+          <div id="liveNotifications" style="margin: 20px 0;">
+            <h3>📢 Notificações em Tempo Real</h3>
+            <div id="realtimeContainer" class="realtime-notifications"></div>
+          </div>
+
+          <!-- Container para notificações persistentes -->
+          <div id="persistentNotifications" style="margin: 20px 0;">
+            <h3>📋 Histórico de Notificações</h3>
+            <div id="notificationsContainer" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #fafafa;">
+              <p style="color: #666; text-align: center; margin: 0;">Clique em "Carregar Notificações" para ver o histórico</p>
+            </div>
+          </div>
+          
+          <div id="notificationsResponse" class="response-area"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Controle de role do usuário
+    let userRole = localStorage.getItem('userRole') || null;
+    let socket = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 3;
+    let isSocketConnected = false;
+
+    function setUserRole(role) {
+      userRole = role;
+      localStorage.setItem('userRole', role);
+      updateTabsVisibility();
+    }
+
+    function updateTabsVisibility() {
+      const academicTab = document.getElementById('academic-tab-button');
+      const professionalTab = document.getElementById('professional-tab-button');
+      
+      if (userRole === 'student') {
+        academicTab.style.display = 'block';
+        professionalTab.style.display = 'none';
+      } else if (userRole === 'enterprise') {
+        academicTab.style.display = 'none';
+        professionalTab.style.display = 'block';
+      } else {
+        academicTab.style.display = 'none';
+        professionalTab.style.display = 'none';
+      }
+    }
+
+    // Função para obter perfil e role
+    function fetchUserProfile() {
+      if (!token) return;
+      
+      fetch(API_BASE + '/me', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.role) {
+          setUserRole(data.role);
+        }
+      })
+      .catch(err => console.log('Erro ao buscar perfil:', err));
+    }
+
+    // === WEBSOCKET FUNCTIONS ===
+    function disconnectWebSocket() {
+      if (socket && socket.connected) {
+        socket.disconnect();
+        console.log('WebSocket disconnected');
+      }
+      socket = null;
+      isSocketConnected = false;
+      updateWSStatus('disconnected', 'WebSocket: Desconectado');
+    }
+
+    function connectWebSocket() {
+      if (!token) {
+        updateWSStatus('error', 'Token necessário para conectar');
+        return;
+      }
+
+      if (socket && socket.connected) {
+        updateWSStatus('connected', 'Já conectado');
+        return;
+      }
+
+      updateWSStatus('connecting', 'Conectando...');
+
+      socket = io(`${API_BASE}/notifications`, {
+        auth: {
+          token: token
+        },
+        transports: ['websocket', 'polling'],
+        forceNew: true
+      });
+
+      socket.on('connect', () => {
+        reconnectAttempts = 0;
+        updateWSStatus('connected', 'WebSocket: Conectado');
+        console.log('WebSocket conectado!');
+      });
+
+      socket.on('disconnect', () => {
+        updateWSStatus('disconnected', 'WebSocket: Desconectado');
+        console.log('WebSocket desconectado!');
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('Erro de conexão:', error);
+        updateWSStatus('error', 'Erro de conexão');
+        
+        if (reconnectAttempts < maxReconnectAttempts) {
+          reconnectAttempts++;
+          setTimeout(() => {
+            console.log(`Tentativa de reconexão ${reconnectAttempts}/${maxReconnectAttempts}`);
+            socket.connect();
+          }, 3000 * reconnectAttempts);
+        }
+      });
+
+      socket.on('connection-status', (data) => {
+        console.log('Status de conexão:', data);
+      });
+
+      socket.on('new-notification', (notification) => {
+        console.log('Nova notificação recebida:', notification);
+        displayRealtimeNotification(notification);
+        showNotificationToast(notification);
+      });
+
+      socket.on('unread-count', (data) => {
+        console.log('Contagem não lidas:', data);
+        updateUnreadBadge(data.unreadCount);
+      });
+
+      socket.on('broadcast-notification', (notification) => {
+        console.log('Notificação broadcast:', notification);
+        displayRealtimeNotification(notification, 'broadcast');
+      });
+    }
+
+    function updateWSStatus(status, message) {
+      const statusElement = document.getElementById('wsStatus');
+      statusElement.textContent = message;
+      
+      statusElement.className = 'status-indicator';
+      if (status === 'connected') {
+        statusElement.classList.add('status-online');
+      } else if (status === 'connecting') {
+        statusElement.classList.add('status-away');
+      } else {
+        statusElement.classList.add('status-offline');
+      }
+    }
+
+    function updateUnreadBadge(count) {
+      const badge = document.getElementById('unreadBadge');
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    function displayRealtimeNotification(notification, type = 'normal') {
+      const container = document.getElementById('realtimeContainer');
+      
+      const item = document.createElement('div');
+      item.className = 'notification-item';
+      
+      if (type === 'broadcast') {
+        item.classList.add('warning');
+      } else if (!notification.isRead) {
+        item.classList.add('unread');
+      }
+
+      const timestamp = new Date().toLocaleTimeString();
+      
+      item.innerHTML = `
+        <div style="display: flex; justify-content: between; align-items: start;">
+          <div style="flex: 1;">
+            <h4 style="margin: 0 0 4px 0; color: #2d3748;">${notification.title || 'Nova Notificação'}</h4>
+            <p style="margin: 0 0 8px 0; color: #4a5568;">${notification.message || notification.description || 'Sem descrição'}</p>
+            <small style="color: #718096;">📅 ${timestamp} ${type === 'broadcast' ? '📢 Broadcast' : ''}</small>
+          </div>
+          <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 18px;">×</button>
+        </div>
+      `;
+      
+      container.insertBefore(item, container.firstChild);
+      
+      // Limitar a 10 notificações na tela
+      while (container.children.length > 10) {
+        container.removeChild(container.lastChild);
+      }
+    }
+
+    function showNotificationToast(notification) {
+      const toast = document.createElement('div');
+      toast.className = 'notification-toast';
+      
+      toast.innerHTML = `
+        <div>
+          <strong>${notification.title || 'Nova Notificação'}</strong>
+          <p style="margin: 4px 0 0 0;">${notification.message || 'Você tem uma nova notificação'}</p>
+        </div>
+        <button onclick="this.parentElement.remove()" style="background: none; border: none; color: #a0aec0; cursor: pointer; margin-left: 12px; font-size: 18px;">×</button>
+      `;
+      
+      document.body.appendChild(toast);
+      
+      // Auto-remover após 5 segundos
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.remove();
+        }
+      }, 5000);
+    }
+
+    // Buscar notificações do usuário
+    async function fetchUserNotifications() {
+      try {
+        const response = await fetch('http://localhost:3000/notifications/user', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const notifications = await response.json();
+          displayNotifications(notifications);
+        } else {
+          throw new Error('Erro ao buscar notificações');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar notificações:', error);
+        showError('Erro ao carregar notificações');
+      }
+    }
+
+    // Marcar notificação como lida
+    async function markNotificationAsReadById(notificationId) {
+      try {
+        const response = await fetch(`http://localhost:3000/notifications/${notificationId}/read`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          // Atualizar a notificação na interface
+          const notificationElement = document.querySelector(`[data-notification-id="${notificationId}"]`);
+          if (notificationElement) {
+            notificationElement.classList.remove('unread');
+            notificationElement.classList.add('read');
+          }
+          
+          // Atualizar contador de não lidas
+          fetchUnreadCount();
+        } else {
+          throw new Error('Erro ao marcar notificação como lida');
+        }
+      } catch (error) {
+        console.error('Erro ao marcar notificação como lida:', error);
+      }
+    }
+
+    // Buscar contador de notificações não lidas
+    async function fetchUnreadCount() {
+      try {
+        const response = await fetch('http://localhost:3000/notifications/unread-count', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          updateUnreadBadge(data.count);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar contador de não lidas:', error);
+      }
+    }
+
+    // Exibir notificações na interface
+    function displayNotifications(notifications) {
+      const container = document.getElementById('notificationsContainer');
+      container.innerHTML = '';
+
+      if (notifications.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhuma notificação encontrada</p>';
+        return;
+      }
+
+      notifications.forEach(notification => {
+        const notificationElement = createNotificationElement(notification);
+        container.appendChild(notificationElement);
+      });
+    }
+
+    // Criar elemento de notificação
+    function createNotificationElement(notification) {
+      const div = document.createElement('div');
+      div.className = `notification-item p-4 border rounded-lg mb-2 cursor-pointer hover:bg-gray-50 ${notification.isRead ? 'read' : 'unread'}`;
+      div.setAttribute('data-notification-id', notification.id);
+      
+      div.innerHTML = `
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <h4 class="font-medium text-gray-900">${notification.title}</h4>
+            <p class="text-gray-600 text-sm mt-1">${notification.message}</p>
+            <p class="text-gray-400 text-xs mt-2">${formatDate(notification.createdAt)}</p>
+          </div>
+          ${!notification.isRead ? '<div class="w-3 h-3 bg-blue-500 rounded-full ml-2"></div>' : ''}
+        </div>
+      `;
+
+      // Marcar como lida ao clicar
+      div.addEventListener('click', () => {
+        if (!notification.isRead) {
+          markNotificationAsReadById(notification.id);
+        }
+      });
+
+      return div;
+    }
+
+    // Função para formatar data
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleString('pt-BR');
+    }
+
+    let token = localStorage.getItem('token') || null;
+    const API_BASE = 'http://localhost:3000';
+    function showResponse(id, data) {
+      document.getElementById(id).innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+    }
+    function setToken(t) {
+      token = t;
+      localStorage.setItem('token', t);
+      document.getElementById('tokenInfo').textContent = t ? 'Conectado' : 'Desconectado';
+      document.getElementById('tokenInfo').className = t ? 'status-indicator status-online' : 'status-indicator status-offline';
+    }
+    
+    function showMainTab(tabName) {
+      // Esconder todas as abas
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.main-tab').forEach(tab => tab.classList.remove('active'));
+      
+      // Mostrar aba selecionada
+      document.getElementById(tabName + '-tab').classList.add('active');
+      event.target.classList.add('active');
+    }
+    
+    function showSubTab(subTabName) {
+      // Esconder todas as sub-abas
+      document.querySelectorAll('.sub-content').forEach(sub => sub.classList.add('hidden'));
+      document.querySelectorAll('.sub-tab').forEach(tab => tab.classList.remove('active'));
+      
+      // Mostrar sub-aba selecionada
+      document.getElementById(subTabName + '-subtab').classList.remove('hidden');
+      event.target.classList.add('active');
+    }
+    function login() {
+      const username = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
+      fetch(API_BASE + '/auth/sign-in', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+      .then(r => r.json().then(data => ({ok: r.ok, data})))
+      .then(({ok, data}) => {
+        showResponse('loginResponse', data);
+        if (ok && data.access_token) {
+          setToken(data.access_token);
+          document.getElementById('authSection').classList.add('hidden');
+          document.getElementById('mainSection').classList.remove('hidden');
+          // Buscar perfil para obter a role
+          fetchUserProfile();
+          // Conectar WebSocket automaticamente
+          setTimeout(() => connectWebSocket(), 1000);
+        }
+      });
+    }
+    function logout() {
+      disconnectWebSocket(); // Desconectar WebSocket
+      setToken(null);
+      localStorage.removeItem('token');
+      localStorage.removeItem('userRole');
+      userRole = null;
+      document.getElementById('mainSection').classList.add('hidden');
+      document.getElementById('authSection').classList.remove('hidden');
+      updateTabsVisibility(); // Esconder abas
+    }
+    function apiCall(endpoint, method = 'GET', body = null, isFormData = false) {
+      const headers = {};
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      if (!isFormData && body) headers['Content-Type'] = 'application/json';
+      const config = { method, headers };
+      if (body) config.body = isFormData ? body : JSON.stringify(body);
+      return fetch(API_BASE + endpoint, config).then(r => r.json().then(data => ({ok: r.ok, data})));
+    }
+    // --- Funções de cada sessão ---
+    function getMyProfile() {
+      apiCall('/me').then(({ok, data}) => {
+        showResponse('profileResponse', data);
+        if (ok) {
+          document.getElementById('profileName').value = data.name || '';
+          document.getElementById('profileEmail').value = data.email || '';
+          document.getElementById('profileBio').value = data.description || '';
+          document.getElementById('profileBirthDate').value = data.birthDate ? data.birthDate.split('T')[0] : '';
+        }
+      });
+    }
+    function updateProfile() {
+      const name = document.getElementById('profileName').value;
+      const description = document.getElementById('profileBio').value;
+      const birthDate = document.getElementById('profileBirthDate').value;
+      
+      const body = {};
+      if (name) body.name = name;
+      if (description) body.description = description;
+      if (birthDate) body.birthDate = birthDate;
+      
+      if (Object.keys(body).length === 0) {
+        return alert('Preencha pelo menos um campo para atualizar!');
+      }
+      
+      apiCall('/me', 'PUT', body).then(({data}) => showResponse('profileResponse', data));
+    }
+    function deleteProfile() {
+      if (!confirm('Tem certeza?')) return;
+      apiCall('/me', 'DELETE').then(({data}) => { showResponse('profileResponse', data); logout(); });
+    }
+    function updateStudentProfile() {
+      const body = {
+        course: document.getElementById('studentCourse').value || undefined,
+        registrationNumber: document.getElementById('studentRegistrationNumber').value || undefined,
+        lattes: document.getElementById('studentLattes').value || undefined
+      };
+      // Remove campos undefined
+      Object.keys(body).forEach(key => body[key] === undefined && delete body[key]);
+      apiCall('/me/student', 'PUT', body).then(({data}) => showResponse('studentResponse', data));
+    }
+    function updateEnterpriseProfile() {
+      const body = {
+        fantasyName: document.getElementById('enterpriseName').value || undefined,
+        cnpj: document.getElementById('enterpriseCnpj').value || undefined,
+        socialReason: document.getElementById('enterpriseDescription').value || undefined
+      };
+      // Remove campos undefined
+      Object.keys(body).forEach(key => body[key] === undefined && delete body[key]);
+      apiCall('/me/enterprise', 'PUT', body).then(({data}) => showResponse('enterpriseResponse', data));
+    }
+    function addSocialMedia() {
+      const type = document.getElementById('socialPlatform').value;
+      const url = document.getElementById('socialUrl').value;
+      if (!type || !url) return alert('Preencha todos os campos!');
+      const body = { socialMedia: [{ type: type, url: url }] };
+      apiCall('/me/social-media', 'PUT', body).then(({data}) => showResponse('socialResponse', data));
+    }
+    function removeSocialMedia() {
+      const uuid = document.getElementById('socialUuidToDelete').value;
+      apiCall('/me/social-media/' + uuid, 'DELETE').then(({data}) => showResponse('socialResponse', data));
+    }
+    function addTag() {
+      const label = document.getElementById('newTag').value;
+      if (!label) return alert('Digite o nome da tag!');
+      const body = { label: label };
+      apiCall('/me/tags', 'POST', body).then(({data}) => {
+        showResponse('tagsResponse', data);
+        document.getElementById('newTag').value = ''; // Limpa o campo após adicionar
+      });
+    }
+    function removeTag() {
+      const uuid = document.getElementById('tagUuidToDelete').value;
+      if (!uuid) return alert('Digite o UUID da tag!');
+      apiCall('/me/tags/' + uuid, 'DELETE').then(({data}) => {
+        showResponse('tagsResponse', data);
+        document.getElementById('tagUuidToDelete').value = ''; // Limpa o campo após remover
+      });
+    }
+    function createAddress() {
+      const zipCode = document.getElementById('addressCep').value;
+      if (!zipCode) return alert('CEP é obrigatório para criar endereço!');
+      
+      const body = { zipCode: zipCode };
+      
+      const street = document.getElementById('addressStreet').value;
+      const neighborhood = document.getElementById('addressNeighborhood').value;
+      const city = document.getElementById('addressCity').value;
+      const state = document.getElementById('addressState').value;
+      
+      if (street) body.street = street;
+      if (neighborhood) body.neighborhood = neighborhood;
+      if (city) body.city = city;
+      if (state) body.state = state;
+      
+      apiCall('/me/address', 'POST', body).then(({data}) => showResponse('addressResponse', data));
+    }
+    function updateAddress() {
+      const zipCode = document.getElementById('addressCep').value;
+      const street = document.getElementById('addressStreet').value;
+      const neighborhood = document.getElementById('addressNeighborhood').value;
+      const city = document.getElementById('addressCity').value;
+      const state = document.getElementById('addressState').value;
+      
+      const body = {};
+      if (zipCode) body.zipCode = zipCode;
+      if (street) body.street = street;
+      if (neighborhood) body.neighborhood = neighborhood;
+      if (city) body.city = city;
+      if (state) body.state = state;
+      
+      if (Object.keys(body).length === 0) {
+        return alert('Preencha pelo menos um campo para atualizar!');
+      }
+      
+      apiCall('/me/address', 'PUT', body).then(({data}) => showResponse('addressResponse', data));
+    }
+    function uploadAvatar() {
+      const file = document.getElementById('avatarFile').files[0];
+      if (!file) return alert('Selecione um arquivo!');
+      const form = new FormData(); form.append('file', file);
+      apiCall('/me/avatar', 'POST', form, true).then(({data}) => showResponse('uploadsResponse', data));
+    }
+    function uploadBanner() {
+      const file = document.getElementById('bannerFile').files[0];
+      if (!file) return alert('Selecione um arquivo!');
+      const form = new FormData(); form.append('file', file);
+      apiCall('/me/banner', 'POST', form, true).then(({data}) => showResponse('uploadsResponse', data));
+    }
+    function uploadCurriculum() {
+      const file = document.getElementById('curriculumFile').files[0];
+      if (!file) return alert('Selecione um arquivo!');
+      const form = new FormData(); form.append('file', file);
+      apiCall('/me/student/curriculum', 'POST', form, true).then(({data}) => showResponse('academicUploadsResponse', data));
+    }
+    function uploadHistory() {
+      const file = document.getElementById('historyFile').files[0];
+      if (!file) return alert('Selecione um arquivo!');
+      const form = new FormData(); form.append('file', file);
+      apiCall('/me/student/history', 'POST', form, true).then(({data}) => showResponse('academicUploadsResponse', data));
+    }
+    function checkIfLiked() {
+      const uuid = document.getElementById('likeUserUuid').value;
+      apiCall('/me/likes/' + uuid + '/check').then(({data}) => showResponse('likesResponse', data));
+    }
+    function giveLike() {
+      const uuid = document.getElementById('likeUserUuid').value;
+      apiCall('/me/likes/' + uuid, 'POST').then(({data}) => showResponse('likesResponse', data));
+    }
+    function removeLike() {
+      const uuid = document.getElementById('likeUserUuid').value;
+      apiCall('/me/likes/' + uuid, 'DELETE').then(({data}) => showResponse('likesResponse', data));
+    }
+    function createJob() {
+      const title = document.getElementById('jobTitle').value;
+      const description = document.getElementById('jobDescription').value;
+      const expiresAt = document.getElementById('jobExpiresAt').value;
+      
+      if (!title || !description) return alert('Preencha o título e descrição!');
+      if (title.length < 3) return alert('Título deve ter pelo menos 3 caracteres!');
+      if (title.length > 200) return alert('Título deve ter no máximo 200 caracteres!');
+      
+      const body = {
+        title: title,
+        body: description
+      };
+      
+      // Adicionar data de expiração se fornecida
+      if (expiresAt) {
+        body.expiresAt = new Date(expiresAt).toISOString();
+      }
+      
+      apiCall('/me/enterprise/jobs', 'POST', body).then(({data}) => showResponse('jobsResponse', data));
+    }
+    function getMyJobs() {
+      apiCall('/me/enterprise/jobs').then(({data}) => showResponse('jobsResponse', data));
+    }
+    function updateJobContent() {
+      const uuid = document.getElementById('jobUuid').value;
+      const title = document.getElementById('editJobTitle').value;
+      const description = document.getElementById('editJobDescription').value;
+      const expiresAt = document.getElementById('editJobExpiresAt').value;
+      
+      if (!uuid) return alert('Digite o UUID da vaga!');
+      
+      const body = {};
+      
+      // Só adicionar campos que foram preenchidos
+      if (title && title.length >= 3 && title.length <= 200) {
+        body.title = title;
+      } else if (title && (title.length < 3 || title.length > 200)) {
+        return alert('Título deve ter entre 3 e 200 caracteres!');
+      }
+      
+      if (description) {
+        body.body = description;
+      }
+      
+      if (expiresAt) {
+        body.expiresAt = new Date(expiresAt).toISOString();
+      }
+      
+      if (Object.keys(body).length === 0) {
+        return alert('Preencha pelo menos um campo para atualizar!');
+      }
+      
+      apiCall('/me/enterprise/jobs/' + uuid + '/content', 'PUT', body).then(({data}) => showResponse('jobsResponse', data));
+    }
+    function publishJob() {
+      const uuid = document.getElementById('jobUuid').value;
+      apiCall('/me/enterprise/jobs/' + uuid + '/publish', 'PUT').then(({data}) => showResponse('jobsResponse', data));
+    }
+    function pauseJob() {
+      const uuid = document.getElementById('jobUuid').value;
+      apiCall('/me/enterprise/jobs/' + uuid + '/pause', 'PUT').then(({data}) => showResponse('jobsResponse', data));
+    }
+    function closeJob() {
+      const uuid = document.getElementById('jobUuid').value;
+      apiCall('/me/enterprise/jobs/' + uuid + '/close', 'PUT').then(({data}) => showResponse('jobsResponse', data));
+    }
+    function getJobApplications() {
+      const uuid = document.getElementById('applicationsJobUuid').value;
+      if (!uuid) return alert('Digite o UUID da vaga!');
+      apiCall('/me/enterprise/jobs/' + uuid + '/applications').then(({data}) => showResponse('applicationsJobResponse', data));
+    }
+    function getFilteredApplications() {
+      const uuid = document.getElementById('applicationsJobUuid').value;
+      const status = document.getElementById('applicationStatusFilter').value;
+      if (!uuid) return alert('Digite o UUID da vaga!');
+      
+      let url = '/me/enterprise/jobs/' + uuid + '/applications/filtered';
+      if (status) {
+        url += '?status=' + status;
+      }
+      
+      apiCall(url).then(({data}) => showResponse('applicationsJobResponse', data));
+    }
+    function applyToJob() {
+      const jobUuid = document.getElementById('applyJobUuid').value;
+      const coverLetter = document.getElementById('applyCoverLetter').value;
+      
+      // Validações
+      if (!jobUuid || jobUuid.trim() === '') {
+        return alert('Por favor, digite o UUID da vaga!');
+      }
+      
+      if (coverLetter && coverLetter.length > 2000) {
+        return alert('Carta de apresentação deve ter no máximo 2000 caracteres!');
+      }
+      
+      const body = { coverLetter: coverLetter || undefined };
+      
+      apiCall('/me/student/job-applications/' + jobUuid.trim(), 'POST', body)
+        .then(({ok, data}) => {
+          showResponse('applicationsResponse', data);
+          if (ok) {
+            // Limpar campos após sucesso
+            document.getElementById('applyJobUuid').value = '';
+            document.getElementById('applyCoverLetter').value = '';
+            updateCharCount(); // Atualizar contador
+            alert('✅ Candidatura enviada com sucesso!');
+          } else {
+            // Tratar erros específicos
+            const errorMessage = data.message || 'Erro ao enviar candidatura';
+            if (errorMessage.includes('não encontrada')) {
+              alert('❌ Vaga não encontrada. Verifique o UUID.');
+            } else if (errorMessage.includes('não está disponível')) {
+              alert('❌ Esta vaga não está disponível para candidaturas.');
+            } else if (errorMessage.includes('expirou')) {
+              alert('❌ Esta vaga já expirou.');
+            } else if (errorMessage.includes('já se candidatou')) {
+              alert('❌ Você já se candidatou a esta vaga.');
+            } else if (errorMessage.includes('estudantes')) {
+              alert('❌ Apenas estudantes podem se candidatar a vagas.');
+            } else {
+              alert('❌ ' + errorMessage);
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Erro ao enviar candidatura:', error);
+        });
+    }
+    function updateCharCount() {
+      const textarea = document.getElementById('applyCoverLetter');
+      const charCount = document.getElementById('charCount');
+      const current = textarea.value.length;
+      const max = 2000;
+      
+      charCount.textContent = `${current}/${max} caracteres`;
+      charCount.style.color = current > max * 0.9 ? '#e53e3e' : '#64748b';
+    }
+    function getMyApplications() {
+      apiCall('/me/student/job-applications').then(({data}) => showResponse('applicationsResponse', data));
+    }
+    function cancelApplication() {
+      const uuid = document.getElementById('cancelApplicationUuid').value;
+      apiCall('/me/student/job-applications/' + uuid, 'DELETE').then(({data}) => showResponse('applicationsResponse', data));
+    }
+    function getMyNotifications() {
+      fetchUserNotifications();
+    }
+    function getUnreadCount() {
+      fetchUnreadCount();
+    }
+    function markAllAsRead() {
+      apiCall('/me/notifications/read-all', 'PUT').then(({data}) => {
+        showResponse('notificationsResponse', data);
+        // Recarregar notificações após marcar todas como lidas
+        fetchUserNotifications();
+        fetchUnreadCount();
+      });
+    }
+    function markNotificationAsRead() {
+      const id = document.getElementById('notificationId').value;
+      if (id) {
+        markNotificationAsReadById(id);
+      } else {
+        showError('Por favor, insira o ID da notificação');
+      }
+    }
+    // Auto-login if token exists
+    window.onload = function() {
+      if (token) {
+        document.getElementById('authSection').classList.add('hidden');
+        document.getElementById('mainSection').classList.remove('hidden');
+        document.getElementById('tokenInfo').textContent = 'Token: ' + token.substring(0, 20) + '...';
+        // Buscar perfil para configurar as abas
+        fetchUserProfile();
+      } else {
+        // Se não tem token, inicializar abas escondidas
+        updateTabsVisibility();
+      }
+    }
+  </script>
+</body>
+</html>
