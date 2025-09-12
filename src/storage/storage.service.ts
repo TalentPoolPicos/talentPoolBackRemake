@@ -34,11 +34,17 @@ export class StorageService {
   private readonly config: MinioConfig;
 
   constructor(private readonly configService: ConfigService) {
+    const useSSL =
+      this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true';
+    const port = parseInt(
+      this.configService.get<string>('MINIO_PORT', '9000'),
+      10,
+    );
+
     this.config = {
       endpoint: this.configService.get<string>('MINIO_ENDPOINT', 'localhost'),
-      port: parseInt(this.configService.get<string>('MINIO_PORT', '9000'), 10),
-      useSSL:
-        this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true',
+      port: port,
+      useSSL: useSSL,
       accessKey: this.configService.get<string>(
         'MINIO_ROOT_USER',
         'minioadmin',
@@ -55,15 +61,21 @@ export class StorageService {
 
     this.bucketName = this.config.bucketName;
 
-    // Inicializar cliente MinIO
-    this.minioClient = new Minio.Client({
+    // Configurar cliente MinIO
+    const clientConfig: any = {
       endPoint: this.config.endpoint,
-      port: this.config.port,
       useSSL: this.config.useSSL,
       accessKey: this.config.accessKey,
       secretKey: this.config.secretKey,
-      // Remover região para usar configuração padrão do bitnami
-    });
+    };
+
+    // Só adicionar porta se não for a porta padrão para o protocolo
+    const isDefaultPort = (useSSL && port === 443) || (!useSSL && port === 80);
+    if (!isDefaultPort) {
+      clientConfig.port = this.config.port;
+    }
+
+    this.minioClient = new Minio.Client(clientConfig);
 
     this.logger.log(
       `MinIO configurado: ${this.config.endpoint}:${this.config.port}`,
