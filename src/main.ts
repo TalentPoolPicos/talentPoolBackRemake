@@ -29,7 +29,9 @@ async function bootstrap() {
 
     const config = new DocumentBuilder()
       .setTitle('TalentPool API Documentation')
-      .setDescription('Interactive API documentation')
+      .setDescription(
+        'API completa para o sistema TalentPool com autenticação, gerenciamento de usuários, vagas, notificações em tempo real via WebSocket e muito mais. Para documentação detalhada do sistema de notificações WebSocket, consulte: `/docs/websocket-notifications.md`',
+      )
       .setVersion('3')
       .addBearerAuth()
       .addServer('/')
