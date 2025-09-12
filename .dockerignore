@@ -1,0 +1,55 @@
+# Node modules
+node_modules
+npm-debug.log*
+
+# Distribution
+dist
+
+# Environment files
+.env*
+!prod.env
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+test/
+coverage/
+*.spec.ts
+*.test.ts
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Development tools
+.eslintrc*
+.prettierrc*
+jest.config.*
+
+# Docker files
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Keep scripts directory for startup script
+!scripts/
