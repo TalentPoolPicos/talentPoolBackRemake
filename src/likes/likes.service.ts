@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { NotificationManagerService } from '../notifications/notification-manager.service';
 import { UserPreviewResponseDto } from '../users/dtos/user-response.dto';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class LikesService {
   constructor(
     private prisma: PrismaService,
     private storageService: StorageService,
+    private notificationManager: NotificationManagerService,
   ) {}
 
   /**
@@ -114,6 +116,21 @@ export class LikesService {
     this.logger.log(
       `Like criado com sucesso: ${initiator.uuid} -> ${targetUser.uuid}`,
     );
+
+    // Enviar notificação para o usuário que recebeu o like
+    try {
+      await this.notificationManager.notifyProfileLike({
+        likerId: initiator.id,
+        likedUserId: targetUser.id,
+      });
+
+      this.logger.log(
+        `Notificação de like enviada para usuário ${targetUser.id}`,
+      );
+    } catch (error) {
+      this.logger.error(`Erro ao enviar notificação de like: ${error.message}`);
+      // Não falhamos a operação principal se a notificação falhar
+    }
   }
 
   /**
