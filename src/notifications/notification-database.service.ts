@@ -478,4 +478,62 @@ export class NotificationDatabaseService {
 
     return where;
   }
+
+  /**
+   * Busca usuários conectados à empresa (que deram ou receberam likes)
+   * para notificações de novas vagas
+   */
+  async getUsersConnectedToEnterprise(
+    enterpriseUserId: number,
+  ): Promise<Array<{ id: number; uuid: string; name: string | null }>> {
+    try {
+      this.logger.log(
+        `Buscando usuários conectados à empresa ${enterpriseUserId}`,
+      );
+
+      // Buscar usuários que deram like para a empresa OU receberam like da empresa
+      const connectedUsers = await this.prisma.user.findMany({
+        where: {
+          OR: [
+            // Usuários que deram like para a empresa
+            {
+              initiatedLikes: {
+                some: {
+                  receiverId: enterpriseUserId,
+                },
+              },
+            },
+            // Usuários que receberam like da empresa
+            {
+              receivedLikes: {
+                some: {
+                  initiatorId: enterpriseUserId,
+                },
+              },
+            },
+          ],
+          // Apenas estudantes devem receber notificações de vagas
+          role: 'student',
+        },
+        select: {
+          id: true,
+          uuid: true,
+          name: true,
+        },
+        distinct: ['id'],
+      });
+
+      this.logger.log(
+        `Encontrados ${connectedUsers.length} usuários conectados à empresa`,
+      );
+
+      return connectedUsers;
+    } catch (error) {
+      this.logger.error(
+        `Erro ao buscar usuários conectados à empresa: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
 }

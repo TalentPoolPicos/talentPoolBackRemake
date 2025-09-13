@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { NotificationsService } from './notifications.service';
 import { NotificationProcessor } from './notification.processor';
+import { JobNotificationProcessor } from './job-notification.processor';
 import { NotificationsGateway } from './gateways/notifications.gateway';
 import { NotificationDatabaseService } from './notification-database.service';
 import { NotificationManagerService } from './notification-manager.service';
@@ -47,10 +48,21 @@ import { NOTIFICATION_QUEUES } from './constants/queue.constants';
         },
       },
     }),
+    BullModule.registerQueue({
+      name: NOTIFICATION_QUEUES.JOB_NOTIFICATIONS,
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 2000,
+        },
+      },
+    }),
   ],
   providers: [
     NotificationsService,
     NotificationProcessor,
+    JobNotificationProcessor,
     NotificationsGateway,
     NotificationDatabaseService,
     NotificationManagerService,

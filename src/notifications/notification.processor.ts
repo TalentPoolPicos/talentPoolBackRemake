@@ -3,7 +3,6 @@ import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsGateway } from './gateways/notifications.gateway';
-import { NotificationDatabaseService } from './notification-database.service';
 import {
   NotificationJobData,
   NotificationResult,
@@ -17,7 +16,6 @@ export class NotificationProcessor extends WorkerHost {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsGateway: NotificationsGateway,
-    private readonly notificationDb: NotificationDatabaseService,
   ) {
     super();
   }
@@ -72,11 +70,11 @@ export class NotificationProcessor extends WorkerHost {
 
       // Verificar se é uma notificação para broadcast
       if (data.metadata?.broadcast) {
-        await this.notificationsGateway.broadcastNotification(notificationData);
+        this.notificationsGateway.broadcastNotification(notificationData);
         this.logger.log(`Broadcasted notification ${notification.id}`);
       } else if (data.metadata?.role) {
         // Enviar para todos os usuários de um papel específico
-        await this.notificationsGateway.sendNotificationToRole(
+        this.notificationsGateway.sendNotificationToRole(
           data.metadata.role,
           notificationData,
         );
@@ -85,7 +83,7 @@ export class NotificationProcessor extends WorkerHost {
         );
       } else {
         // Enviar para usuário específico
-        const sent = await this.notificationsGateway.sendNotificationToUser(
+        const sent = this.notificationsGateway.sendNotificationToUser(
           data.userId,
           notificationData,
         );
@@ -102,7 +100,7 @@ export class NotificationProcessor extends WorkerHost {
         where: { userId: data.userId, readAt: null },
       });
 
-      await this.notificationsGateway.sendUnreadCount(data.userId, unreadCount);
+      this.notificationsGateway.sendUnreadCount(data.userId, unreadCount);
 
       return {
         success: true,
