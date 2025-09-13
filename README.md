@@ -83,7 +83,7 @@ You can find the installation instructions for Docker [here](https://docs.docker
 You can run the application using Docker Compose.
 
 ```bash
-docker compose -f docker-compose-front-dev.yaml up -d
+docker compose -f docker-compose-prod.yaml up -d
 ```
 
 ### Types generation
