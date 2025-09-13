@@ -6,6 +6,8 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { SearchService } from '../search/search.service';
@@ -28,6 +30,12 @@ import {
   JobApplicationStudentResponseDto,
   StudentApplicationListResponseDto,
 } from './dtos/job-response.dto';
+import {
+  NOTIFICATION_QUEUES,
+  NOTIFICATION_JOBS,
+} from '../notifications/constants/queue.constants';
+import { JobPublishedNotificationData } from '../notifications/interfaces/job-notification.interface';
+import { NotificationManagerService } from '../notifications/notification-manager.service';
 
 @Injectable()
 export class JobsService {
@@ -51,6 +59,9 @@ export class JobsService {
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
     private readonly searchService: SearchService,
+    @InjectQueue(NOTIFICATION_QUEUES.JOB_NOTIFICATIONS)
+    private readonly jobNotificationQueue: Queue,
+    private readonly notificationManager: NotificationManagerService,
   ) {}
 
   /**
@@ -302,6 +313,25 @@ export class JobsService {
       `Nova candidatura: estudante ${studentId} para vaga ${jobUuid}`,
     );
 
+    // Enviar notificação para a empresa sobre nova candidatura
+    try {
+      await this.notificationManager.notifyJobApplication({
+        applicationId: application.id,
+        jobId: job.id,
+        studentId: student.id,
+        enterpriseId: application.job.enterprise.user.id,
+      });
+
+      this.logger.log(
+        `Notificação de candidatura enviada para empresa ${application.job.enterprise.user.id}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Erro ao enviar notificação de candidatura: ${error.message}`,
+      );
+      // Não falha a operação principal se a notificação falhar
+    }
+
     return this.mapApplicationToStudentResponse(application);
   }
 
@@ -355,6 +385,7 @@ export class JobsService {
         },
         student: {
           select: {
+            id: true,
             uuid: true,
             user: {
               select: {
@@ -371,6 +402,25 @@ export class JobsService {
     this.logger.log(
       `Status da candidatura atualizado: ${applicationUuid} -> ${updateDto.status}`,
     );
+
+    // Enviar notificação para o estudante sobre mudança de status
+    try {
+      await this.notificationManager.notifyApplicationStatusUpdate(
+        updatedApplication.id,
+        updateDto.status,
+        updatedApplication.student.id,
+        updatedApplication.job.title,
+      );
+
+      this.logger.log(
+        `Notificação de status enviada para estudante ${updatedApplication.student.id}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Erro ao enviar notificação de status: ${error.message}`,
+      );
+      // Não falha a operação principal se a notificação falhar
+    }
 
     return this.mapApplicationToResponse(updatedApplication, true);
   }
@@ -1208,6 +1258,41 @@ export class JobsService {
       this.logger.warn(
         `Falha ao sincronizar vaga ${updatedJob.uuid} com Meilisearch após mudança de status: ${error.message}`,
       );
+    }
+
+    // Se a vaga foi publicada, adicionar job na fila de notificações
+    if (status === this.JOB_STATUS.PUBLISHED && !job.publishedAt) {
+      try {
+        const notificationData: JobPublishedNotificationData = {
+          jobId: updatedJob.id,
+          jobUuid: updatedJob.uuid,
+          jobTitle: updatedJob.title,
+          jobLocation: 'Não informado', // Job não tem location, pode usar um valor padrão
+          enterpriseId: updatedJob.enterprise.id,
+          enterpriseUserId: updatedJob.enterprise.user.id,
+          enterpriseName:
+            updatedJob.enterprise.user.name ||
+            updatedJob.enterprise.user.username,
+        };
+
+        await this.jobNotificationQueue.add(
+          NOTIFICATION_JOBS.NOTIFY_JOB_PUBLISHED,
+          notificationData,
+          {
+            priority: 10, // Alta prioridade para notificações de novas vagas
+            delay: 1000, // 1 segundo de delay para dar tempo da transação completar
+          },
+        );
+
+        this.logger.log(
+          `Job de notificação adicionado na fila para vaga ${updatedJob.uuid}`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Falha ao adicionar job de notificação na fila para vaga ${updatedJob.uuid}: ${error.message}`,
+        );
+        // Não falhar a publicação da vaga por causa de erro na notificação
+      }
     }
 
     return this.mapJobToResponse(updatedJob, null);
