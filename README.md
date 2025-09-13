@@ -71,6 +71,49 @@ $ mau deploy
 
 With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
+## 🌐 Interface de Testes da API
+
+A aplicação inclui uma interface web interativa para testar todas as funcionalidades da API sem precisar de ferramentas externas como Postman ou Insomnia.
+
+### Acessando a Interface
+
+Depois de iniciar a aplicação, acesse:
+
+```
+http://localhost:3000/app
+```
+
+### Funcionalidades da Interface
+
+- **🔐 Sistema de Login**: Faça login com qualquer usuário de teste
+- **👥 Gestão de Perfil**: Visualize e edite informações do usuário
+- **💼 Sistema de Vagas**: Crie, visualize e candidate-se a vagas
+- **❤️ Sistema de Likes**: Interaja com outros usuários
+- **🔔 Notificações em Tempo Real**: WebSocket funcionando
+- **📱 Totalmente Responsiva**: Funciona em desktop e mobile
+
+### Configuração do Host
+
+Para trocar o host da API (localhost para produção), edite o arquivo `public/index.html` na seção de configuração no topo:
+
+```javascript
+window.API_CONFIG = {
+  // Para desenvolvimento local
+  host: 'http://localhost:3000',
+  
+  // Para produção - descomente e altere:
+  // host: 'https://api.talentpool.com.br',
+};
+```
+
+### Usuários de Teste
+
+Consulte o arquivo [USERS_SEED.md](USERS_SEED.md) para ver todos os usuários disponíveis para teste.
+
+**Senha padrão para todos os usuários**: `MinhaSenh@123`
+
+---
+
 ## Docker
 
 You can run the application using Docker and Docker Compose.
