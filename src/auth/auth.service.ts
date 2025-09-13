@@ -9,6 +9,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { SearchService } from '../search/search.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { compare, hash } from 'bcrypt';
 import { JwtPayload } from './interfaces/payload';
 import { RefreshPayload } from './interfaces/refresh';
@@ -26,6 +27,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private searchService: SearchService,
+    private notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -192,6 +194,20 @@ export class AuthService {
       this.logger.log(
         `Usuário criado com sucesso: ${username} (ID: ${user.id})`,
       );
+
+      // Enviar notificação de boas-vindas
+      try {
+        await this.notificationsService.notifyWelcome(
+          user.id,
+          user.name || username,
+        );
+        this.logger.log(`Notificação de boas-vindas enviada para ${username}`);
+      } catch (error) {
+        this.logger.error(
+          `Erro ao enviar notificação de boas-vindas para ${username}: ${error.message}`,
+        );
+        // Não bloquear o cadastro se a notificação falhar
+      }
 
       // Sincronizar usuário com Meilisearch
       try {
