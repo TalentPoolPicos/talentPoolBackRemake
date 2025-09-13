@@ -141,10 +141,11 @@ export class MeController {
     return this.usersService.updateProfile(req.user.sub, updateData);
   }
 
+  @ApiTags('Students')
   @ApiOperation({
     summary: 'Atualizar perfil de estudante',
     description:
-      'Atualiza informações específicas do perfil de estudante (curso, matrícula, lattes)',
+      'Atualiza informações específicas do perfil de estudante (matrícula, curso, semestre)',
   })
   @ApiOkResponse({
     description: 'Perfil de estudante atualizado com sucesso',
@@ -171,6 +172,7 @@ export class MeController {
     return this.usersService.updateStudentProfile(req.user.sub, updateData);
   }
 
+  @ApiTags('Enterprises')
   @ApiOperation({
     summary: 'Atualizar perfil de empresa',
     description:
@@ -201,6 +203,7 @@ export class MeController {
     return this.usersService.updateEnterpriseProfile(req.user.sub, updateData);
   }
 
+  @ApiTags('Social Media')
   @ApiOperation({
     summary: 'Atualizar redes sociais',
     description: 'Atualiza a lista de redes sociais do usuário',
@@ -224,6 +227,7 @@ export class MeController {
     return this.usersService.updateSocialMedia(req.user.sub, updateData);
   }
 
+  @ApiTags('Social Media')
   @ApiOperation({
     summary: 'Deletar rede social',
     description: 'Remove uma rede social específica do perfil do usuário',
@@ -252,6 +256,7 @@ export class MeController {
     return this.usersService.deleteSocialMedia(req.user.sub, uuid);
   }
 
+  @ApiTags('Tags')
   @ApiOperation({
     summary: 'Adicionar tag',
     description: 'Adiciona uma nova tag/habilidade ao perfil do usuário',
@@ -275,6 +280,7 @@ export class MeController {
     return this.usersService.addTag(req.user.sub, addTagData);
   }
 
+  @ApiTags('Tags')
   @ApiOperation({
     summary: 'Deletar tag',
     description: 'Remove uma tag específica do perfil do usuário',
@@ -303,6 +309,7 @@ export class MeController {
     return this.usersService.deleteTag(req.user.sub, uuid);
   }
 
+  @ApiTags('Addresses')
   @ApiOperation({
     summary: 'Criar endereço',
     description: 'Cria um novo endereço para o usuário (CEP obrigatório)',
@@ -326,6 +333,7 @@ export class MeController {
     return this.usersService.createAddress(req.user.sub, createData);
   }
 
+  @ApiTags('Addresses')
   @ApiOperation({
     summary: 'Atualizar endereço',
     description: 'Atualiza o endereço do usuário (todos os campos opcionais)',
@@ -427,6 +435,7 @@ export class MeController {
     return this.userImageService.uploadBanner(req.user.sub, file);
   }
 
+  @ApiTags('Students')
   @ApiOperation({
     summary: 'Upload de currículo do estudante',
     description:
@@ -487,6 +496,7 @@ export class MeController {
     }
   }
 
+  @ApiTags('Students')
   @ApiOperation({
     summary: 'Upload de histórico escolar do estudante',
     description:
@@ -547,6 +557,7 @@ export class MeController {
     }
   }
 
+  @ApiTags('Likes')
   @ApiOperation({
     summary: 'Verificar se deu like em um usuário',
     description:
@@ -595,6 +606,7 @@ export class MeController {
     }
   }
 
+  @ApiTags('Likes')
   @ApiOperation({
     summary: 'Dar like em um usuário',
     description:
@@ -651,6 +663,7 @@ export class MeController {
     }
   }
 
+  @ApiTags('Likes')
   @ApiOperation({
     summary: 'Remover like de um usuário',
     description:
@@ -728,6 +741,7 @@ export class MeController {
   /**
    * Criar nova vaga (apenas empresas)
    */
+  @ApiTags('Enterprises')
   @Post('enterprise/jobs')
   @UseGuards(RolesGuard)
   @Roles(Role.ENTERPRISE)
@@ -749,6 +763,7 @@ export class MeController {
   /**
    * Listar minhas vagas (apenas empresas)
    */
+  @ApiTags('Enterprises')
   @Get('enterprise/jobs')
   @UseGuards(RolesGuard)
   @Roles(Role.ENTERPRISE)
@@ -776,6 +791,7 @@ export class MeController {
   /**
    * Atualizar conteúdo da vaga (título, body, expiresAt) - apenas empresas
    */
+  @ApiTags('Enterprises')
   @Put('enterprise/jobs/:uuid/content')
   @UseGuards(RolesGuard)
   @Roles(Role.ENTERPRISE)
@@ -814,6 +830,7 @@ export class MeController {
   /**
    * Publicar vaga (apenas empresas)
    */
+  @ApiTags('Enterprises')
   @Put('enterprise/jobs/:uuid/publish')
   @UseGuards(RolesGuard)
   @Roles(Role.ENTERPRISE)
@@ -843,6 +860,7 @@ export class MeController {
   /**
    * Pausar vaga (apenas empresas)
    */
+  @ApiTags('Enterprises')
   @Put('enterprise/jobs/:uuid/pause')
   @UseGuards(RolesGuard)
   @Roles(Role.ENTERPRISE)
@@ -872,6 +890,7 @@ export class MeController {
   /**
    * Finalizar vaga (apenas empresas)
    */
+  @ApiTags('Enterprises')
   @Put('enterprise/jobs/:uuid/close')
   @UseGuards(RolesGuard)
   @Roles(Role.ENTERPRISE)
@@ -901,6 +920,7 @@ export class MeController {
   /**
    * Atualizar status de candidatura (apenas empresas)
    */
+  @ApiTags('Enterprises')
   @Put('enterprise/job-applications/:uuid/status')
   @UseGuards(RolesGuard)
   @Roles(Role.ENTERPRISE)
@@ -935,6 +955,7 @@ export class MeController {
   /**
    * Adicionar notas do recrutador sem alterar status
    */
+  @ApiTags('Enterprises')
   @Put('enterprise/applications/:uuid/notes')
   @UseGuards(RolesGuard)
   @Roles(Role.ENTERPRISE)
@@ -961,6 +982,7 @@ export class MeController {
   /**
    * Listar candidaturas de uma vaga (apenas empresas)
    */
+  @ApiTags('Enterprises')
   @Get('enterprise/jobs/:uuid/applications')
   @UseGuards(RolesGuard)
   @Roles(Role.ENTERPRISE)
@@ -986,6 +1008,7 @@ export class MeController {
   /**
    * Listar todas as candidaturas da empresa
    */
+  @ApiTags('Enterprises')
   @Get('enterprise/applications')
   @UseGuards(RolesGuard)
   @Roles(Role.ENTERPRISE)
@@ -1004,6 +1027,7 @@ export class MeController {
   /**
    * Listar candidaturas filtradas de uma vaga específica
    */
+  @ApiTags('Enterprises')
   @Get('enterprise/jobs/:uuid/applications/filtered')
   @UseGuards(RolesGuard)
   @Roles(Role.ENTERPRISE)
@@ -1037,6 +1061,7 @@ export class MeController {
   /**
    * Aplicar para vaga (apenas estudantes)
    */
+  @ApiTags('Students')
   @Post('student/job-applications/:jobUuid')
   @UseGuards(RolesGuard)
   @Roles(Role.STUDENT)
@@ -1069,6 +1094,7 @@ export class MeController {
   /**
    * Listar minhas candidaturas (apenas estudantes)
    */
+  @ApiTags('Students')
   @Get('student/job-applications')
   @UseGuards(RolesGuard)
   @Roles(Role.STUDENT)
@@ -1095,6 +1121,7 @@ export class MeController {
   /**
    * Remover candidatura (apenas estudantes)
    */
+  @ApiTags('Students')
   @Delete('student/job-applications/:uuid')
   @UseGuards(RolesGuard)
   @Roles(Role.STUDENT)
@@ -1124,7 +1151,7 @@ export class MeController {
   // ================================
   // ROTAS DE NOTIFICAÇÕES
   // ================================
-
+  @ApiTags('Notifications')
   @ApiOperation({
     summary: 'Obter minhas notificações',
     description: `
@@ -1260,6 +1287,7 @@ socket.on('notification', (notification) => {
     };
   }
 
+  @ApiTags('Notifications')
   @ApiOperation({
     summary: 'Marcar notificação como lida',
     description: 'Marca uma notificação específica como lida',
@@ -1285,6 +1313,7 @@ socket.on('notification', (notification) => {
     };
   }
 
+  @ApiTags('Notifications')
   @ApiOperation({
     summary: 'Marcar todas as notificações como lidas',
     description: 'Marca todas as notificações do usuário como lidas',
@@ -1304,6 +1333,7 @@ socket.on('notification', (notification) => {
     };
   }
 
+  @ApiTags('Notifications')
   @ApiOperation({
     summary: 'Obter contagem de notificações não lidas',
     description: 'Retorna apenas a contagem de notificações não lidas',

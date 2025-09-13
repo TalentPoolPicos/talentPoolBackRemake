@@ -1,4 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
 import { PrismaModule } from '../prisma/prisma.module';
 import { StorageModule } from '../storage/storage.module';
 import { SearchModule } from '../search/search.module';
@@ -9,7 +10,7 @@ import { UserImageService } from './user-image.service';
 import { UsersController } from './users.controller';
 import { MeController } from './me.controller';
 import { LikesService } from '../likes/likes.service';
-import { JobsService } from '../jobs/jobs.service';
+import { NOTIFICATION_QUEUES } from '../notifications/constants/queue.constants';
 
 @Module({
   imports: [
@@ -18,9 +19,12 @@ import { JobsService } from '../jobs/jobs.service';
     forwardRef(() => SearchModule),
     forwardRef(() => JobsModule),
     NotificationsModule,
+    BullModule.registerQueue({
+      name: NOTIFICATION_QUEUES.JOB_NOTIFICATIONS,
+    }),
   ],
   controllers: [UsersController, MeController],
-  providers: [UsersService, UserImageService, LikesService, JobsService],
+  providers: [UsersService, UserImageService, LikesService],
   exports: [UsersService, UserImageService],
 })
 export class UsersModule {}
