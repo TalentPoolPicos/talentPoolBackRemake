@@ -3,7 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TalentPool API - Interface de Testes WebSocket</title>
+  <title>TalentPool API - Interface de Testes WebSocket</title>
+  
+  <!-- ========================================= -->
+  <!-- 🔧 CONFIGURAÇÃO DO HOST DA API           -->
+  <!-- ========================================= -->
+  <!-- Altere a URL abaixo para trocar o host da API -->
+  <script>
+    // 🌐 Configure aqui o endereço da sua API
+    window.API_CONFIG = {
+      // Para desenvolvimento local
+      host: 'https://server.adrinatooor.xyz',
+      
+      // Para produção - descomente e altere conforme necessário:
+      // host: 'https://api.talentpool.com.br',
+      
+      // Para staging/teste - descomente e altere conforme necessário:
+      // host: 'https://staging-api.talentpool.com.br',
+    };
+    
+    // URL base da API (não altere esta linha)
+    window.API_BASE = window.API_CONFIG.host;
+  </script>
+  <!-- ========================================= -->
+  
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: 0; min-height: 100vh; }
@@ -175,6 +198,9 @@
     <div class="header">
       <h1>TalentPool - Perfil & Testes</h1>
       <p>Faça login e teste todas as rotas do seu perfil!</p>
+      <div style="margin-top: 16px; padding: 8px 16px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; display: inline-block;">
+        🌐 <strong>API Host:</strong> <span id="currentApiHost" style="color: #0369a1; font-family: monospace;"></span>
+      </div>
     </div>
     <div class="auth" id="authSection">
       <h2>🔐 Fazer Login</h2>
@@ -819,7 +845,7 @@
     // Buscar notificações do usuário
     async function fetchUserNotifications() {
       try {
-        const response = await fetch('http://localhost:3000/notifications/user', {
+        const response = await fetch(`${API_BASE}/notifications/user`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -841,7 +867,7 @@
     // Marcar notificação como lida
     async function markNotificationAsReadById(notificationId) {
       try {
-        const response = await fetch(`http://localhost:3000/notifications/${notificationId}/read`, {
+        const response = await fetch(`${API_BASE}/notifications/${notificationId}/read`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -870,7 +896,7 @@
     // Buscar contador de notificações não lidas
     async function fetchUnreadCount() {
       try {
-        const response = await fetch('http://localhost:3000/notifications/unread-count', {
+        const response = await fetch(`${API_BASE}/notifications/unread-count`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -936,7 +962,9 @@
     }
 
     let token = localStorage.getItem('token') || null;
-    const API_BASE = 'http://localhost:3000';
+    // API_BASE agora é definido na configuração no topo do arquivo
+    // const API_BASE = 'http://localhost:3000'; // ❌ Removido - use window.API_BASE
+    const API_BASE = window.API_BASE; // ✅ Usa a configuração centralizada
     function showResponse(id, data) {
       document.getElementById(id).innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
     }
@@ -1329,6 +1357,9 @@
     }
     // Auto-login if token exists
     window.onload = function() {
+      // Exibir o host atual da API no header
+      document.getElementById('currentApiHost').textContent = API_BASE;
+      
       if (token) {
         document.getElementById('authSection').classList.add('hidden');
         document.getElementById('mainSection').classList.remove('hidden');
@@ -1341,5 +1372,33 @@
       }
     }
   </script>
+  
+  <!-- 
+  ===================================================================
+  📋 INSTRUÇÕES PARA TROCAR O HOST DA API:
+  ===================================================================
+  
+  1. 🔍 LOCALIZE a seção de configuração no TOPO do arquivo (linhas 9-25)
+  
+  2. ✏️ EDITE a propriedade 'host' dentro de window.API_CONFIG:
+     
+     Para DESENVOLVIMENTO LOCAL:
+     host: 'http://localhost:3000',
+     
+     Para PRODUÇÃO:
+     host: 'https://api.talentpool.com.br',
+     
+     Para STAGING/TESTE:
+     host: 'https://staging-api.talentpool.com.br',
+  
+  3. 💾 SALVE o arquivo
+  
+  4. 🔄 RECARREGUE a página no navegador
+  
+  5. ✅ VERIFIQUE o host exibido no cabeçalho da página
+  
+  ⚠️  IMPORTANTE: Certifique-se de que a API esteja rodando no host configurado!
+  ===================================================================
+  -->
 </body>
 </html>
