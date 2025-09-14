@@ -1,203 +1,211 @@
-# 👥 Usuários de Teste - TalentPool
+# TalentPool - Usuários de Seed
 
-Documentação dos usuários criados automaticamente para desenvolvimento e testes da aplicação.
-
-## 🔐 Senha Padrão
-**Todos os usuários**: `MinhaSenh@123`
-
----
-
-## 👨‍🎓 Estudantes
-
-### João Silva (`joao_silva`)
-- **Email**: `joao.silva@ufpi.edu.br`
-- **Curso**: Ciência da Computação (UFPI) - Matrícula: 20190001
-- **Nascimento**: 15/03/1999
-- **Especialidade**: Full Stack (React/Node.js) + Machine Learning
-- **Localização**: Centro, Teresina/PI
-- **Lattes**: http://lattes.cnpq.br/1234567890123456
-- **GitHub**: https://github.com/joaosilva
-- **Descrição**: Estudante apaixonado por desenvolvimento web e inteligência artificial.
-
-### Maria Santos (`maria_santos`)
-- **Email**: `maria.santos@ufpi.edu.br`
-- **Curso**: Sistemas de Informação (UFPI) - Matrícula: 20200002
-- **Nascimento**: 22/07/2000
-- **Especialidade**: Frontend & UX/UI Design (React, Vue.js, TypeScript, Figma)
-- **Localização**: Centro, Teresina/PI
-- **Lattes**: http://lattes.cnpq.br/2345678901234567
-- **GitHub**: https://github.com/mariasantos
-- **Descrição**: Desenvolvedora frontend com foco em React e experiência do usuário.
-
-### Pedro Costa (`pedro_costa`)
-- **Email**: `pedro.costa@ifpi.edu.br`
-- **Curso**: Análise e Desenvolvimento de Sistemas (IFPI) - Matrícula: 20180003
-- **Nascimento**: 08/11/1998
-- **Especialidade**: Backend & Microsserviços (Python, Django, FastAPI, Docker)
-- **Localização**: Fátima, Teresina/PI
-- **Lattes**: http://lattes.cnpq.br/3456789012345678
-- **GitHub**: https://github.com/pedrocosta
-- **Descrição**: Especialista em backend com Python e arquitetura de microsserviços.
-
-### Ana Oliveira (`ana_oliveira`)
-- **Email**: `ana.oliveira@ufpi.edu.br`
-- **Curso**: Ciência da Computação (UFPI) - Matrícula: 20210004
-- **Nascimento**: 30/01/2001
-- **Especialidade**: Data Science & Machine Learning (Python, TensorFlow, R)
-- **Localização**: Ininga, Teresina/PI
-- **Lattes**: http://lattes.cnpq.br/4567890123456789
-- **GitHub**: https://github.com/anaoliveira
-- **Descrição**: Data Scientist em formação, especializada em ML e análise de dados.
-
-### Carlos Lima (`carlos_lima`)
-- **Email**: `carlos.lima@uespi.br`
-- **Curso**: Engenharia de Software (UESPI) - Matrícula: 20190005
-- **Nascimento**: 12/09/1999
-- **Especialidade**: DevOps & Cloud (AWS, Docker, Terraform, Jenkins)
-- **Localização**: Pirajá, Teresina/PI
-- **Lattes**: http://lattes.cnpq.br/5678901234567890
-- **GitHub**: https://github.com/carloslima
-- **Descrição**: Entusiasta DevOps, especializado em automação e infraestrutura.
-
-### Lúcia Ferreira (`lucia_ferreira`)
-- **Email**: `lucia.ferreira@ufpi.edu.br`
-- **Curso**: Ciência da Computação (UFPI) - Matrícula: 20200006
-- **Nascimento**: 18/05/2000
-- **Especialidade**: Mobile Development (Flutter, React Native, Firebase)
-- **Localização**: Dirceu, Teresina/PI
-- **Lattes**: http://lattes.cnpq.br/6789012345678901
-- **GitHub**: https://github.com/luciaferreira
-- **Descrição**: Desenvolvedora mobile focada em Flutter e apps multiplataforma.
-
----
-
-## 🏢 Empresas
-
-### TechPicos Startup (`techpicos_startup`)
-- **Email**: `contato@techpicos.com.br`
-- **Razão Social**: TechPicos Tecnologia e Inovação Ltda.
-- **CNPJ**: 12.345.678/0001-90
-- **Área de Atuação**: Agronegócio, IoT, Sustentabilidade, Inovação
-- **Localização**: Av. Barão de Gurguéia, 1000 - Centro, Teresina/PI
-- **LinkedIn**: https://linkedin.com/company/techpicos
-- **Descrição**: Startup focada em soluções tecnológicas para o agronegócio piauiense.
-
-### InnovaTech PI (`innovatech_pi`)
-- **Email**: `rh@innovatech.com.br`
-- **Razão Social**: InnovaTech Piauí Desenvolvimento de Software S.A.
-- **CNPJ**: 23.456.789/0001-01
-- **Área de Atuação**: Software Corporativo, Consultoria, ERP, CRM
-- **Localização**: Rua Álvaro Mendes, 500 - Centro, Teresina/PI
-- **LinkedIn**: https://linkedin.com/company/innovatech-pi
-- **Descrição**: Empresa de desenvolvimento de software corporativo e consultoria em TI.
-
-### DataCenter Nordeste (`datacenter_nordeste`)
-- **Email**: `vagas@datacenter-ne.com.br`
-- **Razão Social**: DataCenter Nordeste Infraestrutura Digital Ltda.
-- **CNPJ**: 34.567.890/0001-12
-- **Área de Atuação**: Cloud Computing, Infraestrutura, Hosting, DevOps
-- **Localização**: Av. Homero Castelo Branco, 2000 - Horto, Teresina/PI
-- **LinkedIn**: https://linkedin.com/company/datacenter-nordeste
-- **Descrição**: Provedora de serviços de cloud computing e infraestrutura digital.
-
-### Software House PI (`software_house_pi`)
-- **Email**: `contato@swhouse-pi.com.br`
-- **Razão Social**: Software House Piauí Desenvolvimento Ágil ME
-- **CNPJ**: 45.678.901/0001-23
-- **Área de Atuação**: Desenvolvimento Web, Mobile, Metodologias Ágeis, Startups
-- **Localização**: Rua São Pedro, 300 - Ilhotas, Teresina/PI
-- **GitHub**: https://github.com/software-house-pi
-- **Descrição**: Casa de software especializada em desenvolvimento web e mobile.
-
-### AI Solutions Brasil (`ai_solutions_br`)
-- **Email**: `careers@aisolutions.com.br`
-- **Razão Social**: AI Solutions Brasil Inteligência Artificial Ltda.
-- **CNPJ**: 56.789.012/0001-34
-- **Área de Atuação**: Inteligência Artificial, Machine Learning, Deep Learning, NLP
-- **Localização**: Av. Miguel Rosa, 1500 - São Cristóvão, Teresina/PI
-- **GitHub**: https://github.com/ai-solutions-br
-- **Descrição**: Empresa pioneira em soluções de IA para diversos setores.
-
----
-
-## 👑 Usuários Administrativos
-
-### Administrador (`admin`)
-- **Email**: `admin@admin.com`
-- **Nome**: Administrador do Sistema
-- **Role**: `admin`
-- **Descrição**: Usuário administrador com acesso completo ao sistema TalentPool
-
-### Moderador (`moderador`)
-- **Email**: `moderador@talentpool.com`
-- **Nome**: Moderador do Sistema
-- **Role**: `moderator`
-- **Descrição**: Usuário moderador responsável pela gestão de conteúdo
-
----
-
-## 💼 Vagas de Emprego
-
-| Título | Empresa | Prazo |
-|--------|---------|-------|
-| **Desenvolvedor Full Stack React/Node.js** | TechPicos Startup | 30 dias |
-| **Data Scientist Junior** | AI Solutions Brasil | 25 dias |
-| **DevOps Engineer** | DataCenter Nordeste | 20 dias |
-| **Mobile Developer Flutter** | Software House PI | 35 dias |
-| **Analista de Sistemas Sênior** | InnovaTech PI | 45 dias |
-
----
-
-## 📝 Candidaturas e Interações
-
-### Status das Candidaturas:
-- **3 Pendentes** (aguardando análise)
-- **2 Em Análise** (sendo avaliadas)
-- **2 Aprovadas** (aceitas pelas empresas)
-
-### Exemplos de Candidaturas:
-- João Silva → Full Stack (pending) + Data Scientist (reviewing)
-- Maria Santos → Mobile Flutter (approved)
-- Ana Oliveira → Data Scientist (approved)
-- Carlos Lima → DevOps (reviewing)
-
-### Sistema de Likes:
-- Likes mútuos entre estudantes e empresas
-- Networking entre estudantes
-- Demonstração do sistema de conexões
-
----
-
-## 🚀 Como Usar
-
-### Login na API
-```bash
-POST /auth/sign-in
-{
-  "username": "joao_silva",
-  "password": "MinhaSenh@123"
-}
-```
-
-### Executar Seed
-```bash
-npx prisma db seed
-```
-
-### Perfis para Teste:
-- **Estudantes**: Teste candidaturas, perfis acadêmicos, networking
-- **Empresas**: Teste criação de vagas, gestão de candidaturas
-- **Admin/Moderador**: Teste funcionalidades administrativas
-
----
+Este documento descreve os usuários criados no seed do banco de dados para testes e desenvolvimento.
 
 ## 📊 Resumo dos Dados
 
-- ✅ **13 usuários totais** (6 estudantes + 5 empresas + 2 admins)
-- ✅ **5 vagas publicadas** com diferentes prazos de expiração
-- ✅ **7 candidaturas** em vários status para testes
-- ✅ **Perfis completos** com endereços, cursos, especialidades
-- ✅ **Dados realistas** baseados no cenário educacional piauiense
-- ✅ **Links funcionais** para Lattes, GitHub, LinkedIn
+- **6 Estudantes** com perfis completos e tags diversificadas
+- **5 Empresas** com diferentes especialidades tecnológicas
+- **2 Usuários Administrativos** (admin e moderador)
+- **Vagas de emprego** relacionadas às especialidades
+- **Candidaturas** e **likes** entre usuários
 
-*Use qualquer username + senha padrão `MinhaSenh@123` para acessar a aplicação.*
+## 👨‍🎓 Estudantes
+
+### João Silva
+- **Username:** `joao_silva`
+- **Email:** joao.silva@ufpi.edu.br
+- **Curso:** Ciência da Computação
+- **Tags:** JavaScript, React, Node.js, Python, Machine Learning
+- **Descrição:** Estudante apaixonado por desenvolvimento web e inteligência artificial
+
+### Maria Santos
+- **Username:** `maria_santos`
+- **Email:** maria.santos@ufpi.edu.br
+- **Curso:** Sistemas de Informação
+- **Tags:** React, Vue.js, TypeScript, Figma, UX/UI Design
+- **Descrição:** Desenvolvedora frontend com foco em React e UX/UI Design
+
+### Pedro Costa
+- **Username:** `pedro_costa`
+- **Email:** pedro.costa@ifpi.edu.br
+- **Curso:** Análise e Desenvolvimento de Sistemas
+- **Tags:** Python, Django, FastAPI, Docker, Kubernetes, PostgreSQL
+- **Descrição:** Especialista em backend com Python e Django, interessado em arquitetura de microsserviços
+
+### Ana Oliveira
+- **Username:** `ana_oliveira`
+- **Email:** ana.oliveira@ufpi.edu.br
+- **Curso:** Ciência da Computação
+- **Tags:** Python, Machine Learning, TensorFlow, Pandas, Data Science, R
+- **Descrição:** Data Scientist em formação, trabalha com Machine Learning e análise de dados
+
+### Carlos Lima
+- **Username:** `carlos_lima`
+- **Email:** carlos.lima@uespi.br
+- **Curso:** Engenharia de Software
+- **Tags:** DevOps, AWS, Docker, Terraform, Ansible, Jenkins
+- **Descrição:** DevOps enthusiast, ama automação e infraestrutura como código
+
+### Lúcia Ferreira
+- **Username:** `lucia_ferreira`
+- **Email:** lucia.ferreira@ufpi.edu.br
+- **Curso:** Ciência da Computação
+- **Tags:** Flutter, Dart, React Native, Firebase, Mobile Development
+- **Descrição:** Mobile developer focada em Flutter e desenvolvimento multiplataforma
+
+### Bruna Martins (Novo)
+- **Username:** `bruna_martins`
+- **Email:** bruna.martins@ufpi.edu.br
+- **Curso:** Engenharia Elétrica
+- **Tags:** IoT, Automação, Arduino, C++, Eletrônica
+- **Descrição:** Estudante de Engenharia Elétrica com interesse em IoT e automação residencial
+
+### Rafael Gomes (Novo)
+- **Username:** `rafael_gomes`
+- **Email:** rafael.gomes@ifpi.edu.br
+- **Curso:** Sistemas de Informação
+- **Tags:** Java, Spring Boot, PostgreSQL, APIs, Microservices
+- **Descrição:** Backend developer focado em Java, Spring Boot e bancos de dados
+
+## 🏢 Empresas
+
+### TechPicos Startup
+- **Username:** `techpicos_startup`
+- **Email:** contato@techpicos.com.br
+- **Tags:** Agronegócio, IoT, Sustentabilidade, Inovação
+- **Descrição:** Startup focada em soluções tecnológicas para o agronegócio piauiense
+
+### InnovaTech PI
+- **Username:** `innovatech_pi`
+- **Email:** rh@innovatech.com.br
+- **Tags:** Software Corporativo, Consultoria, ERP, CRM
+- **Descrição:** Empresa de desenvolvimento de software corporativo e consultoria em TI
+
+### DataCenter Nordeste
+- **Username:** `datacenter_nordeste`
+- **Email:** vagas@datacenter-ne.com.br
+- **Tags:** Cloud Computing, Infraestrutura, Hosting, DevOps
+- **Descrição:** Provedora de serviços de cloud computing e infraestrutura digital
+
+### Software House PI
+- **Username:** `software_house_pi`
+- **Email:** contato@swhouse-pi.com.br
+- **Tags:** Desenvolvimento Web, Mobile, Agile, Startups
+- **Descrição:** Casa de software especializada em desenvolvimento web e mobile
+
+### AI Solutions Brasil
+- **Username:** `ai_solutions_br`
+- **Email:** careers@aisolutions.com.br
+- **Tags:** Inteligência Artificial, Machine Learning, Deep Learning, NLP
+- **Descrição:** Empresa pioneira em soluções de inteligência artificial para diversos setores
+
+### IoT Solutions Nordeste (Nova)
+- **Username:** `iot_solutions`
+- **Email:** contato@iotsolutions.com.br
+- **Tags:** IoT, Automação, Smart Home, Arduino, Cloud
+- **Descrição:** Empresa referência em automação residencial e soluções IoT
+
+### Backend Experts Ltda. (Nova)
+- **Username:** `backend_experts`
+- **Email:** contato@backendexperts.com.br
+- **Tags:** Java, Spring Boot, Microservices, APIs, Consultoria
+- **Descrição:** Consultoria especializada em arquitetura de microsserviços e APIs Java
+
+## 👑 Usuários Administrativos
+
+### Admin
+- **Username:** `admin`
+- **Email:** admin@admin.com
+- **Password:** MinhaSenh@123
+- **Role:** admin
+
+### Moderador
+- **Username:** `moderador`
+- **Email:** moderador@talentpool.com
+- **Password:** MinhaSenh@123
+- **Role:** moderator
+
+## 🔐 Senha Padrão
+
+Todos os usuários têm a mesma senha: `MinhaSenh@123`
+
+## 🎯 Cenários de Teste de Recomendações
+
+### Recomendações para Estudantes
+
+#### Ana Oliveira (Data Science)
+- **Tags:** Python, Machine Learning, TensorFlow, Pandas, Data Science, R
+- **Recomendação Esperada:** AI Solutions Brasil (match perfeito com Machine Learning)
+
+#### Carlos Lima (DevOps)
+- **Tags:** DevOps, AWS, Docker, Terraform, Ansible, Jenkins
+- **Recomendação Esperada:** DataCenter Nordeste (match perfeito com DevOps)
+
+#### Lúcia Ferreira (Mobile)
+- **Tags:** Flutter, Dart, React Native, Firebase, Mobile Development
+- **Recomendação Esperada:** Software House PI (match com Mobile)
+
+#### Bruna Martins (IoT)
+- **Tags:** IoT, Automação, Arduino, C++, Eletrônica
+- **Recomendação Esperada:** IoT Solutions Nordeste (match perfeito com IoT)
+
+#### Rafael Gomes (Java Backend)
+- **Tags:** Java, Spring Boot, PostgreSQL, APIs, Microservices
+- **Recomendação Esperada:** Backend Experts Ltda. (match perfeito com Java/Spring)
+
+### Recomendações para Empresas
+
+#### AI Solutions Brasil (IA/ML)
+- **Tags:** Inteligência Artificial, Machine Learning, Deep Learning, NLP
+- **Recomendação Esperada:** Ana Oliveira (match perfeito com Machine Learning)
+
+#### DataCenter Nordeste (Cloud/DevOps)
+- **Tags:** Cloud Computing, Infraestrutura, Hosting, DevOps
+- **Recomendação Esperada:** Carlos Lima (match perfeito com DevOps)
+
+#### Software House PI (Web/Mobile)
+- **Tags:** Desenvolvimento Web, Mobile, Agile, Startups
+- **Recomendação Esperada:** Lúcia Ferreira (match com Mobile)
+
+#### IoT Solutions Nordeste (IoT)
+- **Tags:** IoT, Automação, Smart Home, Arduino, Cloud
+- **Recomendação Esperada:** Bruna Martins (match perfeito com IoT)
+
+#### Backend Experts Ltda. (Java)
+- **Tags:** Java, Spring Boot, Microservices, APIs, Consultoria
+- **Recomendação Esperada:** Rafael Gomes (match perfeito com Java/Spring)
+
+## 💼 Vagas de Emprego
+
+1. **Desenvolvedor Full Stack React/Node.js** - TechPicos Startup
+2. **Data Scientist Junior** - AI Solutions Brasil
+3. **DevOps Engineer** - DataCenter Nordeste
+4. **Mobile Developer Flutter** - Software House PI
+5. **Analista de Sistemas Sênior** - InnovaTech PI
+
+## 📝 Candidaturas
+
+Várias candidaturas foram criadas simulando aplicações reais às vagas.
+
+## ❤️ Likes
+
+Likes mútuos foram criados entre estudantes e empresas para testar funcionalidades sociais.
+
+## 🚀 Como Executar o Seed
+
+```bash
+# Executar apenas o seed de usuários
+npx ts-node prisma/seeds/users.ts
+
+# Ou executar todos os seeds
+npm run seed
+```
+
+## 📈 Melhorias Recentes
+
+- **Adicionados 2 novos estudantes:** Bruna Martins (IoT) e Rafael Gomes (Java Backend)
+- **Adicionadas 2 novas empresas:** IoT Solutions Nordeste e Backend Experts Ltda.
+- **Cenários de teste expandidos:** Agora há matches perfeitos para testar o algoritmo de recomendações
+- **Cobertura tecnológica ampliada:** IoT, Java/Spring Boot, automação residencial, consultoria backend</content>
+<parameter name="filePath">/home/adrinator/talentPoolBackRemake/USERS_SEED.md
