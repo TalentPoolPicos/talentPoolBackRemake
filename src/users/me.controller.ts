@@ -15,6 +15,7 @@ import {
   HttpException,
   InternalServerErrorException,
   Query,
+  ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -49,6 +50,10 @@ import {
   UserProfileResponseDto,
   DeleteProfileResponseDto,
 } from './dtos/user-response.dto';
+import {
+  GetRecommendedUsersDto,
+  RecommendedUsersResponseDto,
+} from './dtos/recommendations.dto';
 import { LikesService } from '../likes/likes.service';
 import { JobsService } from '../jobs/jobs.service';
 import { Role } from '../auth/enums/role.enum';
@@ -1350,5 +1355,60 @@ socket.on('notification', (notification) => {
     );
 
     return { unreadCount };
+  }
+
+  @ApiTags('Students', 'Enterprises')
+  @ApiOperation({
+    summary: 'Obter usuários recomendados',
+    description:
+      'Retorna uma lista paginada de usuários recomendados baseada nas tags do usuário atual. Usuários estudantes recebem recomendações de empresas e vice-versa.',
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Número de resultados por página (1-50)',
+    required: false,
+    type: Number,
+    example: 20,
+  })
+  @ApiQuery({
+    name: 'offset',
+    description: 'Offset para paginação (início em 0)',
+    required: false,
+    type: Number,
+    example: 0,
+  })
+  @ApiOkResponse({
+    description: 'Usuários recomendados obtidos com sucesso',
+    type: RecommendedUsersResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Parâmetros de paginação inválidos',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Erro interno do servidor',
+  })
+  @Get('recommendations')
+  async getRecommendedUsers(
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    query: GetRecommendedUsersDto,
+    @Request() req: CustomRequest,
+  ): Promise<RecommendedUsersResponseDto> {
+    const { limit = 20, offset = 0 } = query;
+
+    const result = await this.usersService.getRecommendedUsers(
+      req.user.sub,
+      limit,
+      offset,
+    );
+
+    return {
+      users: result.users,
+      total: result.total,
+      hasNext: result.hasNext,
+      hasPrev: result.hasPrev,
+      count: result.users.length,
+      offset,
+      limit,
+    };
   }
 }

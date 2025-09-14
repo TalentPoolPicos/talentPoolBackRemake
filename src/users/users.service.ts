@@ -1176,6 +1176,307 @@ export class UsersService {
   }
 
   /**
+   * Calcula a distância de Levenshtein entre duas strings
+   */
+  private calculateLevenshteinDistance(str1: string, str2: string): number {
+    const matrix = Array(str2.length + 1)
+      .fill(null)
+      .map(() => Array(str1.length + 1).fill(null));
+
+    for (let i = 0; i <= str1.length; i += 1) {
+      matrix[0][i] = i;
+    }
+
+    for (let j = 0; j <= str2.length; j += 1) {
+      matrix[j][0] = j;
+    }
+
+    for (let j = 1; j <= str2.length; j += 1) {
+      for (let i = 1; i <= str1.length; i += 1) {
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        matrix[j][i] = Math.min(
+          matrix[j][i - 1] + 1, // deletion
+          matrix[j - 1][i] + 1, // insertion
+          matrix[j - 1][i - 1] + indicator, // substitution
+        );
+      }
+    }
+
+    return matrix[str2.length][str1.length];
+  }
+
+  /**
+   * Normaliza uma tag para comparação
+   */
+  private normalizeTag(tag: string): string {
+    return tag
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]/g, '') // Remove caracteres especiais
+      .replace(/js$/, 'javascript') // ReactJS -> reactjavascript
+      .replace(/css$/, 'styles'); // CSS -> styles
+  }
+
+  /**
+   * Calcula a similaridade entre duas tags (0-1, onde 1 é idêntica)
+   */
+  private calculateTagSimilarity(tag1: string, tag2: string): number {
+    const normalized1 = this.normalizeTag(tag1);
+    const normalized2 = this.normalizeTag(tag2);
+
+    // Se são idênticas após normalização
+    if (normalized1 === normalized2) {
+      return 1;
+    }
+
+    // Se uma contém a outra
+    if (
+      normalized1.includes(normalized2) ||
+      normalized2.includes(normalized1)
+    ) {
+      return 0.8;
+    }
+
+    // Calcular similaridade baseada na distância de Levenshtein
+    const maxLength = Math.max(normalized1.length, normalized2.length);
+    if (maxLength === 0) return 1;
+
+    const distance = this.calculateLevenshteinDistance(
+      normalized1,
+      normalized2,
+    );
+    const similarity = 1 - distance / maxLength;
+
+    // Considerar similar se a similaridade for >= 70%
+    return similarity >= 0.7 ? similarity : 0;
+  }
+
+  /**
+   * Calcula o score de compatibilidade entre usuário atual e um candidato
+   */
+  private calculateUserCompatibilityScore(
+    userTags: string[],
+    candidateTags: { label: string }[],
+  ): number {
+    if (userTags.length === 0 || candidateTags.length === 0) {
+      return 0;
+    }
+
+    let totalScore = 0;
+    let matchCount = 0;
+
+    for (const userTag of userTags) {
+      let bestMatch = 0;
+      for (const candidateTag of candidateTags) {
+        const similarity = this.calculateTagSimilarity(
+          userTag,
+          candidateTag.label,
+        );
+        bestMatch = Math.max(bestMatch, similarity);
+      }
+
+      if (bestMatch > 0) {
+        totalScore += bestMatch;
+        matchCount++;
+      }
+    }
+
+    // Score final: média das melhores correspondências * fator de cobertura
+    const averageScore = matchCount > 0 ? totalScore / matchCount : 0;
+    const coverageFactor = matchCount / userTags.length; // Quantas tags do usuário foram "cobertas"
+
+    return averageScore * coverageFactor;
+  }
+
+  /**
+   * Busca usuários recomendados baseado nas tags do usuário atual com algoritmo de similaridade
+   */
+  async getRecommendedUsers(
+    userId: number,
+    limit: number = 20,
+    offset: number = 0,
+  ): Promise<{
+    users: UserPreviewResponseDto[];
+    total: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  }> {
+    this.logger.log(
+      `Buscando usuários recomendados para usuário ID: ${userId}`,
+    );
+
+    // Buscar o usuário atual com suas tags
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        tags: true,
+      },
+    });
+
+    if (!currentUser) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    // Se o usuário não tem tags, retornar usuários aleatórios com papel diferente
+    if (!currentUser.tags || currentUser.tags.length === 0) {
+      this.logger.log(
+        'Usuário sem tags, buscando usuários com papel diferente',
+      );
+      return this.getRecommendedUsersByRole(currentUser.role, limit, offset);
+    }
+
+    // Extrair labels das tags do usuário atual
+    const userTagLabels = currentUser.tags.map((tag) => tag.label);
+    this.logger.log(`Tags do usuário: ${userTagLabels.join(', ')}`);
+
+    // Determinar o papel oposto para recomendação
+    const oppositeRole =
+      currentUser.role === 'student' ? 'enterprise' : 'student';
+
+    // Buscar TODOS os usuários do papel oposto (sem filtrar por tags ainda)
+    // Vamos aplicar o algoritmo de similaridade em memória para melhor controle
+    const allCandidates = await this.prisma.user.findMany({
+      where: {
+        id: { not: userId }, // Excluir o próprio usuário
+        role: oppositeRole, // Papel diferente
+        isActive: true,
+        isDeleted: false,
+      },
+      include: {
+        tags: true,
+        address: true,
+        avatar: true,
+        banner: true,
+      },
+    });
+
+    this.logger.log(
+      `Analisando ${allCandidates.length} candidatos para recomendação`,
+    );
+
+    // Calcular score de compatibilidade para cada candidato
+    const candidatesWithScore = allCandidates
+      .map((candidate) => ({
+        user: candidate,
+        score: this.calculateUserCompatibilityScore(
+          userTagLabels,
+          candidate.tags,
+        ),
+      }))
+      .filter((item) => item.score > 0) // Apenas usuários com alguma compatibilidade
+      .sort((a, b) => b.score - a.score); // Ordenar por score decrescente
+
+    // Se não há candidatos com score > 0, usar usuários aleatórios
+    if (candidatesWithScore.length === 0) {
+      this.logger.log(
+        'Nenhum usuário compatível encontrado, usando fallback aleatório',
+      );
+      return this.getRecommendedUsersByRole(currentUser.role, limit, offset);
+    }
+
+    // Aplicar paginação nos resultados ordenados por score
+    const paginatedCandidates = candidatesWithScore.slice(
+      offset,
+      offset + limit,
+    );
+
+    this.logger.log(
+      `Selecionados ${paginatedCandidates.length} usuários com scores: ${paginatedCandidates
+        .map((c) => c.score.toFixed(3))
+        .join(', ')}`,
+    );
+
+    // Converter para DTOs de preview
+    const userPreviews = await Promise.all(
+      paginatedCandidates.map(async ({ user }) => {
+        const imageUrls = await this.getUserImageUrls(user.id);
+        return this.mapToPreviewDto(
+          user,
+          imageUrls.avatarUrl || undefined,
+          imageUrls.bannerUrl || undefined,
+        );
+      }),
+    );
+
+    const totalCount = candidatesWithScore.length;
+    const hasNext = offset + limit < totalCount;
+    const hasPrev = offset > 0;
+
+    this.logger.log(
+      `Retornando ${userPreviews.length} usuários recomendados de ${totalCount} compatíveis`,
+    );
+
+    return {
+      users: userPreviews,
+      total: totalCount,
+      hasNext,
+      hasPrev,
+    };
+  }
+
+  /**
+   * Busca usuários recomendados apenas por papel (fallback quando não há tags)
+   */
+  private async getRecommendedUsersByRole(
+    currentUserRole: string,
+    limit: number,
+    offset: number,
+  ): Promise<{
+    users: UserPreviewResponseDto[];
+    total: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  }> {
+    const oppositeRole =
+      currentUserRole === 'student' ? 'enterprise' : 'student';
+
+    const users = await this.prisma.user.findMany({
+      where: {
+        role: oppositeRole,
+        isActive: true,
+        isDeleted: false,
+      },
+      include: {
+        tags: true,
+        address: true,
+        avatar: true,
+        banner: true,
+      },
+      skip: offset,
+      take: limit,
+    });
+
+    const totalCount = await this.prisma.user.count({
+      where: {
+        role: oppositeRole,
+        isActive: true,
+        isDeleted: false,
+      },
+    });
+
+    const userPreviews = await Promise.all(
+      users.map(async (user) => {
+        const imageUrls = await this.getUserImageUrls(user.id);
+        return this.mapToPreviewDto(
+          user,
+          imageUrls.avatarUrl || undefined,
+          imageUrls.bannerUrl || undefined,
+        );
+      }),
+    );
+
+    const hasNext = offset + limit < totalCount;
+    const hasPrev = offset > 0;
+
+    return {
+      users: userPreviews,
+      total: totalCount,
+      hasNext,
+      hasPrev,
+    };
+  }
+
+  /**
    * Exemplo de método para deletar arquivo do usuário
    */
   async deleteUserFile(storageKey: string): Promise<void> {
