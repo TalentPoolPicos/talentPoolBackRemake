@@ -77,8 +77,8 @@ export class UpdateStudentProfileDto {
   })
   @IsOptional()
   @IsString({ message: 'Número de matrícula deve ser uma string' })
-  @MaxLength(11, {
-    message: 'Número de matrícula deve ter no máximo 11 caracteres',
+  @MaxLength(50, {
+    message: 'Número de matrícula deve ter no máximo 50 caracteres',
   })
   registrationNumber?: string;
 
