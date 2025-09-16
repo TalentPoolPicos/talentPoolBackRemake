@@ -75,7 +75,7 @@ model Student {
   updatedAt          DateTime         @updatedAt @map("updated_at")
   lattes             String?          @db.VarChar(255)
   course             String?          @db.VarChar(100)
-  registrationNumber String?          @unique @map("registration_number") @db.VarChar(11)
+  registrationNumber String?          @unique @map("registration_number") @db.VarChar(50)
   userId             Int              @unique @map("user_id")
   curriculum         Attachment?      @relation("StudentCurriculum")
   history            Attachment?      @relation("StudentHistory")
