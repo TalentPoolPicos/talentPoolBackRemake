@@ -419,7 +419,7 @@
             <h3>➕ Candidatar-se a uma Vaga</h3>
             <div class="form-group">
               <label>UUID da Vaga</label>
-              <input id="applyJobUuid" placeholder="UUID da vaga desejada">
+              <input id="applyUuid" placeholder="UUID da vaga desejada">
               <small>Digite o UUID completo da vaga para se candidatar</small>
             </div>
             <div class="form-group">
@@ -505,7 +505,7 @@
             <h3>⚙️ Gerenciar Vaga Específica</h3>
             <div class="form-group">
               <label>UUID da Vaga</label>
-              <input id="jobUuid" placeholder="UUID da vaga para gerenciar">
+              <input id="uuid" placeholder="UUID da vaga para gerenciar">
             </div>
             
             <div class="form-group">
@@ -533,7 +533,7 @@
             <h3>👥 Candidaturas por Vaga</h3>
             <div class="form-group">
               <label>UUID da Vaga</label>
-              <input id="applicationsJobUuid" placeholder="UUID da vaga para ver candidaturas">
+              <input id="applicationsUuid" placeholder="UUID da vaga para ver candidaturas">
             </div>
             <div class="actions-grid">
               <button class="btn" onclick="getJobApplications()">👥 Ver Candidaturas</button>
@@ -1212,7 +1212,7 @@
       apiCall('/me/enterprise/jobs').then(({data}) => showResponse('jobsResponse', data));
     }
     function updateJobContent() {
-      const uuid = document.getElementById('jobUuid').value;
+  const uuid = document.getElementById('uuid').value;
       const title = document.getElementById('editJobTitle').value;
       const description = document.getElementById('editJobDescription').value;
       const expiresAt = document.getElementById('editJobExpiresAt').value;
@@ -1243,24 +1243,24 @@
       apiCall('/me/enterprise/jobs/' + uuid + '/content', 'PUT', body).then(({data}) => showResponse('jobsResponse', data));
     }
     function publishJob() {
-      const uuid = document.getElementById('jobUuid').value;
+  const uuid = document.getElementById('uuid').value;
       apiCall('/me/enterprise/jobs/' + uuid + '/publish', 'PUT').then(({data}) => showResponse('jobsResponse', data));
     }
     function pauseJob() {
-      const uuid = document.getElementById('jobUuid').value;
+  const uuid = document.getElementById('uuid').value;
       apiCall('/me/enterprise/jobs/' + uuid + '/pause', 'PUT').then(({data}) => showResponse('jobsResponse', data));
     }
     function closeJob() {
-      const uuid = document.getElementById('jobUuid').value;
+  const uuid = document.getElementById('uuid').value;
       apiCall('/me/enterprise/jobs/' + uuid + '/close', 'PUT').then(({data}) => showResponse('jobsResponse', data));
     }
     function getJobApplications() {
-      const uuid = document.getElementById('applicationsJobUuid').value;
+  const uuid = document.getElementById('applicationsUuid').value;
       if (!uuid) return alert('Digite o UUID da vaga!');
       apiCall('/me/enterprise/jobs/' + uuid + '/applications').then(({data}) => showResponse('applicationsJobResponse', data));
     }
     function getFilteredApplications() {
-      const uuid = document.getElementById('applicationsJobUuid').value;
+  const uuid = document.getElementById('applicationsUuid').value;
       const status = document.getElementById('applicationStatusFilter').value;
       if (!uuid) return alert('Digite o UUID da vaga!');
       
@@ -1272,11 +1272,11 @@
       apiCall(url).then(({data}) => showResponse('applicationsJobResponse', data));
     }
     function applyToJob() {
-      const jobUuid = document.getElementById('applyJobUuid').value;
+  const uuid = document.getElementById('applyUuid').value;
       const coverLetter = document.getElementById('applyCoverLetter').value;
       
       // Validações
-      if (!jobUuid || jobUuid.trim() === '') {
+      if (!uuid || uuid.trim() === '') {
         return alert('Por favor, digite o UUID da vaga!');
       }
       
@@ -1286,12 +1286,12 @@
       
       const body = { coverLetter: coverLetter || undefined };
       
-      apiCall('/me/student/job-applications/' + jobUuid.trim(), 'POST', body)
+  apiCall('/me/student/job-applications/' + uuid.trim(), 'POST', body)
         .then(({ok, data}) => {
           showResponse('applicationsResponse', data);
           if (ok) {
             // Limpar campos após sucesso
-            document.getElementById('applyJobUuid').value = '';
+            document.getElementById('applyUuid').value = '';
             document.getElementById('applyCoverLetter').value = '';
             updateCharCount(); // Atualizar contador
             alert('✅ Candidatura enviada com sucesso!');
