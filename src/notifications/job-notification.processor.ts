@@ -29,7 +29,7 @@ export class JobNotificationProcessor extends WorkerHost {
 
     try {
       this.logger.log(
-        `Processing job notification ${job.id} for job ${data.jobUuid}`,
+        `Processing job notification ${job.id} for job ${data.uuid}`,
       );
 
       // Buscar usuários conectados à empresa
@@ -58,11 +58,11 @@ export class JobNotificationProcessor extends WorkerHost {
           priority: 2,
           relatedJobId: data.jobId,
           relatedUserId: data.enterpriseUserId,
-          actionUrl: `/jobs/${data.jobUuid}`,
+          actionUrl: `/jobs/${data.uuid}`,
           actionType: 'view_job',
           actionData: {
             jobId: data.jobId,
-            jobUuid: data.jobUuid,
+            uuid: data.uuid,
             enterpriseId: data.enterpriseId,
           },
           metadata: {
@@ -78,7 +78,7 @@ export class JobNotificationProcessor extends WorkerHost {
       await Promise.all(notificationPromises);
 
       this.logger.log(
-        `Successfully sent ${connectedUsers.length} job notifications for job ${data.jobUuid}`,
+        `Successfully sent ${connectedUsers.length} job notifications for job ${data.uuid}`,
       );
 
       return {

@@ -398,6 +398,38 @@ export class JobListResponseDto {
 }
 
 /**
+ * DTO para resposta pública de vagas publicadas (preview + paginação)
+ */
+export class PublishedJobListResponseDto {
+  @ApiProperty({
+    type: [JobPreviewDto],
+    description: 'Lista de vagas publicadas (preview)',
+  })
+  jobs: JobPreviewDto[];
+
+  @ApiProperty({
+    type: Number,
+    example: 25,
+    description: 'Total de vagas publicadas',
+  })
+  total: number;
+
+  @ApiProperty({
+    type: Number,
+    example: 20,
+    description: 'Limite de itens por página',
+  })
+  limit: number;
+
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    description: 'Offset da paginação',
+  })
+  offset: number;
+}
+
+/**
  * DTO para resposta de lista de aplicações
  */
 export class ApplicationListResponseDto {

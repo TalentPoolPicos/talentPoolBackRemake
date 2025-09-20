@@ -1,6 +1,6 @@
 export interface JobPublishedNotificationData {
   jobId: number;
-  jobUuid: string;
+  uuid: string;
   jobTitle: string;
   enterpriseId: number;
   enterpriseName: string;
