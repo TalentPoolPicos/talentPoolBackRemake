@@ -6,6 +6,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { validate as isUuid } from 'uuid';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
@@ -199,7 +200,10 @@ export class JobsService {
             },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy:
+          where.status === this.JOB_STATUS.PUBLISHED
+            ? { publishedAt: 'desc' }
+            : { createdAt: 'desc' },
         take: takeInt,
         skip: skipInt,
       }),
@@ -243,10 +247,14 @@ export class JobsService {
    * Aplicar para vaga (apenas estudantes)
    */
   async applyToJob(
-    jobUuid: string,
+    uuid: string,
     studentId: number,
     applyDto: ApplyToJobDto,
   ): Promise<JobApplicationStudentResponseDto> {
+    // Validar formato do UUID antes de usar no Prisma
+    if (!isUuid(uuid)) {
+      throw new BadRequestException('UUID inválido');
+    }
     const student = await this.prisma.user.findUnique({
       where: { id: studentId },
       include: { student: true },
@@ -259,7 +267,7 @@ export class JobsService {
     }
 
     const job = await this.prisma.job.findUnique({
-      where: { uuid: jobUuid },
+      where: { uuid },
     });
 
     if (!job) {
@@ -314,7 +322,7 @@ export class JobsService {
     });
 
     this.logger.log(
-      `Nova candidatura: estudante ${studentId} para vaga ${jobUuid}`,
+      `Nova candidatura: estudante ${studentId} para vaga ${uuid}`,
     );
 
     // Enviar notificação para a empresa sobre nova candidatura
@@ -506,12 +514,15 @@ export class JobsService {
    * Listar candidaturas filtradas para uma vaga específica
    */
   async getJobApplicationsFiltered(
-    jobUuid: string,
+    uuid: string,
     companyId: number,
     filters: GetApplicationsFilterDto,
   ): Promise<ApplicationListResponseDto> {
+    if (!isUuid(uuid)) {
+      throw new BadRequestException('uuid inválido');
+    }
     const job = await this.prisma.job.findUnique({
-      where: { uuid: jobUuid },
+      where: { uuid: uuid },
       include: {
         enterprise: {
           include: {
@@ -832,7 +843,9 @@ export class JobsService {
    */
   async getJobByUuid(uuid: string, userId?: number): Promise<JobResponseDto> {
     this.logger.log(`Buscando vaga por UUID: ${uuid}`);
-
+    if (!isUuid(uuid)) {
+      throw new BadRequestException('UUID inválido');
+    }
     const job = await this.prisma.job.findUnique({
       where: { uuid },
       include: {
@@ -880,7 +893,9 @@ export class JobsService {
     updateJobDto: UpdateJobDto,
   ): Promise<JobResponseDto> {
     this.logger.log(`Atualizando vaga ${uuid} para empresa ID: ${companyId}`);
-
+    if (!isUuid(uuid)) {
+      throw new BadRequestException('UUID inválido');
+    }
     // Verificar se a vaga existe e pertence à empresa
     const job = await this.prisma.job.findUnique({
       where: { uuid },
@@ -952,19 +967,21 @@ export class JobsService {
    * Listar candidaturas de uma vaga
    */
   async getJobApplications(
-    jobUuid: string,
+    uuid: string,
     companyId: number,
     status?: ApplicationStatus,
     limit: number = 20,
     offset: number = 0,
   ): Promise<ApplicationListResponseDto> {
     this.logger.log(
-      `Listando candidaturas da vaga ${jobUuid} para empresa ID: ${companyId}`,
+      `Listando candidaturas da vaga ${uuid} para empresa ID: ${companyId}`,
     );
-
+    if (!isUuid(uuid)) {
+      throw new BadRequestException('UUID inválido');
+    }
     // Verificar se a vaga existe e pertence à empresa
     const job = await this.prisma.job.findUnique({
-      where: { uuid: jobUuid },
+      where: { uuid },
       include: {
         enterprise: {
           include: {
@@ -1093,7 +1110,9 @@ export class JobsService {
     this.logger.log(
       `Atualizando conteúdo da vaga ${uuid} para empresa ID: ${companyId}`,
     );
-
+    if (!isUuid(uuid)) {
+      throw new BadRequestException('UUID inválido');
+    }
     // Verificar se a vaga existe e pertence à empresa
     const job = await this.prisma.job.findUnique({
       where: { uuid },
@@ -1272,7 +1291,7 @@ export class JobsService {
       try {
         const notificationData: JobPublishedNotificationData = {
           jobId: updatedJob.id,
-          jobUuid: updatedJob.uuid,
+          uuid: updatedJob.uuid,
           jobTitle: updatedJob.title,
           jobLocation: 'Não informado', // Job não tem location, pode usar um valor padrão
           enterpriseId: updatedJob.enterprise.id,
