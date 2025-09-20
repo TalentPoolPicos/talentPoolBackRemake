@@ -1357,7 +1357,6 @@ socket.on('notification', (notification) => {
     return { unreadCount };
   }
 
-  @ApiTags('Students', 'Enterprises')
   @ApiOperation({
     summary: 'Obter usuários recomendados',
     description:
