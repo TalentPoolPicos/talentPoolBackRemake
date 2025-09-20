@@ -123,7 +123,7 @@ describe('JobsService', () => {
   describe('applyToJob', () => {
     it('should allow student to apply to job', async () => {
       const studentId = 1;
-      const jobUuid = 'job-uuid';
+      const uuid = 'job-uuid';
       const applyDto = {
         coverLetter: 'Gostaria de me candidatar a esta vaga.',
       };
@@ -136,7 +136,7 @@ describe('JobsService', () => {
 
       const mockJob = {
         id: 1,
-        uuid: jobUuid,
+        uuid: uuid,
         status: JobStatus.published,
         expiresAt: null,
       };
@@ -147,7 +147,7 @@ describe('JobsService', () => {
         status: ApplicationStatus.pending,
         coverLetter: applyDto.coverLetter,
         job: {
-          uuid: jobUuid,
+          uuid: uuid,
           title: 'Vaga Teste',
           status: JobStatus.published,
         },
@@ -163,7 +163,7 @@ describe('JobsService', () => {
         mockApplication,
       );
 
-      const result = await service.applyToJob(jobUuid, studentId, applyDto);
+      const result = await service.applyToJob(uuid, studentId, applyDto);
 
       expect(result.uuid).toBe('application-uuid');
       expect(result.status).toBe(ApplicationStatus.pending);
@@ -172,7 +172,7 @@ describe('JobsService', () => {
 
     it('should throw ForbiddenException for non-student user', async () => {
       const userId = 1;
-      const jobUuid = 'job-uuid';
+      const uuid = 'job-uuid';
       const applyDto = { coverLetter: 'Test' };
 
       const mockEnterprise = {
@@ -183,14 +183,14 @@ describe('JobsService', () => {
 
       mockPrismaService.user.findUnique.mockResolvedValue(mockEnterprise);
 
-      await expect(
-        service.applyToJob(jobUuid, userId, applyDto),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.applyToJob(uuid, userId, applyDto)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should throw NotFoundException for non-existent job', async () => {
       const studentId = 1;
-      const jobUuid = 'non-existent-job';
+      const uuid = 'non-existent-job';
       const applyDto = { coverLetter: 'Test' };
 
       const mockStudent = {
@@ -203,7 +203,7 @@ describe('JobsService', () => {
       mockPrismaService.job.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.applyToJob(jobUuid, studentId, applyDto),
+        service.applyToJob(uuid, studentId, applyDto),
       ).rejects.toThrow(NotFoundException);
     });
   });
