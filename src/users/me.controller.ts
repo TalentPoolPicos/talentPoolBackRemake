@@ -1067,11 +1067,11 @@ export class MeController {
    * Aplicar para vaga (apenas estudantes)
    */
   @ApiTags('Students')
-  @Post('student/job-applications/:jobUuid')
+  @Post('student/job-applications/:uuid')
   @UseGuards(RolesGuard)
   @Roles(Role.STUDENT)
   @ApiOperation({ summary: 'Aplicar para vaga' })
-  @ApiParam({ name: 'jobUuid', type: String, description: 'UUID da vaga' })
+  @ApiParam({ name: 'uuid', type: String, description: 'UUID da vaga' })
   @ApiCreatedResponse({
     description: 'Candidatura criada com sucesso',
     type: JobApplicationStudentResponseDto,
@@ -1089,11 +1089,11 @@ export class MeController {
     description: 'Esta vaga não está disponível ou expirou',
   })
   async applyToJob(
-    @Param('jobUuid') jobUuid: string,
+    @Param('uuid') uuid: string,
     @Body() applyDto: ApplyToJobDto,
     @Request() req: CustomRequest,
   ): Promise<JobApplicationStudentResponseDto> {
-    return this.jobsService.applyToJob(jobUuid, req.user.sub, applyDto);
+    return this.jobsService.applyToJob(uuid, req.user.sub, applyDto);
   }
 
   /**
