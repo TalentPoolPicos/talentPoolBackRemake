@@ -139,8 +139,8 @@ export class JobsService {
     userId?: number,
     status?: JobStatus,
     companyId?: number,
-    limit = 20,
-    offset = 0,
+    limit: number | string = 20,
+    offset: number | string = 0,
   ): Promise<JobListResponseDto> {
     const where: Record<string, any> = {};
 
@@ -172,6 +172,10 @@ export class JobsService {
       where.status = status;
     }
 
+    // Garantir que take e skip sejam inteiros
+    const takeInt = typeof limit === 'string' ? parseInt(limit, 10) : limit;
+    const skipInt = typeof offset === 'string' ? parseInt(offset, 10) : offset;
+
     const [jobs, total] = await Promise.all([
       this.prisma.job.findMany({
         where,
@@ -196,8 +200,8 @@ export class JobsService {
           },
         },
         orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip: offset,
+        take: takeInt,
+        skip: skipInt,
       }),
       this.prisma.job.count({ where }),
     ]);
@@ -230,8 +234,8 @@ export class JobsService {
         this.mapJobToResponse(job, appliedJobIds.has(job.id)),
       ),
       total,
-      limit,
-      offset,
+      limit: takeInt,
+      offset: skipInt,
     };
   }
 
@@ -666,8 +670,8 @@ export class JobsService {
   async getStudentApplications(
     studentId: number,
     status?: ApplicationStatus,
-    limit = 20,
-    offset = 0,
+    limit: number | string = 20,
+    offset: number | string = 0,
   ): Promise<StudentApplicationListResponseDto> {
     const student = await this.prisma.student.findFirst({
       where: { user: { id: studentId } },
@@ -681,6 +685,9 @@ export class JobsService {
     if (status) {
       where.status = status;
     }
+
+    const takeInt = typeof limit === 'string' ? parseInt(limit, 10) : limit;
+    const skipInt = typeof offset === 'string' ? parseInt(offset, 10) : offset;
 
     const [applications, total] = await Promise.all([
       this.prisma.jobApplication.findMany({
@@ -702,8 +709,8 @@ export class JobsService {
           },
         },
         orderBy: { appliedAt: 'desc' },
-        take: limit,
-        skip: offset,
+        take: takeInt,
+        skip: skipInt,
       }),
       this.prisma.jobApplication.count({ where }),
     ]);
@@ -722,8 +729,8 @@ export class JobsService {
         this.mapApplicationToStudentResponse(app),
       ),
       total,
-      limit,
-      offset,
+      limit: takeInt,
+      offset: skipInt,
     };
   }
 
