@@ -134,6 +134,86 @@ export class JobsService {
   }
 
   /**
+   * Listar vagas publicadas por uma empresa (buscar por user.uuid)
+   */
+  async listPublishedJobsByEnterprise(
+    enterpriseUserUuid: string,
+    limit: number | string = 20,
+    offset: number | string = 0,
+  ) {
+    // Encontrar o usuário/empresa
+    const user = await this.prisma.user.findUnique({
+      where: { uuid: enterpriseUserUuid },
+      include: { enterprise: true },
+    });
+
+    if (!user || !user.enterprise || user.role !== Role.enterprise) {
+      throw new NotFoundException('Empresa não encontrada');
+    }
+
+    const takeInt = typeof limit === 'string' ? parseInt(limit, 10) : limit;
+    const skipInt = typeof offset === 'string' ? parseInt(offset, 10) : offset;
+
+    const where: any = {
+      enterpriseId: user.enterprise.id,
+      status: this.JOB_STATUS.PUBLISHED,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+    };
+
+    const [jobs, total] = await Promise.all([
+      this.prisma.job.findMany({
+        where,
+        include: {
+          enterprise: {
+            select: {
+              id: true,
+              uuid: true,
+              user: {
+                select: {
+                  uuid: true,
+                  username: true,
+                  name: true,
+                },
+              },
+            },
+          },
+          _count: {
+            select: {
+              applications: true,
+            },
+          },
+        },
+        orderBy: { publishedAt: 'desc' },
+        take: takeInt,
+        skip: skipInt,
+      }),
+      this.prisma.job.count({ where }),
+    ]);
+
+    // Mapear para preview (mesma estrutura do JobPreviewDto)
+    const previews = jobs.map((job) => ({
+      uuid: job.uuid,
+      title: job.title,
+      status: job.status,
+      createdAt: job.createdAt?.toISOString(),
+      publishedAt: job.publishedAt?.toISOString(),
+      company: {
+        uuid: job.enterprise.uuid,
+        username: job.enterprise.user.username,
+        name: job.enterprise.user.name ?? undefined,
+        avatarUrl: null,
+      },
+    }));
+
+    return {
+      jobs: previews,
+      total,
+      limit: takeInt,
+      offset: skipInt,
+    };
+  }
+
+  /**
    * Listar vagas (públicas para estudantes, todas para empresas)
    */
   async listJobs(

@@ -75,6 +75,34 @@ export class JobsController {
   }
 
   /**
+   * Listar vagas publicadas de uma empresa pública por user UUID
+   */
+  @Get('enterprise/:userUuid/published')
+  @Public()
+  @ApiOperation({
+    summary: 'Listar vagas publicadas de uma empresa (public) por user UUID',
+  })
+  @ApiOkResponse({ type: PublishedJobListResponseDto })
+  @ApiParam({
+    name: 'userUuid',
+    type: String,
+    description: 'UUID do usuário (empresa)',
+  })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
+  async listEnterprisePublishedJobs(
+    @Param('userUuid') userUuid: string,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+    @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset?: number,
+  ): Promise<PublishedJobListResponseDto> {
+    return this.jobsService.listPublishedJobsByEnterprise(
+      userUuid,
+      limit ?? 20,
+      offset ?? 0,
+    );
+  }
+
+  /**
    * Obter detalhes de uma vaga específica
    */
   @Get(':uuid')
