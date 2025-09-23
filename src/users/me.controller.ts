@@ -794,6 +794,31 @@ export class MeController {
   }
 
   /**
+   * Obter detalhes de uma vaga (apenas empresa que criou)
+   */
+  @ApiTags('Enterprises')
+  @Get('enterprise/jobs/:uuid')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ENTERPRISE)
+  @ApiOperation({ summary: 'Obter detalhes de uma vaga (empresa criadora)' })
+  @ApiParam({ name: 'uuid', type: String, description: 'UUID da vaga' })
+  @ApiOkResponse({
+    description: 'Vaga obtida com sucesso',
+    type: JobResponseDto,
+  })
+  @ApiBadRequestResponse({ description: 'UUID inválido' })
+  @ApiNotFoundResponse({ description: 'Vaga não encontrada' })
+  @ApiForbiddenResponse({
+    description: 'Você não tem permissão para acessar esta vaga',
+  })
+  async getMyJobByUuid(
+    @Param('uuid') uuid: string,
+    @Request() req: CustomRequest,
+  ): Promise<JobResponseDto> {
+    return this.jobsService.getJobByUuid(uuid, req.user.sub);
+  }
+
+  /**
    * Atualizar conteúdo da vaga (título, body, expiresAt) - apenas empresas
    */
   @ApiTags('Enterprises')
