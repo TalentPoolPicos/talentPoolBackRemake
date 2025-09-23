@@ -6,6 +6,8 @@ import {
   ApiParam,
   ApiQuery,
   ApiOkResponse,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
 } from '@nestjs/swagger';
 import { JobsService } from './jobs.service';
 import { Public } from '../auth/decotaros/public.decorator';
@@ -108,6 +110,9 @@ export class JobsController {
   @Get(':uuid')
   @Public()
   @ApiOperation({ summary: 'Obter vaga por UUID' })
+  @ApiOkResponse({ type: JobResponseDto })
+  @ApiBadRequestResponse({ description: 'UUID inválido' })
+  @ApiNotFoundResponse({ description: 'Vaga não encontrada' })
   @ApiParam({ name: 'uuid', type: String, description: 'UUID da vaga' })
   async getJobByUuid(
     @Param('uuid') uuid: string,
