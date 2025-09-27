@@ -89,6 +89,7 @@ import {
   UploadCurriculumResponseDto,
   UploadHistoryResponseDto,
 } from './dtos/upload-image.dto';
+import { NotificationListResponseDto } from '../notifications/dtos/notification-list-response.dto';
 import { NotificationManagerService } from '../notifications/notification-manager.service';
 
 @ApiTags('Me')
@@ -1223,68 +1224,7 @@ socket.on('notification', (notification) => {
   })
   @ApiOkResponse({
     description: 'Notificações obtidas com sucesso',
-    schema: {
-      type: 'object',
-      properties: {
-        notifications: {
-          type: 'object',
-          properties: {
-            notifications: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  id: { type: 'number', example: 1 },
-                  title: { type: 'string', example: 'Nova vaga disponível' },
-                  message: {
-                    type: 'string',
-                    example: 'Uma nova vaga foi publicada!',
-                  },
-                  type: {
-                    type: 'string',
-                    example: 'job_published',
-                  },
-                  isRead: { type: 'boolean', example: false },
-                  createdAt: {
-                    type: 'string',
-                    example: '2025-09-12T10:30:00Z',
-                  },
-                  readAt: {
-                    type: 'string',
-                    nullable: true,
-                    example: null,
-                  },
-                },
-              },
-            },
-          },
-        },
-        unreadCount: { type: 'number', example: 5 },
-        stats: {
-          type: 'object',
-          properties: {
-            total: { type: 'number', example: 25 },
-            unread: { type: 'number', example: 5 },
-            byType: {
-              type: 'object',
-              example: {
-                job_published: 10,
-                profile_liked: 8,
-                system_announcement: 7,
-              },
-            },
-          },
-        },
-        pagination: {
-          type: 'object',
-          properties: {
-            page: { type: 'number', example: 1 },
-            limit: { type: 'number', example: 20 },
-            total: { type: 'number', example: 25 },
-          },
-        },
-      },
-    },
+    type: NotificationListResponseDto,
   })
   @Get('notifications')
   async getMyNotifications(
@@ -1293,14 +1233,12 @@ socket.on('notification', (notification) => {
     @Query('limit') limit = 20,
     @Query('unreadOnly') unreadOnly = false,
   ) {
-    const notifications = await this.notificationManager.getUserNotifications(
-      req.user.sub,
-      typeof unreadOnly === 'string' ? unreadOnly === 'true' : unreadOnly,
-    );
+    const { notifications, total, unreadCount, hasMore } =
+      await this.notificationManager.getUserNotifications(
+        req.user.sub,
+        typeof unreadOnly === 'string' ? unreadOnly === 'true' : unreadOnly,
+      );
 
-    const unreadCount = await this.notificationManager.getUnreadCount(
-      req.user.sub,
-    );
     const stats = await this.notificationManager.getUserNotificationStats(
       req.user.sub,
     );
@@ -1312,7 +1250,8 @@ socket.on('notification', (notification) => {
       pagination: {
         page: Number(page),
         limit: Number(limit),
-        total: notifications.notifications.length,
+        total,
+        hasMore,
       },
     };
   }
