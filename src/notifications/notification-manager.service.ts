@@ -174,6 +174,8 @@ export class NotificationManagerService {
     newStatus: string,
     studentId: number,
     jobTitle: string,
+    jobUuid?: string,
+    studentUserUuid?: string,
   ): Promise<void> {
     try {
       this.logger.log(
@@ -191,18 +193,91 @@ export class NotificationManagerService {
         statusMessages[newStatus] ||
         `Status da sua candidatura foi atualizado para: ${newStatus}`;
 
-      await this.notificationsService.createNotification({
-        userId: studentId,
-        type: NotificationType.job_application_received, // Reutilizando o tipo mais próximo
-        title: 'Atualização de Candidatura',
-        message: `${message} para a vaga "${jobTitle}"`,
-        relatedApplicationId: applicationId,
-      });
+      // Prepare frontend URLs when available
+      const jobUrl = jobUuid
+        ? `https://front.bancodetalentos.online/jobs/${jobUuid}`
+        : `/student/applications/${applicationId}`;
+      const profileUrl = studentUserUuid
+        ? `https://front.bancodetalentos.online/profile/${studentUserUuid}`
+        : undefined;
+
+      // Enviar notificação para o estudante com tipo apropriado e metadata útil
+      await this.notificationsService.sendNotificationToUser(
+        studentId,
+        NotificationType.job_application_updated,
+        'Atualização de Candidatura',
+        `${message} para a vaga "${jobTitle}"`,
+        {
+          priority: newStatus === 'accepted' ? 3 : 2,
+          relatedApplicationId: applicationId,
+          actionUrl: jobUrl,
+          actionType: 'view_application',
+          actionData: { applicationId, jobUuid, profileUrl },
+        },
+      );
 
       this.logger.log('Application status notification sent successfully');
     } catch (error) {
       this.logger.error(
         'Failed to send application status notification:',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Notifica quando um estudante remove (retira) sua candidatura.
+   * Envia para a empresa responsável pela vaga.
+   */
+  async notifyApplicationWithdrawal(data: {
+    applicationId: number;
+    jobId: number;
+    studentId: number;
+    enterpriseId: number;
+    studentName?: string;
+    jobTitle?: string;
+    jobUuid?: string;
+    studentUserUuid?: string;
+  }): Promise<void> {
+    try {
+      this.logger.log(
+        `Notifying application withdrawal: ${data.applicationId} (job ${data.jobId})`,
+      );
+
+      const jobUrl = data.jobUuid
+        ? `https://front.bancodetalentos.online/jobs/${data.jobUuid}`
+        : undefined;
+      const profileUrl = data.studentUserUuid
+        ? `https://front.bancodetalentos.online/profile/${data.studentUserUuid}`
+        : undefined;
+
+      await this.notificationsService.sendNotificationToUser(
+        data.enterpriseId,
+        NotificationType.job_application_updated,
+        'Candidatura removida',
+        `${data.studentName || 'Um estudante'} removeu a candidatura para a vaga "${
+          data.jobTitle || ''
+        }"`,
+        {
+          priority: 2,
+          relatedJobId: data.jobId,
+          relatedApplicationId: data.applicationId,
+          relatedUserId: data.studentId,
+          actionUrl: jobUrl || `/jobs`,
+          actionType: 'view_applications',
+          actionData: {
+            applicationId: data.applicationId,
+            jobId: data.jobId,
+            profileUrl,
+          },
+        },
+      );
+
+      this.logger.log('Application withdrawal notification sent to enterprise');
+    } catch (error) {
+      this.logger.error(
+        'Failed to send application withdrawal notification:',
         error,
       );
       throw error;
