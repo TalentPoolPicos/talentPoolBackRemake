@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste de Notificações - TalentPool API</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+    button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+    button:hover { background: #0056b3; }
+    .result { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px; }
+    .error { background: #f8d7da; color: #721c24; }
+    .success { background: #d4edda; color: #155724; }
+    .section { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>🔔 Teste de Notificações - TalentPool API</h1>
+  
+  <!-- Seção de Login -->
+  <div class="section">
+    <h2>🔐 Login</h2>
+    <div class="form-group">
+      <label>Username:</label>
+      <input type="text" id="username" value="testuser">
+    </div>
+    <div class="form-group">
+      <label>Password:</label>
+      <input type="password" id="password" value="TestPass123!">
+    </div>
+    <button onclick="login()">🔑 Fazer Login</button>
+    <div id="loginResult" class="result" style="display: none;"></div>
+  </div>
+
+  <!-- Seção de Teste de Notificações -->
+  <div class="section">
+    <h2>📋 Testar Notificações</h2>
+    <div class="form-group">
+      <label>UUID da Candidatura:</label>
+      <input type="text" id="applicationUuid" placeholder="Cole o UUID da candidatura aqui">
+    </div>
+    <div class="form-group">
+      <label>Novo Status:</label>
+      <select id="newStatus">
+        <option value="pending">Pendente</option>
+        <option value="reviewing">Revisando</option>
+        <option value="interview">Entrevista</option>
+        <option value="accepted">Aceito</option>
+        <option value="rejected">Rejeitado</option>
+        <option value="approved">Aprovado</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Notas do Recrutador (opcional):</label>
+      <input type="text" id="reviewerNotes" placeholder="Digite as notas do recrutador">
+    </div>
+    <button onclick="updateApplicationStatus()">📝 Atualizar Status</button>
+    <div id="updateResult" class="result" style="display: none;"></div>
+  </div>
+
+  <!-- Seção de Verificação de Notificações -->
+  <div class="section">
+    <h2>🔔 Verificar Notificações</h2>
+    <button onclick="getNotifications()">📋 Buscar Notificações</button>
+    <button onclick="getUnreadCount()">🔢 Contar Não Lidas</button>
+    <div id="notificationsResult" class="result" style="display: none;"></div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:3000';
+    let token = null;
+    
+    async function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const resultDiv = document.getElementById('loginResult');
+      
+      try {
+        showResult('loginResult', '🔄 Fazendo login...', '');
+        
+        const response = await fetch(`${API_BASE}/auth/sign-in`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          token = data.access_token;
+          showResult('loginResult', `✅ Login realizado com sucesso!<br>Token: ${token.substring(0, 50)}...`, 'success');
+        } else {
+          showResult('loginResult', `❌ Erro no login: ${data.message || 'Erro desconhecido'}`, 'error');
+        }
+      } catch (error) {
+        showResult('loginResult', `❌ Erro de conexão: ${error.message}`, 'error');
+      }
+    }
+    
+    async function updateApplicationStatus() {
+      if (!token) {
+        showResult('updateResult', '❌ Faça login primeiro', 'error');
+        return;
+      }
+      
+      const applicationUuid = document.getElementById('applicationUuid').value;
+      const newStatus = document.getElementById('newStatus').value;
+      const reviewerNotes = document.getElementById('reviewerNotes').value;
+      
+      if (!applicationUuid) {
+        showResult('updateResult', '❌ Digite o UUID da candidatura', 'error');
+        return;
+      }
+      
+      try {
+        showResult('updateResult', '🔄 Atualizando status da candidatura...', '');
+        
+        const response = await fetch(`${API_BASE}/me/enterprise/job-applications/${applicationUuid}/status`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            status: newStatus,
+            reviewerNotes: reviewerNotes || null
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          showResult('updateResult', `✅ Status atualizado com sucesso!<br><br>Resposta:<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+        } else {
+          showResult('updateResult', `❌ Erro ao atualizar status: ${data.message || 'Erro desconhecido'}<br><br>Resposta:<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 'error');
+        }
+      } catch (error) {
+        showResult('updateResult', `❌ Erro de conexão: ${error.message}`, 'error');
+      }
+    }
+    
+    async function getNotifications() {
+      if (!token) {
+        showResult('notificationsResult', '❌ Faça login primeiro', 'error');
+        return;
+      }
+      
+      try {
+        showResult('notificationsResult', '🔄 Buscando notificações...', '');
+        
+        const response = await fetch(`${API_BASE}/me/notifications`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          const notifications = data.notifications || [];
+          let html = `✅ ${notifications.length} notificações encontradas<br><br>`;
+          
+          if (notifications.length > 0) {
+            html += '<div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: white;">';
+            notifications.forEach(notif => {
+              html += `<div style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                <strong>${notif.title}</strong><br>
+                <small>${notif.message}</small><br>
+                <small style="color: #666;">${new Date(notif.createdAt).toLocaleString('pt-BR')} - ${notif.isRead ? 'Lida' : 'Não lida'}</small>
+              </div>`;
+            });
+            html += '</div>';
+          } else {
+            html += '<p>Nenhuma notificação encontrada.</p>';
+          }
+          
+          showResult('notificationsResult', html, 'success');
+        } else {
+          showResult('notificationsResult', `❌ Erro ao buscar notificações: ${data.message || 'Erro desconhecido'}`, 'error');
+        }
+      } catch (error) {
+        showResult('notificationsResult', `❌ Erro de conexão: ${error.message}`, 'error');
+      }
+    }
+    
+    async function getUnreadCount() {
+      if (!token) {
+        showResult('notificationsResult', '❌ Faça login primeiro', 'error');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API_BASE}/me/notifications/unread-count`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          showResult('notificationsResult', `📊 Notificações não lidas: ${data.unreadCount}`, 'success');
+        } else {
+          showResult('notificationsResult', `❌ Erro ao contar notificações: ${data.message || 'Erro desconhecido'}`, 'error');
+        }
+      } catch (error) {
+        showResult('notificationsResult', `❌ Erro de conexão: ${error.message}`, 'error');
+      }
+    }
+    
+    function showResult(elementId, message, type) {
+      const resultDiv = document.getElementById(elementId);
+      resultDiv.innerHTML = message;
+      resultDiv.className = `result ${type}`;
+      resultDiv.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
+
