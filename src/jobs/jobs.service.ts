@@ -141,13 +141,23 @@ export class JobsService {
     limit: number | string = 20,
     offset: number | string = 0,
   ) {
-    // Encontrar o usuário/empresa
+    // Buscar o enterpriseId pelo userUuid
     const user = await this.prisma.user.findUnique({
       where: { uuid: enterpriseUserUuid },
-      include: { enterprise: true },
+      select: { id: true, role: true },
     });
 
-    if (!user || !user.enterprise || user.role !== Role.enterprise) {
+    if (!user || user.role !== Role.enterprise) {
+      throw new NotFoundException('Empresa não encontrada');
+    }
+
+    // Buscar o enterprise vinculado ao usuário
+    const enterprise = await this.prisma.enterprise.findUnique({
+      where: { userId: user.id },
+      select: { id: true, uuid: true },
+    });
+
+    if (!enterprise) {
       throw new NotFoundException('Empresa não encontrada');
     }
 
@@ -155,7 +165,7 @@ export class JobsService {
     const skipInt = typeof offset === 'string' ? parseInt(offset, 10) : offset;
 
     const where: any = {
-      enterpriseId: user.enterprise.id,
+      enterpriseId: enterprise.id,
       status: this.JOB_STATUS.PUBLISHED,
       OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
     };
@@ -502,6 +512,8 @@ export class JobsService {
         updateDto.status,
         updatedApplication.student.id,
         updatedApplication.job.title,
+        updatedApplication.job.uuid,
+        updatedApplication.student.user.uuid,
       );
 
       this.logger.log(
@@ -1152,6 +1164,13 @@ export class JobsService {
             user: true,
           },
         },
+        job: {
+          include: {
+            enterprise: {
+              include: { user: true },
+            },
+          },
+        },
       },
     });
 
@@ -1177,6 +1196,29 @@ export class JobsService {
     });
 
     this.logger.log(`Candidatura ${applicationUuid} removida com sucesso`);
+
+    // Notificar empresa sobre retirada da candidatura
+    try {
+      await this.notificationManager.notifyApplicationWithdrawal({
+        applicationId: application.id,
+        jobId: application.job.id,
+        studentId: application.student.user.id,
+        enterpriseId: application.job.enterprise.user.id,
+        studentName:
+          application.student.user.name || application.student.user.username,
+        jobTitle: application.job.title,
+        // provide uuids for frontend links
+        jobUuid: application.job.uuid,
+        studentUserUuid: application.student.user.uuid,
+      } as any);
+      this.logger.log(
+        `Notificação enviada para empresa ${application.job.enterprise.user.id} sobre retirada da candidatura ${applicationUuid}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Erro ao notificar empresa sobre retirada de candidatura: ${error.message}`,
+      );
+    }
   }
 
   /**
