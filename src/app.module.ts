@@ -10,7 +10,6 @@ import { StorageModule } from './storage/storage.module';
 import { LikesModule } from './likes/likes.module';
 import { SearchModule } from './search/search.module';
 import { JobsModule } from './jobs/jobs.module';
-import { NotificationsModule } from './notifications/notifications.module';
 import { AdminModule } from './admin/admin.module';
 
 @Module({
@@ -24,7 +23,6 @@ import { AdminModule } from './admin/admin.module';
     JobsModule,
     AuthModule,
     LikesModule,
-    NotificationsModule,
     AdminModule,
   ],
   controllers: [AppController],

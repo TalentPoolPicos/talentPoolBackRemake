@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -12,6 +12,7 @@ import { NotificationCleanupService } from './notification-cleanup.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { NOTIFICATION_QUEUES } from './constants/queue.constants';
 
+@Global()
 @Module({
   imports: [
     PrismaModule,

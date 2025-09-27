@@ -5,7 +5,6 @@ import { JobsController } from './jobs.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { StorageModule } from '../storage/storage.module';
 import { SearchModule } from '../search/search.module';
-import { NotificationsModule } from '../notifications/notifications.module';
 import { NOTIFICATION_QUEUES } from '../notifications/constants/queue.constants';
 
 @Module({
@@ -13,7 +12,6 @@ import { NOTIFICATION_QUEUES } from '../notifications/constants/queue.constants'
     PrismaModule,
     StorageModule,
     forwardRef(() => SearchModule),
-    forwardRef(() => NotificationsModule),
     BullModule.registerQueue({
       name: NOTIFICATION_QUEUES.JOB_NOTIFICATIONS,
     }),
