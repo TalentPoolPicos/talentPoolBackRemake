@@ -2,14 +2,10 @@ import { Global, Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { NotificationsService } from './notifications.service';
-import { NotificationProcessor } from './notification.processor';
-import { JobNotificationProcessor } from './job-notification.processor';
-import { NotificationsGateway } from './gateways/notifications.gateway';
-import { NotificationDatabaseService } from './notification-database.service';
-import { NotificationManagerService } from './notification-manager.service';
-import { NotificationCleanupService } from './notification-cleanup.service';
 import { PrismaModule } from '../prisma/prisma.module';
+import { NotificationService } from './services/notification.service';
+import { NotificationProcessor } from './processors/notification.processor';
+import { NotificationsGateway } from './gateways/notifications.gateway';
 import { NOTIFICATION_QUEUES } from './constants/queue.constants';
 
 @Global()
@@ -49,32 +45,8 @@ import { NOTIFICATION_QUEUES } from './constants/queue.constants';
         },
       },
     }),
-    BullModule.registerQueue({
-      name: NOTIFICATION_QUEUES.JOB_NOTIFICATIONS,
-      defaultJobOptions: {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 2000,
-        },
-      },
-    }),
   ],
-  providers: [
-    NotificationsService,
-    NotificationProcessor,
-    JobNotificationProcessor,
-    NotificationsGateway,
-    NotificationDatabaseService,
-    NotificationManagerService,
-    NotificationCleanupService,
-  ],
-  exports: [
-    NotificationsService,
-    NotificationsGateway,
-    NotificationDatabaseService,
-    NotificationManagerService,
-    NotificationCleanupService,
-  ],
+  providers: [NotificationService, NotificationProcessor, NotificationsGateway],
+  exports: [NotificationService, NotificationsGateway],
 })
 export class NotificationsModule {}

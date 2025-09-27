@@ -101,19 +101,26 @@ export class NotificationsGateway
   /**
    * Enviar notificação para usuário específico
    */
-  sendNotificationToUser(userId: number, notification: any) {
-    const socketId = this.connectedUsers.get(userId);
+  sendNotificationToUser(userId: number, notification: any): boolean {
+    try {
+      const socketId = this.connectedUsers.get(userId);
 
-    if (socketId) {
-      // Usuário está online - enviar via WebSocket
-      this.server.to(`user:${userId}`).emit('new-notification', notification);
+      if (socketId) {
+        // Usuário está online - enviar via WebSocket
+        this.server.to(`user:${userId}`).emit('new-notification', notification);
 
-      this.logger.log(`Sent real-time notification to user ${userId}`);
-      return true;
-    } else {
-      // Usuário está offline - notificação ficará no banco para próxima conexão
-      this.logger.log(
-        `User ${userId} is offline - notification saved for later`,
+        this.logger.log(`Sent real-time notification to user ${userId}`);
+        return true;
+      } else {
+        // Usuário está offline - notificação ficará no banco para próxima conexão
+        this.logger.log(
+          `User ${userId} is offline - notification saved for later`,
+        );
+        return false;
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to send notification to user ${userId}: ${error.message}`,
       );
       return false;
     }

@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
-import { NotificationManagerService } from '../notifications/notification-manager.service';
+import { NotificationService } from '../notifications/services/notification.service';
 import { UserPreviewResponseDto } from '../users/dtos/user-response.dto';
 
 @Injectable()
@@ -17,7 +17,7 @@ export class LikesService {
   constructor(
     private prisma: PrismaService,
     private storageService: StorageService,
-    private notificationManager: NotificationManagerService,
+    private notificationService: NotificationService,
   ) {}
 
   /**
@@ -62,7 +62,7 @@ export class LikesService {
     // Buscar dados do usuário que está dando like
     const initiator = await this.prisma.user.findUnique({
       where: { id: initiatorId },
-      select: { id: true, role: true, uuid: true },
+      select: { id: true, role: true, uuid: true, name: true, username: true },
     });
 
     if (!initiator) {
@@ -119,10 +119,11 @@ export class LikesService {
 
     // Enviar notificação para o usuário que recebeu o like
     try {
-      await this.notificationManager.notifyProfileLike({
-        likerId: initiator.id,
-        likedUserId: targetUser.id,
-      });
+      await this.notificationService.notifyProfileLiked(
+        targetUser.id,
+        initiator.name || initiator.username,
+        initiator.id,
+      );
 
       this.logger.log(
         `Notificação de like enviada para usuário ${targetUser.id}`,

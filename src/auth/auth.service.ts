@@ -9,7 +9,8 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { SearchService } from '../search/search.service';
-import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationService } from '../notifications/services/notification.service';
+import { NotificationType } from '@prisma/client';
 import { compare, hash } from 'bcrypt';
 import { JwtPayload } from './interfaces/payload';
 import { RefreshPayload } from './interfaces/refresh';
@@ -27,7 +28,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private searchService: SearchService,
-    private notificationsService: NotificationsService,
+    private notificationService: NotificationService,
   ) {}
 
   /**
@@ -106,10 +107,10 @@ export class AuthService {
    * Sign up new user (students only with institutional email)
    */
   async signUp(signUpDto: SignUpDto): Promise<AccessTokenDto> {
-    const { username, email, password, name, description } = signUpDto;
+    const { username, email, password, name, description, role } = signUpDto;
 
     this.logger.log(
-      `Tentativa de cadastro para usuário: ${username} (${email})`,
+      `Tentativa de cadastro para usuário: ${username} (${email}) com role: ${role}`,
     );
 
     // Validate institutional email (extra validation layer)
@@ -146,16 +147,21 @@ export class AuthService {
 
     const hashedPassword = await hash(password, 12);
 
+    this.logger.log(`Creating user with role: ${role}`);
+
     try {
       const user = await this.prisma.$transaction(
         async (tx): Promise<UserWithProfiles> => {
-          // Create user as STUDENT (forced)
+          // Create user with the specified role
+          const userRole = (role as Role) || Role.STUDENT;
+          this.logger.log(`Using role in transaction: ${userRole}`);
+
           const newUser = (await tx.user.create({
             data: {
               username,
               email,
               password: hashedPassword,
-              role: Role.STUDENT, // Always STUDENT for sign-up
+              role: userRole, // Use the role from the request or default to STUDENT
               name,
               description,
               isActive: true,
@@ -166,12 +172,21 @@ export class AuthService {
             },
           })) as UserWithProfiles;
 
-          // Create student profile (always for sign-up)
-          await tx.student.create({
-            data: {
-              userId: newUser.id,
-            },
-          });
+          // Create profile based on role
+          if (userRole === Role.ENTERPRISE) {
+            await tx.enterprise.create({
+              data: {
+                userId: newUser.id,
+              },
+            });
+          } else {
+            // Default to student profile for other roles
+            await tx.student.create({
+              data: {
+                userId: newUser.id,
+              },
+            });
+          }
 
           return newUser;
         },
@@ -197,9 +212,10 @@ export class AuthService {
 
       // Enviar notificação de boas-vindas
       try {
-        await this.notificationsService.notifyWelcome(
+        await this.notificationService.notifyWelcome(
           user.id,
           user.name || username,
+          user.role as 'student' | 'enterprise',
         );
         this.logger.log(`Notificação de boas-vindas enviada para ${username}`);
       } catch (error) {

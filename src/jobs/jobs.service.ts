@@ -7,8 +7,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import { validate as isUuid } from 'uuid';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { SearchService } from '../search/search.service';
@@ -31,12 +29,7 @@ import {
   JobApplicationStudentResponseDto,
   StudentApplicationListResponseDto,
 } from './dtos/job-response.dto';
-import {
-  NOTIFICATION_QUEUES,
-  NOTIFICATION_JOBS,
-} from '../notifications/constants/queue.constants';
-import { JobPublishedNotificationData } from '../notifications/interfaces/job-notification.interface';
-import { NotificationManagerService } from '../notifications/notification-manager.service';
+import { NotificationService } from '../notifications/services/notification.service';
 
 @Injectable()
 export class JobsService {
@@ -60,9 +53,7 @@ export class JobsService {
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
     private readonly searchService: SearchService,
-    @InjectQueue(NOTIFICATION_QUEUES.JOB_NOTIFICATIONS)
-    private readonly jobNotificationQueue: Queue,
-    private readonly notificationManager: NotificationManagerService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   /**
@@ -417,12 +408,13 @@ export class JobsService {
 
     // Enviar notificação para a empresa sobre nova candidatura
     try {
-      await this.notificationManager.notifyJobApplication({
-        applicationId: application.id,
-        jobId: job.id,
-        studentId: student.id,
-        enterpriseId: application.job.enterprise.user.id,
-      });
+      await this.notificationService.notifyNewJobApplication(
+        application.id,
+        job.id,
+        application.job.enterprise.user.id,
+        student.name || student.username,
+        job.title,
+      );
 
       this.logger.log(
         `Notificação de candidatura enviada para empresa ${application.job.enterprise.user.id}`,
@@ -491,6 +483,7 @@ export class JobsService {
             uuid: true,
             user: {
               select: {
+                id: true,
                 uuid: true,
                 username: true,
                 name: true,
@@ -507,21 +500,25 @@ export class JobsService {
 
     // Enviar notificação para o estudante sobre mudança de status
     try {
-      await this.notificationManager.notifyApplicationStatusUpdate(
+      this.logger.log(
+        `Sending notification for application ${updatedApplication.id}, status: ${updateDto.status}, student: ${updatedApplication.student.user.id}`,
+      );
+
+      await this.notificationService.notifyApplicationStatusUpdate(
         updatedApplication.id,
         updateDto.status,
-        updatedApplication.student.id,
+        updatedApplication.student.user.id,
         updatedApplication.job.title,
         updatedApplication.job.uuid,
-        updatedApplication.student.user.uuid,
       );
 
       this.logger.log(
-        `Notificação de status enviada para estudante ${updatedApplication.student.id}`,
+        `Notificação de status enviada para estudante ${updatedApplication.student.user.id}`,
       );
     } catch (error) {
       this.logger.error(
         `Erro ao enviar notificação de status: ${error.message}`,
+        error.stack,
       );
       // Não falha a operação principal se a notificação falhar
     }
@@ -1199,18 +1196,13 @@ export class JobsService {
 
     // Notificar empresa sobre retirada da candidatura
     try {
-      await this.notificationManager.notifyApplicationWithdrawal({
-        applicationId: application.id,
-        jobId: application.job.id,
-        studentId: application.student.user.id,
-        enterpriseId: application.job.enterprise.user.id,
-        studentName:
-          application.student.user.name || application.student.user.username,
-        jobTitle: application.job.title,
-        // provide uuids for frontend links
-        jobUuid: application.job.uuid,
-        studentUserUuid: application.student.user.uuid,
-      } as any);
+      await this.notificationService.notifyApplicationWithdrawal(
+        application.id,
+        application.job.enterprise.user.id,
+        application.student.user.name || application.student.user.username,
+        application.job.title,
+        application.job.id,
+      );
       this.logger.log(
         `Notificação enviada para empresa ${application.job.enterprise.user.id} sobre retirada da candidatura ${applicationUuid}`,
       );
@@ -1408,38 +1400,25 @@ export class JobsService {
       );
     }
 
-    // Se a vaga foi publicada, adicionar job na fila de notificações
+    // Se a vaga foi publicada, notificar usuários relevantes
     if (status === this.JOB_STATUS.PUBLISHED && !job.publishedAt) {
       try {
-        const notificationData: JobPublishedNotificationData = {
-          jobId: updatedJob.id,
-          uuid: updatedJob.uuid,
-          jobTitle: updatedJob.title,
-          jobLocation: 'Não informado', // Job não tem location, pode usar um valor padrão
-          enterpriseId: updatedJob.enterprise.id,
-          enterpriseUserId: updatedJob.enterprise.user.id,
-          enterpriseName:
-            updatedJob.enterprise.user.name ||
+        await this.notificationService.notifyJobPublishedToRelevantStudents(
+          updatedJob.id,
+          updatedJob.title,
+          updatedJob.enterprise.id,
+          updatedJob.enterprise.user.name ||
             updatedJob.enterprise.user.username,
-        };
-
-        await this.jobNotificationQueue.add(
-          NOTIFICATION_JOBS.NOTIFY_JOB_PUBLISHED,
-          notificationData,
-          {
-            priority: 10, // Alta prioridade para notificações de novas vagas
-            delay: 1000, // 1 segundo de delay para dar tempo da transação completar
-          },
         );
 
         this.logger.log(
-          `Job de notificação adicionado na fila para vaga ${updatedJob.uuid}`,
+          `Notificações de vaga publicada enviadas para estudantes relevantes: ${updatedJob.uuid}`,
         );
       } catch (error) {
         this.logger.error(
-          `Falha ao adicionar job de notificação na fila para vaga ${updatedJob.uuid}: ${error.message}`,
+          `Erro ao notificar sobre vaga publicada: ${error.message}`,
         );
-        // Não falhar a publicação da vaga por causa de erro na notificação
+        // Não falha a operação principal se a notificação falhar
       }
     }
 

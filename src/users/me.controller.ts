@@ -90,7 +90,7 @@ import {
   UploadHistoryResponseDto,
 } from './dtos/upload-image.dto';
 import { NotificationListResponseDto } from '../notifications/dtos/notification-list-response.dto';
-import { NotificationManagerService } from '../notifications/notification-manager.service';
+import { NotificationService } from '../notifications/services/notification.service';
 
 @ApiTags('Me')
 @ApiBearerAuth()
@@ -103,7 +103,7 @@ export class MeController {
     private readonly userImageService: UserImageService,
     private readonly likesService: LikesService,
     private readonly jobsService: JobsService,
-    private readonly notificationManager: NotificationManagerService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   @ApiOperation({
@@ -1234,12 +1234,14 @@ socket.on('notification', (notification) => {
     @Query('unreadOnly') unreadOnly = false,
   ) {
     const { notifications, total, unreadCount, hasMore } =
-      await this.notificationManager.getUserNotifications(
+      await this.notificationService.getUserNotifications(
         req.user.sub,
+        Number(page),
+        Number(limit),
         typeof unreadOnly === 'string' ? unreadOnly === 'true' : unreadOnly,
       );
 
-    const stats = await this.notificationManager.getUserNotificationStats(
+    const stats = await this.notificationService.getUserNotificationStats(
       req.user.sub,
     );
 
@@ -1269,7 +1271,7 @@ socket.on('notification', (notification) => {
     @Param('id') notificationId: string,
     @Request() req: CustomRequest,
   ): Promise<{ message: string; success: boolean }> {
-    const success = await this.notificationManager.markAsRead(
+    const success = await this.notificationService.markAsRead(
       parseInt(notificationId),
       req.user.sub,
     );
@@ -1294,7 +1296,7 @@ socket.on('notification', (notification) => {
   async markAllNotificationsAsRead(
     @Request() req: CustomRequest,
   ): Promise<{ message: string; count: number }> {
-    const count = await this.notificationManager.markAllAsRead(req.user.sub);
+    const count = await this.notificationService.markAllAsRead(req.user.sub);
 
     return {
       message: `${count} notificações marcadas como lidas`,
@@ -1314,7 +1316,7 @@ socket.on('notification', (notification) => {
   async getUnreadNotificationsCount(
     @Request() req: CustomRequest,
   ): Promise<{ unreadCount: number }> {
-    const unreadCount = await this.notificationManager.getUnreadCount(
+    const unreadCount = await this.notificationService.getUnreadCount(
       req.user.sub,
     );
 
@@ -1373,5 +1375,22 @@ socket.on('notification', (notification) => {
       offset,
       limit,
     };
+  }
+
+  /**
+   * Teste de criação de notificação
+   */
+  @ApiTags('Notifications')
+  @Post('notifications/test')
+  @ApiOperation({ summary: 'Testar criação de notificação' })
+  @ApiOkResponse({
+    description: 'Notificação de teste criada com sucesso',
+  })
+  async testCreateNotification(@Request() req: CustomRequest) {
+    return this.notificationService.testCreateNotification(
+      req.user.sub,
+      'Teste de Notificação',
+      'Esta é uma notificação de teste para verificar se o sistema está funcionando.',
+    );
   }
 }

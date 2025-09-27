@@ -1,11 +1,9 @@
 export const NOTIFICATION_QUEUES = {
   NOTIFICATIONS: 'notifications',
-  JOB_NOTIFICATIONS: 'job-notifications',
 } as const;
 
 export const NOTIFICATION_JOBS = {
   CREATE_NOTIFICATION: 'create-notification',
-  NOTIFY_JOB_PUBLISHED: 'notify-job-published',
 } as const;
 
 export const QUEUE_CONFIG = {

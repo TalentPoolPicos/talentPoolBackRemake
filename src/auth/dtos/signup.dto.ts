@@ -5,9 +5,11 @@ import {
   IsStrongPassword,
   MinLength,
   IsOptional,
+  IsEnum,
   ValidateBy,
   ValidationOptions,
 } from 'class-validator';
+import { Role } from '@prisma/client';
 import {
   isInstitutionalEmail,
   INSTITUTIONAL_EMAIL_DOMAINS,
@@ -93,4 +95,15 @@ export class SignUpDto {
   @IsOptional()
   @IsString({ message: 'Descrição deve ser uma string' })
   description?: string;
+
+  @ApiProperty({
+    enum: Role,
+    example: 'student',
+    description: 'O tipo de usuário (student ou enterprise)',
+    required: false,
+    default: 'student',
+  })
+  @IsOptional()
+  @IsEnum(Role, { message: 'Role deve ser student ou enterprise' })
+  role?: Role;
 }
